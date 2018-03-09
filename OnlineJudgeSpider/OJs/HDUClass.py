@@ -1,10 +1,10 @@
-from OJs.BaseClass import Base
+from OnlineJudgeSpider.OJs import Base
 from urllib import request, parse
 from bs4 import BeautifulSoup
 import re
 from http import cookiejar
-from Config import Problem, Spider, Result
-import Config
+from OnlineJudgeSpider.Config import Problem, Spider, Result
+from OnlineJudgeSpider import Config
 
 
 class HDU(Base):

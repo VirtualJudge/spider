@@ -1,5 +1,6 @@
-from OJs.HDUClass import HDU
-from OJs.POJClass import POJ
+from OnlineJudgeSpider.OJs.HDUClass import HDU
+from OnlineJudgeSpider.OJs.POJClass import POJ
+
 
 class OJBuilder:
     @staticmethod
@@ -12,6 +13,7 @@ class OJBuilder:
     @staticmethod
     def build_hdu():
         return HDU()
+
     @staticmethod
     def build_poj():
         return POJ()

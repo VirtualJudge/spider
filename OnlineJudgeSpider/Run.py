@@ -1,5 +1,4 @@
-from Control import Controller
-from Config import Account
+from OnlineJudgeSpider.Config import Account
 
 if __name__ == '__main__':
     account = Account('', '')
