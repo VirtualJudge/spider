@@ -1,15 +1,20 @@
 from OJs.HDUClass import HDU
-
+from OJs.POJClass import POJ
 
 class OJBuilder:
     @staticmethod
     def build_oj(name):
         if name == 'HDU':
             return OJBuilder.build_hdu()
+        if name == 'POJ':
+            return OJBuilder.build_poj()
 
     @staticmethod
     def build_hdu():
         return HDU()
+    @staticmethod
+    def build_poj():
+        return POJ()
 
 
 class Controller:
