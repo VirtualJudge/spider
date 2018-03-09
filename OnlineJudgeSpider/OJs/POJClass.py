@@ -1,4 +1,4 @@
-from OnlineJudgeSpider.OJs import Base
+from OnlineJudgeSpider.OJs.BaseClass import Base
 from http import cookiejar
 from urllib import request
 import re
@@ -9,6 +9,10 @@ class POJ(Base):
         self.code_type = 'utf-8'
         self.cj = cookiejar.CookieJar()
         self.opener = request.build_opener(request.HTTPCookieProcessor(self.cj))
+
+    @staticmethod
+    def home_page_url(self):
+        pass
 
     # 登录页面
     def login_webside(self, *args, **kwargs):

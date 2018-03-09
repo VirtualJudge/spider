@@ -1,5 +1,4 @@
 import json
-import uuid
 from urllib import request
 
 ACCOUNTS_FILE = '/Users/prefixai/static_files/accounts.json'

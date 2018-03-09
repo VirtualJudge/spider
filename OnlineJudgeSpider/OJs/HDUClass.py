@@ -1,10 +1,12 @@
-from OnlineJudgeSpider.OJs import Base
-from urllib import request, parse
-from bs4 import BeautifulSoup
 import re
 from http import cookiejar
-from OnlineJudgeSpider.Config import Problem, Spider, Result
+from urllib import request, parse
+
+from bs4 import BeautifulSoup
+
 from OnlineJudgeSpider import Config
+from OnlineJudgeSpider.Config import Problem, Spider, Result
+from OnlineJudgeSpider.OJs.BaseClass import Base
 
 
 class HDU(Base):
@@ -12,6 +14,11 @@ class HDU(Base):
         self.code_type = 'gb18030'
         self.cj = cookiejar.CookieJar()
         self.opener = request.build_opener(request.HTTPCookieProcessor(self.cj))
+
+    @staticmethod
+    def home_page_url(self):
+        url = 'http://acm.hdu.edu.cn/'
+        return url
 
     def check_login_status(self):
         url = 'http://acm.hdu.edu.cn/'

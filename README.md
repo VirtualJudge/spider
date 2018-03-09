@@ -1,2 +1,13 @@
 # PyJudge-Spider
-基于Python爬虫的虚拟评测系统 爬虫核心
+Python Spider Virtual Judge - Judge Spider
+***
+### build script
+> python3 setup.py bdist_wheel
+
+### supports
+ - HDU
+
+### working
+ - POJ
+ - Codeforces
+ - ZOJ 
