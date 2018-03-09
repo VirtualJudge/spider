@@ -6,10 +6,10 @@ from http import cookiejar
 from Config import Problem, Spider, Result
 import Config
 
+
 class HDU(Base):
     def __init__(self):
-
-        self.code_type = 'gb2312'
+        self.code_type = 'gb18030'
         self.cj = cookiejar.CookieJar()
         self.opener = request.build_opener(request.HTTPCookieProcessor(self.cj))
 
@@ -25,7 +25,6 @@ class HDU(Base):
     def login_webside(self, *args, **kwargs):
         if self.check_login_status():
             return True
-        assert kwargs['account'] is not None, "没有提供账号"
         login_page_url = 'http://acm.hdu.edu.cn/'
         login_link_url = 'http://acm.hdu.edu.cn/userloginex.php?action=login&cid=0&notice=0'
 
@@ -41,33 +40,47 @@ class HDU(Base):
             return False
 
     def get_problem(self, *args, **kwargs):
-        assert kwargs['pid'] is not None, "没有给题目编号'id'"
         url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + str(kwargs['pid'])
         website_data = Spider.get_data(url, self.code_type)
         problem = Problem()
         problem.origin_id = kwargs['pid']
         problem.origin_url = url
-
         problem.title = re.search(r'color:#1A5CC8\'>([\s\S]*?)</h1>', website_data).group(1)
         problem.time_limit = re.search(r'(\d* MS)', website_data).group(1)
         problem.memory_limit = re.search(r'/(\d* K)', website_data).group(1)
+        problem.special_judge = re.search(r'color=red>Special Judge</font>', website_data) is not None
         problem.description = re.search(r'>Problem Description</div>[\s\S]*?panel_content>([\s\S]*?)</div>',
                                         website_data).group(1)
         problem.input = re.search(r'>Input</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data).group(1)
         problem.output = re.search(r'>Output</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data).group(1)
+        match_group = re.search(r'>Sample Input</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data)
+        input_data = ''
+
+        if match_group:
+            input_data = re.search(r'(<pre><div[\s\S]*?>)?([\s\S]*)', match_group.group(1)).group(2)
+
+        output_data = ''
+        match_group = re.search(r'>Sample Output</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data)
+        if match_group:
+            output_data = re.search(r'(<pre><div[\s\S]*?>)?([\s\S]*)', match_group.group(1)).group(2)
+            if re.search('<div', output_data):
+                output_data = re.search(r'([\s\S]*?)<div', output_data).group(1)
         problem.sample = [
-            {'input': re.search(r'>Sample Input</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data).group(1),
-             'output': re.search(r'>Sample Output</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data).group(1)}]
-        problem.author = re.search(r'>Author</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data).group(1)
+            {'input': input_data,
+             'output': output_data}]
+
+        match_group = re.search(r'>Author</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data)
+        if match_group:
+            problem.author = match_group.group(1)
+        match_group = re.search(r'<i>Hint</i>[\s\S]*?/div>[\s]*([\s\S]+?)</div>', website_data)
+        if match_group:
+            problem.hint = match_group.group(1)
 
         return problem
 
     def submit_code(self, *args, **kwargs):
         if self.login_webside(*args, **kwargs) is False:
             return False
-        assert kwargs['code'] is not None
-        assert kwargs['language'] is not None
-        assert kwargs['pid'] is not None
         code = kwargs['code']
         language = kwargs['language']
         pid = kwargs['pid']
@@ -121,4 +134,12 @@ class HDU(Base):
     def is_waiting_for_judge(self, verdict):
         if verdict == 'Queuing' or verdict == 'Compiling':
             return True
+        return False
+
+    def check_status(self):
+        url = 'http://acm.hdu.edu.cn/'
+        with request.urlopen(url, timeout=5) as fin:
+            data = fin.read().decode(self.code_type)
+            if re.search(r'<H1>Welcome to HDU Online Judge System</H1>', data):
+                return True
         return False

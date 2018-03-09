@@ -14,14 +14,10 @@ custom_headers = {
 
 
 class Account:
-    def __init__(self, username, password, uid):
+    def __init__(self, username, password):
         self.username = username
         self.password = password
-        self.uid = uid
         self.status = False
-
-    def get_uid(self):
-        return self.uid
 
     def get_username(self):
         return self.username
@@ -41,7 +37,7 @@ class Accounts:
             accounts_json = json.loads(text)
             for account_json in accounts_json:
                 self.accounts[account_json['name']].append(
-                    Account(account_json['username'], account_json['password'], uuid.uuid1()))
+                    Account(account_json['username'], account_json['password']))
 
     def rent_account(self, oj_name):
         for account in self.accounts[oj_name]:
@@ -89,6 +85,7 @@ class Problem:
         self.time_limit = None
         self.memory_limit = None
         self.description = None
+        self.special_judge = None
         self.input = None
         self.output = None
         self.sample = None
@@ -97,18 +94,19 @@ class Problem:
         self.source = None
 
     def show(self):
-        print(self.origin_id)
-        print(self.origin_url)
-        print(self.title)
-        print(self.time_limit)
-        print(self.memory_limit)
-        print(self.description)
-        print(self.input)
-        print(self.output)
-        print(self.sample)
-        print(self.hint)
-        print(self.author)
-        print(self.source)
+        print('origin_id', self.origin_id)
+        print('origin_url', self.origin_url)
+        print('title', self.title)
+        print('time_limit', self.time_limit)
+        print('memory_limit', self.memory_limit)
+        print('description', self.description)
+        print('special_judge', self.special_judge)
+        print('input', self.input)
+        print('output', self.output)
+        print('sample', self.sample)
+        print('hint', self.hint)
+        print('author', self.author)
+        print('source', self.source)
 
 
 class Result:

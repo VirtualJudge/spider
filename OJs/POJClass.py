@@ -1,4 +1,14 @@
-class Base:
+from OJs.BaseClass import Base
+from http import cookiejar
+from urllib import request
+
+
+class POJ(Base):
+    def __init__(self):
+        self.code_type = 'gb18030'
+        self.cj = cookiejar.CookieJar()
+        self.opener = request.build_opener(request.HTTPCookieProcessor(self.cj))
+
     # 登录页面
     def login_webside(self, *args, **kwargs):
         pass
