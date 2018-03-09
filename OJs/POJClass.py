@@ -1,11 +1,12 @@
 from OJs.BaseClass import Base
 from http import cookiejar
 from urllib import request
+import re
 
 
 class POJ(Base):
     def __init__(self):
-        self.code_type = 'gb18030'
+        self.code_type = 'utf-8'
         self.cj = cookiejar.CookieJar()
         self.opener = request.build_opener(request.HTTPCookieProcessor(self.cj))
 
@@ -51,4 +52,9 @@ class POJ(Base):
 
     # 检查源OJ是否运行正常
     def check_status(self):
-        pass
+        url = "http://poj.org/"
+        with request.urlopen(url, timeout=5) as fin:
+            data = fin.read().decode(self.code_type)
+            if re.search(r'color=blue>Welcome To PKU JudgeOnline</font>', data):
+                return True
+        return False
