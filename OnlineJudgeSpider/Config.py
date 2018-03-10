@@ -80,8 +80,9 @@ class Spider:
 
 class Problem:
     def __init__(self):
-        self.origin_id = None
-        self.origin_url = None
+        self.remote_id = None
+        self.remote_url = None
+        self.remote_oj = None
 
         self.title = None
         self.time_limit = None
