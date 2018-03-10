@@ -97,8 +97,9 @@ class Problem:
         self.source = None
 
     def get_dict(self):
-        ret_dict = {'origin_id': self.origin_id,
-                    'origin_url': self.origin_url,
+        ret_dict = {'remote_id': self.remote_id,
+                    'remote_oj': self.remote_oj,
+                    'remote_url': self.remote_url,
                     'title': self.title,
                     'time_limit': self.time_limit,
                     'memory_limit': self.memory_limit,
@@ -113,8 +114,9 @@ class Problem:
         return ret_dict
 
     def show(self):
-        print('origin_id', self.origin_id)
-        print('origin_url', self.origin_url)
+        print('remote_id', self.remote_id)
+        print('remote_oj', self.remote_oj)
+        print('remote_url', self.remote_url)
         print('title', self.title)
         print('time_limit', self.time_limit)
         print('memory_limit', self.memory_limit)

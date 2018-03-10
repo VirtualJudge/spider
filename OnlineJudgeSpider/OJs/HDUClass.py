@@ -55,8 +55,9 @@ class HDU(Base):
         try:
             website_data = Spider.get_data(url, self.code_type)
 
-            problem.origin_id = kwargs['pid']
-            problem.origin_url = url
+            problem.remote_id = kwargs['pid']
+            problem.remote_url = url
+            problem.remote_oj = 'HDU'
             problem.title = re.search(r'color:#1A5CC8\'>([\s\S]*?)</h1>', website_data).group(1)
             problem.time_limit = re.search(r'(\d* MS)', website_data).group(1)
             problem.memory_limit = re.search(r'/(\d* K)', website_data).group(1)
