@@ -1,4 +1,9 @@
 class Base:
+    # 主页链接
+    @staticmethod
+    def home_page_url(self):
+        pass
+
     # 登录页面
     def login_webside(self, *args, **kwargs):
         pass

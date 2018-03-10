@@ -1,5 +1,4 @@
 import json
-import uuid
 from urllib import request
 
 ACCOUNTS_FILE = '/Users/prefixai/static_files/accounts.json'
@@ -55,9 +54,12 @@ class Accounts:
 class Spider:
     @staticmethod
     def get_data(url, codec):
-        with request.urlopen(url) as fin:
-            data = fin.read()
-            return data.decode(codec)
+        try:
+            with request.urlopen(url) as fin:
+                data = fin.read()
+                return data.decode(codec)
+        except:
+            return None
 
 
 '''
@@ -78,8 +80,9 @@ class Spider:
 
 class Problem:
     def __init__(self):
-        self.origin_id = None
-        self.origin_url = None
+        self.remote_id = None
+        self.remote_url = None
+        self.remote_oj = None
 
         self.title = None
         self.time_limit = None
@@ -93,9 +96,27 @@ class Problem:
         self.author = None
         self.source = None
 
+    def get_dict(self):
+        ret_dict = {'remote_id': self.remote_id,
+                    'remote_oj': self.remote_oj,
+                    'remote_url': self.remote_url,
+                    'title': self.title,
+                    'time_limit': self.time_limit,
+                    'memory_limit': self.memory_limit,
+                    'description': self.description,
+                    'special_judge': self.special_judge,
+                    'input': self.input,
+                    'output': self.output,
+                    'sample': self.sample,
+                    'hint': self.hint,
+                    'author': self.author,
+                    'source': self.source}
+        return ret_dict
+
     def show(self):
-        print('origin_id', self.origin_id)
-        print('origin_url', self.origin_url)
+        print('remote_id', self.remote_id)
+        print('remote_oj', self.remote_oj)
+        print('remote_url', self.remote_url)
         print('title', self.title)
         print('time_limit', self.time_limit)
         print('memory_limit', self.memory_limit)
@@ -115,6 +136,13 @@ class Result:
         self.verdict = None
         self.execute_time = None
         self.execute_memory = None
+
+    def get_dict(self):
+        ret_dict = {'origin_run_id': self.origin_run_id,
+                    'verdict': self.verdict,
+                    'execute_time': self.execute_time,
+                    'execute_memory': self.execute_memory}
+        pass
 
     def show(self):
         print(self.origin_run_id)
