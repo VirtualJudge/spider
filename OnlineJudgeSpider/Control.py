@@ -1,6 +1,8 @@
 from OnlineJudgeSpider.OJs.HDUClass import HDU
 from OnlineJudgeSpider.OJs.POJClass import POJ
 
+support_ojs = ['HDU', ]
+
 
 class OJBuilder:
     @staticmethod
@@ -20,6 +22,13 @@ class OJBuilder:
 
 
 class Controller:
+    # 判断当前是否支持
+    @staticmethod
+    def is_support(oj_name):
+        if oj_name in support_ojs:
+            return True
+        return False
+
     # 获取题面
     @staticmethod
     def get_problem(oj_name, pid, **kwargs):

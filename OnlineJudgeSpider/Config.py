@@ -54,9 +54,12 @@ class Accounts:
 class Spider:
     @staticmethod
     def get_data(url, codec):
-        with request.urlopen(url) as fin:
-            data = fin.read()
-            return data.decode(codec)
+        try:
+            with request.urlopen(url) as fin:
+                data = fin.read()
+                return data.decode(codec)
+        except:
+            return None
 
 
 '''
@@ -92,6 +95,22 @@ class Problem:
         self.author = None
         self.source = None
 
+    def get_dict(self):
+        ret_dict = {'origin_id': self.origin_id,
+                    'origin_url': self.origin_url,
+                    'title': self.title,
+                    'time_limit': self.time_limit,
+                    'memory_limit': self.memory_limit,
+                    'description': self.description,
+                    'special_judge': self.special_judge,
+                    'input': self.input,
+                    'output': self.output,
+                    'sample': self.sample,
+                    'hint': self.hint,
+                    'author': self.author,
+                    'source': self.source}
+        return ret_dict
+
     def show(self):
         print('origin_id', self.origin_id)
         print('origin_url', self.origin_url)
@@ -114,6 +133,13 @@ class Result:
         self.verdict = None
         self.execute_time = None
         self.execute_memory = None
+
+    def get_dict(self):
+        ret_dict = {'origin_run_id': self.origin_run_id,
+                    'verdict': self.verdict,
+                    'execute_time': self.execute_time,
+                    'execute_memory': self.execute_memory}
+        pass
 
     def show(self):
         print(self.origin_run_id)

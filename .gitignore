@@ -15,3 +15,8 @@ build/
 dist/
 
 !.gitignore
+
+OnlineJudgeSpider/__pycache__/
+OnlineJudgeSpider/OJs/__pycache__/
+
+.DS_Store

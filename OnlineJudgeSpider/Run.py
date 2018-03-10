@@ -1,8 +1,8 @@
 from OnlineJudgeSpider.Config import Account
-
+from OnlineJudgeSpider.Control import Controller
 if __name__ == '__main__':
     account = Account('', '')
-    # Controller.get_problem('HDU', '2011').show()
+    Controller.get_problem('HDU', '2011').show()
     # Controller.check_status('HDU')
     # Controller.find_language('HDU', account)
     # Controller.is_waiting_for_judge()
