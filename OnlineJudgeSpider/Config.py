@@ -79,6 +79,8 @@ class Spider:
 
 
 class Problem:
+    PROBLEM_NOT_FOUND = None
+
     def __init__(self):
         self.remote_id = None
         self.remote_url = None
