@@ -1,5 +1,5 @@
-from OnlineJudgeSpider.Config import Account
-from OnlineJudgeSpider.Control import Controller
+from VirtualJudgeSpider.Config import Account
+from VirtualJudgeSpider.Control import Controller
 if __name__ == '__main__':
     account = Account('', '')
     Controller.get_problem('HDU', '2011').show()

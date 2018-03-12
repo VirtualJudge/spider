@@ -1,5 +1,5 @@
-from OnlineJudgeSpider.OJs.HDUClass import HDU
-from OnlineJudgeSpider.OJs.POJClass import POJ
+from VirtualJudgeSpider.OJs.HDUClass import HDU
+from VirtualJudgeSpider.OJs.POJClass import POJ
 
 support_ojs = ['HDU', ]
 
