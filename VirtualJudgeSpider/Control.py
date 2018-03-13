@@ -1,6 +1,6 @@
-from OnlineJudgeSpider.OJs.HDUClass import HDU
-from OnlineJudgeSpider.OJs.POJClass import POJ
-from OnlineJudgeSpider.OJs.WUSTClass import WUST
+from VirtualJudgeSpider.OJs.HDUClass import HDU
+from VirtualJudgeSpider.OJs.POJClass import POJ
+from VirtualJudgeSpider.OJs.WUSTClass import WUST
 
 support_ojs = ['HDU', 'WUST']
 

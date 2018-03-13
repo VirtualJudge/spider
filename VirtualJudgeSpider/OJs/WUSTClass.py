@@ -5,9 +5,9 @@ from urllib import request, parse
 from bs4 import BeautifulSoup
 import bs4
 
-from OnlineJudgeSpider import Config
-from OnlineJudgeSpider.Config import Problem, Spider, Result
-from OnlineJudgeSpider.OJs.BaseClass import Base
+from VirtualJudgeSpider import Config
+from VirtualJudgeSpider.Config import Problem, Spider, Result
+from VirtualJudgeSpider.OJs.BaseClass import Base
 
 
 class WUST(Base):
