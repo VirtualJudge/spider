@@ -68,6 +68,35 @@ class WUST(Base):
                 ans = ans + self.find_texts(child)
         return ans
 
+    def parse_html(self, model, soup, website_data):
+        # -------------------------------------------------------------------------------------------------------
+        ans = ''
+        if model == 'Sample Input':
+            model = soup.find('span', attrs={'id': 'sample_input'})
+            if model is not None:
+                for child in model.children:
+                    ans = ans + self.find_texts(child)
+            return ans.strip()
+
+        taken = "<h2>" + model + "</h2>"
+        match_group = re.search(re.compile(taken), website_data)
+        if match_group is None:
+            return ans
+        model = soup.find('h2', text=model).next_siblings
+        for tag in model:
+            if tag.name == 'div':
+                model = tag
+                break
+        # print(model)
+        try:
+            for child in model.children:
+                ans = ans + self.find_texts(child)
+                # print(model)
+        except Exception as e:
+            print(e)
+        return ans.strip()
+        # ---------------------------------------------------------------------------------------------------------
+
     def get_problem(self, *args, **kwargs):
         url = 'http://acm.wust.edu.cn/problem.php?id=' + str(kwargs['pid']) + '&soj=0'
         problem = Problem()
@@ -84,80 +113,20 @@ class WUST(Base):
 
             soup = BeautifulSoup(website_data, 'lxml')
             texts = soup.find_all(attrs={'class': 'text'})
-            #-------------------------------------------------------------------------------------------------------
-            description = soup.find('h2', text='Description').next_siblings
-            for tag in description:
-                if tag.name == 'div':
-                    description = tag
-                    break
-            # print(description)
-            ans = ''
-            try:
-                for child in description.children:
-                    ans = ans + self.find_texts(child)
-                    # print(child)
-            except Exception as e:
-                print(e)
-            problem.description = ans.strip()
-            #print(problem.description)
-            #---------------------------------------------------------------------------------------------------------
-            problem.input = texts[1].get_text()
-            problem.output = texts[2].get_text()
 
-            input_data = ''
-            match_group = re.search(
-                r"class=sampledata id='sample_input'>([\s\S]*?)</span></pre></div><br><h2>Sample Output", website_data)
-            if match_group:
-                input_data = match_group.group(1)
-
-            output_data = ''
-            match_group = re.search(r"<div><pre class=text><span class=sampledata>([\S\s]*?)</span></pre></div><br>",
-                                    website_data)
-            if match_group:
-                output_data = match_group.group(1)
-
+            problem.description = self.parse_html("Description", soup, website_data)
+            problem.input = self.parse_html("Input", soup, website_data)
+            problem.output = self.parse_html("Output", soup, website_data)
+            input_data = self.parse_html("Sample Input", soup, website_data)
+            output_data = self.parse_html("Sample Output", soup, website_data)
+            problem.hint = self.parse_html("HINT", soup, website_data)
+            problem.author = self.parse_html("Author", soup, website_data)
+            problem.source = self.parse_html("Source", soup, website_data)
             problem.sample = [
                 {'input': input_data,
                  'output': output_data}]
-            #-----------------------------------------------------------------------------------------------------
-            match_group = re.search(r'HINT</h2>[\s\S]*?<div class=text><p>([\s\S]*?)</p></p>', website_data)
-            if match_group:
-                hint = soup.find('h2', text='HINT').next_siblings
-                for tag in hint:
-                    if tag.name=='div':
-                        hint=tag
-                        break
-                #print(hint)
-                ans = ''
-                try:
-                    for child in hint.children:
-                        ans = ans + self.find_texts(child)
-                        #print(child)
-                except Exception as e:
-                    print(e)
-                problem.hint = ans.strip()
-                #print(problem.hint)
-            #-------------------------------------------------------------------------------------------------------
-            match_group = re.search(r'Author</h2>[\s\S]*?<div class=text><p>([\s\S]*?)</p></div>', website_data)
-            if match_group:
-                problem.author = match_group.group(1)
-
-            match_group = re.search(r'Source</h2>[\s\S]*?<div class=text>([\s\S]*?)</div>', website_data)
-            if match_group:
-                source = soup.find('h2', text='Source').next_siblings
-                for tag in source:
-                    if tag.name == 'div':
-                        source = tag
-                        break
-                # print(source)
-                ans = ''
-                try:
-                    for child in source.children:
-                        ans = ans + self.find_texts(child)
-                        # print(child)
-                except Exception as e:
-                    print(e)
-                problem.source = ans.strip()
+        except Exception as e:
+            print(e)
 
         finally:
             return problem
@@ -179,7 +148,10 @@ class WUST(Base):
                 soup = BeautifulSoup(response, 'lxml')
                 submitkey = soup.find('input', attrs={'name': 'submitkey'})['value']
                 # 获取提交的语言信息
-                languages = self.find_language(soup=soup)
+                languages = {}
+                options = soup.find('select', attrs={'name': 'language'}).find_all('option')
+                for option in options:
+                    languages[option.get('value')] = option.string
                 # 语言字典键值反转
                 languages = {value: key for key, value in languages.items()}
                 # 字典键值映射
@@ -189,18 +161,23 @@ class WUST(Base):
             req = request.Request(url=link_post_url, data=post_data.encode(self.code_type), headers=self.headers)
             response = self.opener.open(req)
             return True
-        except:
+        except Exception as e:
+            print(e)
             return False
 
     def find_language(self, *args, **kwargs):
         if self.login_webside(*args, **kwargs) is False:
             return None
-        soup = kwargs['soup']
+        pid = kwargs['pid']
+        url = 'http://acm.wust.edu.cn/submitpage.php?id=' + str(pid) + '&soj=0'
         languages = {}
         try:
-            options = soup.find('select', attrs={'name': 'language'}).find_all('option')
-            for option in options:
-                languages[option.get('value')] = option.string
+            with self.opener.open(url) as fin:
+                data = fin.read().decode(self.code_type)
+                soup = BeautifulSoup(data, 'lxml')
+                options = soup.find('select', attrs={'name': 'language'}).find_all('option')
+                for option in options:
+                    languages[option.get('value')] = option.string
         finally:
             return languages
 
