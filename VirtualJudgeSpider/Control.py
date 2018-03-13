@@ -29,6 +29,11 @@ class OJBuilder:
 
 
 class Controller:
+    # 获取支持的OJ列表
+    @staticmethod
+    def get_support_ojs():
+        return support_ojs
+
     # 判断当前是否支持
     @staticmethod
     def is_support(oj_name):

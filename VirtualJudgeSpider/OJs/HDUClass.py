@@ -4,9 +4,9 @@ from urllib import request, parse
 
 from bs4 import BeautifulSoup
 
-from OnlineJudgeSpider import Config
-from OnlineJudgeSpider.Config import Problem, Spider, Result
-from OnlineJudgeSpider.OJs.BaseClass import Base
+from VirtualJudgeSpider import Config
+from VirtualJudgeSpider.Config import Problem, Spider, Result
+from VirtualJudgeSpider.OJs.BaseClass import Base
 
 
 class HDU(Base):
@@ -88,8 +88,9 @@ class HDU(Base):
             match_group = re.search(r'<i>Hint</i>[\s\S]*?/div>[\s]*([\s\S]+?)</div>', website_data)
             if match_group:
                 problem.hint = match_group.group(1)
-        finally:
-            return problem
+        except:
+            return Problem.PROBLEM_NOT_FOUND
+        return problem
 
     def submit_code(self, *args, **kwargs):
         if self.login_webside(*args, **kwargs) is False:

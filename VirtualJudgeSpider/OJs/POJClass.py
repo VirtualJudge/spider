@@ -1,4 +1,4 @@
-from OnlineJudgeSpider.OJs.BaseClass import Base
+from VirtualJudgeSpider.OJs.BaseClass import Base
 from http import cookiejar
 from urllib import request
 import re

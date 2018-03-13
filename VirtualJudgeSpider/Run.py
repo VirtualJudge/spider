@@ -4,9 +4,9 @@ import csv
 import random
 import time
 if __name__ == '__main__':
-    account = Account('lws138401', 'lws138401')
-    Controller.get_problem('WUST', '2095')
-    print(Controller.find_language('WUST',account))
+    account = Account('', '')
+    #Controller.get_problem('WUST', '2095')
+    #print(Controller.find_language('WUST',account))
     # Controller.check_status('HDU')
     # Controller.find_language('HDU', account)
     # Controller.is_waiting_for_judge()
