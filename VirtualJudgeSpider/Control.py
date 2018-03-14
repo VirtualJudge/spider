@@ -1,7 +1,8 @@
-from OnlineJudgeSpider.OJs.HDUClass import HDU
-from OnlineJudgeSpider.OJs.POJClass import POJ
+from VirtualJudgeSpider.OJs.HDUClass import HDU
+from VirtualJudgeSpider.OJs.POJClass import POJ
+from VirtualJudgeSpider.OJs.WUSTClass import WUST
 
-support_ojs = ['HDU', ]
+support_ojs = ['HDU', 'WUST']
 
 
 class OJBuilder:
@@ -11,6 +12,8 @@ class OJBuilder:
             return OJBuilder.build_hdu()
         if name == 'POJ':
             return OJBuilder.build_poj()
+        if name == 'WUST':
+            return OJBuilder.build_wust()
 
     @staticmethod
     def build_hdu():
@@ -20,8 +23,17 @@ class OJBuilder:
     def build_poj():
         return POJ()
 
+    @staticmethod
+    def build_wust():
+        return WUST()
+
 
 class Controller:
+    # 获取支持的OJ列表
+    @staticmethod
+    def get_support_ojs():
+        return support_ojs
+
     # 判断当前是否支持
     @staticmethod
     def is_support(oj_name):

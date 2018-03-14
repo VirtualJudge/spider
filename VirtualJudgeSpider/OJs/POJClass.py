@@ -4,9 +4,9 @@ from urllib import request, parse
 import re
 import base64
 
-from OnlineJudgeSpider import Config
-from OnlineJudgeSpider.Config import Problem, Spider, Result
-from OnlineJudgeSpider.OJs.BaseClass import Base
+from VirtualJudgeSpider import Config
+from VirtualJudgeSpider.Config import Problem, Spider, Result
+from VirtualJudgeSpider.OJs.BaseClass import Base
 
 class POJ(Base):
     def __init__(self):
@@ -97,7 +97,6 @@ class POJ(Base):
             match_group = re.search(r'>Hint</p>[\s\S]*?"en-US">([\s\S]*?)</div>', website_data)
             if match_group:
                 problem.hint = match_group.group(1)
-
             match_group = re.search(r'>Source</p>[\s\S]*?"en-US">([\s\S]*?)</div>', website_data)
             if match_group:
                 problem.source = match_group.group(1)

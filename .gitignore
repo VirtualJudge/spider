@@ -16,7 +16,7 @@ dist/
 
 !.gitignore
 
-OnlineJudgeSpider/__pycache__/
-OnlineJudgeSpider/OJs/__pycache__/
+VirtualJudgeSpider/__pycache__/
+VirtualJudgeSpider/OJs/__pycache__/
 
 .DS_Store
