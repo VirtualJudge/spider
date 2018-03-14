@@ -30,7 +30,7 @@ class Account:
 
 class Accounts:
     def __init__(self):
-        self.accounts = {'HDU': [], 'POJ': []}
+        self.accounts = {'HDU': [], 'POJ': [],'WUST': []}
         with open(ACCOUNTS_FILE, 'r') as fin:
             text = fin.read()
             accounts_json = json.loads(text)
