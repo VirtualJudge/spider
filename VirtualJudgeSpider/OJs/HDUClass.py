@@ -153,7 +153,7 @@ class HDU(Base):
         return str('HDU')
 
     def is_waiting_for_judge(self, verdict):
-        if verdict == 'Queuing' or verdict == 'Compiling':
+        if verdict in ['Queuing', 'Compiling', 'Running']:
             return True
         return False
 

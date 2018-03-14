@@ -45,7 +45,7 @@ class WUST(Base):
             self.opener.open(login_page_url)
             req = request.Request(url=login_link_url, data=post_data.encode(self.code_type),
                                   headers=Config.custom_headers)
-            response = self.opener.open(req)
+            self.opener.open(req)
 
             if self.check_login_status():
                 return True
@@ -118,8 +118,9 @@ class WUST(Base):
             problem.sample = [
                 {'input': input_data,
                  'output': output_data}]
-        finally:
-            return problem
+        except:
+            return Problem.PROBLEM_NOT_FOUND
+        return problem
 
     def submit_code(self, *args, **kwargs):
         if self.login_webside(*args, **kwargs) is False:
@@ -132,7 +133,6 @@ class WUST(Base):
             link_page_url = 'http://acm.wust.edu.cn/submitpage.php?id=' + str(pid) + '&soj=0'
             link_post_url = 'http://acm.wust.edu.cn/submit.php?'
             Config.custom_headers['Referer'] = link_page_url
-            submitkey = ''
 
             with self.opener.open(link_page_url) as response:
                 soup = BeautifulSoup(response, 'lxml')
@@ -150,7 +150,7 @@ class WUST(Base):
                 {'id': str(pid), 'soj': '0', 'language': language, 'source': code, 'submitkey': str(submitkey)})
             req = request.Request(url=link_post_url, data=post_data.encode(self.code_type),
                                   headers=Config.custom_headers)
-            response = self.opener.open(req)
+            self.opener.open(req)
             return True
         except:
             return False

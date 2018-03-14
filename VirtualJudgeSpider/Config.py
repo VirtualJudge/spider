@@ -28,29 +28,6 @@ class Account:
         return self.status
 
 
-class Accounts:
-    def __init__(self):
-        self.accounts = {'HDU': [], 'POJ': [],'WUST': []}
-        with open(ACCOUNTS_FILE, 'r') as fin:
-            text = fin.read()
-            accounts_json = json.loads(text)
-            for account_json in accounts_json:
-                self.accounts[account_json['name']].append(
-                    Account(account_json['username'], account_json['password']))
-
-    def rent_account(self, oj_name):
-        for account in self.accounts[oj_name]:
-            if not account.status:
-                account.status = True
-                return account
-
-    def return_account(self, oj_name, uuid):
-        for account in self.accounts[oj_name]:
-            if account.uid == uuid:
-                account.status = False
-                break
-
-
 class Spider:
     @staticmethod
     def get_data(url, codec):
