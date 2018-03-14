@@ -6,17 +6,17 @@ VirtualJudge - Judge Spider
 
 ### supports
  - HDU
+ - WUST
 
 ### working
  - POJ
- - WUST 
+ - FZU 
  
 ### pending
  - ZOJ
  - Codeforces
  - URAL
  - Aizu
- - FZU
  - ACdream
  - UESTC
  - UVA
