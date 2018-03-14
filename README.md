@@ -7,9 +7,8 @@ VirtualJudge - Judge Spider
 ### supports
  - HDU
  - WUST
-
-### working
  - POJ
+### working
  - FZU 
  
 ### pending
