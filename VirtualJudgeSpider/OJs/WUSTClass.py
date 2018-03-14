@@ -15,12 +15,6 @@ class WUST(Base):
         self.code_type = 'UTF-8'
         self.cj = cookiejar.CookieJar()
         self.opener = request.build_opener(request.HTTPCookieProcessor(self.cj))
-        self.headers = Config.custom_headers;
-        self.headers['Connection'] = 'keep-alive'
-        self.headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
-        self.headers['Accept-Language'] = 'zh-CN,zh;q=0.9'
-        self.headers[
-            'User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.146 Safari/537.36'
 
     @staticmethod
     def home_page_url(self):
@@ -50,7 +44,7 @@ class WUST(Base):
         try:
             self.opener.open(login_page_url)
             req = request.Request(url=login_link_url, data=post_data.encode(self.code_type),
-                                  headers=self.headers)
+                                  headers=Config.custom_headers)
             response = self.opener.open(req)
 
             if self.check_login_status():
@@ -110,10 +104,9 @@ class WUST(Base):
             problem.time_limit = re.search(r'(\d* Sec)', website_data).group(1)
             problem.memory_limit = re.search(r'(\d* MB)', website_data).group(1)
             problem.special_judge = re.search(r'class=red>Special Judge</span>', website_data) is not None
-
             soup = BeautifulSoup(website_data, 'lxml')
-            texts = soup.find_all(attrs={'class': 'text'})
 
+            # case:problem.picture=self.parse_html("img", soup, website_data)
             problem.description = self.parse_html("Description", soup, website_data)
             problem.input = self.parse_html("Input", soup, website_data)
             problem.output = self.parse_html("Output", soup, website_data)
@@ -125,9 +118,6 @@ class WUST(Base):
             problem.sample = [
                 {'input': input_data,
                  'output': output_data}]
-        except Exception as e:
-            print(e)
-
         finally:
             return problem
 
@@ -141,7 +131,7 @@ class WUST(Base):
             pid = kwargs['pid']
             link_page_url = 'http://acm.wust.edu.cn/submitpage.php?id=' + str(pid) + '&soj=0'
             link_post_url = 'http://acm.wust.edu.cn/submit.php?'
-            self.headers['Referer'] = link_page_url
+            Config.custom_headers['Referer'] = link_page_url
             submitkey = ''
 
             with self.opener.open(link_page_url) as response:
@@ -158,18 +148,17 @@ class WUST(Base):
                 language = languages[language]
             post_data = parse.urlencode(
                 {'id': str(pid), 'soj': '0', 'language': language, 'source': code, 'submitkey': str(submitkey)})
-            req = request.Request(url=link_post_url, data=post_data.encode(self.code_type), headers=self.headers)
+            req = request.Request(url=link_post_url, data=post_data.encode(self.code_type),
+                                  headers=Config.custom_headers)
             response = self.opener.open(req)
             return True
-        except Exception as e:
-            print(e)
+        except:
             return False
 
     def find_language(self, *args, **kwargs):
         if self.login_webside(*args, **kwargs) is False:
             return None
-        pid = kwargs['pid']
-        url = 'http://acm.wust.edu.cn/submitpage.php?id=' + str(pid) + '&soj=0'
+        url = 'http://acm.wust.edu.cn/submitpage.php?id=1000&soj=0'
         languages = {}
         try:
             with self.opener.open(url) as fin:
