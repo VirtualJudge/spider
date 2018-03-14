@@ -146,8 +146,10 @@ class HDU(Base):
                     result.verdict = line[2].string
                     result.execute_time = line[4].string
                     result.execute_memory = line[5].string
-        finally:
-            return result
+                    return result
+        except:
+            pass
+        return result
 
     def get_class_name(self):
         return str('HDU')
