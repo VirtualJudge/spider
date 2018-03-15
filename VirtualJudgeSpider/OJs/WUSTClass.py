@@ -119,7 +119,7 @@ class WUST(Base):
                 {'input': input_data,
                  'output': output_data}]
         except:
-            return Problem.PROBLEM_NOT_FOUND
+            return None
         return problem
 
     def submit_code(self, *args, **kwargs):
@@ -196,8 +196,10 @@ class WUST(Base):
                     result.verdict = line[4].string
                     result.execute_time = line[6].string
                     result.execute_memory = line[5].string
-        finally:
-            return result
+                    return result
+        except:
+            pass
+        return None
 
     def get_class_name(self):
         return str('WUST')

@@ -100,8 +100,10 @@ class POJ(Base):
             match_group = re.search(r'>Source</p>[\s\S]*?"en-US">([\s\S]*?)</div>', website_data)
             if match_group:
                 problem.source = match_group.group(1)
-        finally:
             return problem
+        except:
+            pass
+        return None
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
@@ -151,8 +153,10 @@ class POJ(Base):
                     result.verdict = line[3].string
                     result.execute_time = line[5].string
                     result.execute_memory = line[4].string
-        finally:
-            return result
+                    return result
+        except:
+            pass
+        return None
 
 
     # 获取源OJ支持的语言类型

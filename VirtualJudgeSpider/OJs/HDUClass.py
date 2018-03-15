@@ -89,7 +89,7 @@ class HDU(Base):
             if match_group:
                 problem.hint = match_group.group(1)
         except:
-            return Problem.PROBLEM_NOT_FOUND
+            return None
         return problem
 
     def submit_code(self, *args, **kwargs):
