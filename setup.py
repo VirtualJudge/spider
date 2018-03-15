@@ -3,7 +3,7 @@ import setuptools
 
 
 setup(name='VirtualJudgeSpider',
-      version='0.1',
+      version='0.2',
       description='Virtual Judge Spider',
       author='dian xu',
       author_email='xudian.cn@gmail.com',
