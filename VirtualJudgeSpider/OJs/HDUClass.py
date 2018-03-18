@@ -1,19 +1,18 @@
 import re
-from http import cookiejar
-from urllib import request, parse
 
+import requests
 from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import Config
-from VirtualJudgeSpider.Config import Problem, Spider, Result
+from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
 
 
 class HDU(Base):
     def __init__(self):
         self.code_type = 'gb18030'
-        self.cj = cookiejar.CookieJar()
-        self.opener = request.build_opener(request.HTTPCookieProcessor(self.cj))
+        self.headers = Config.custom_headers
+        self.cookies = None
 
     @staticmethod
     def home_page_url(self):
@@ -23,10 +22,11 @@ class HDU(Base):
     def check_login_status(self):
         url = 'http://acm.hdu.edu.cn/'
         try:
-            with self.opener.open(url) as fin:
-                website_data = fin.read().decode(self.code_type)
-                if re.search(r'userloginex\.php\?action=logout', website_data) is not None:
-                    return True
+            website_data = requests.get(url, cookies=self.cookies, headers=self.headers)
+            self.cookies = website_data.cookies
+            if re.search(r'userloginex\.php\?action=logout', website_data.text) is not None:
+                return True
+            return False
         except:
             return False
 
@@ -36,13 +36,12 @@ class HDU(Base):
         login_page_url = 'http://acm.hdu.edu.cn/'
         login_link_url = 'http://acm.hdu.edu.cn/userloginex.php?action=login&cid=0&notice=0'
 
-        post_data = parse.urlencode(
-            {'username': kwargs['account'].get_username(), 'userpass': kwargs['account'].get_password()})
+        post_data = {'username': kwargs['account'].get_username(), 'userpass': kwargs['account'].get_password()}
         try:
-            self.opener.open(login_page_url)
-            req = request.Request(url=login_link_url, data=post_data.encode(self.code_type),
-                                  headers=Config.custom_headers)
-            self.opener.open(req)
+            req1 = requests.get(login_page_url, cookies=self.cookies, headers=self.headers)
+            self.cookies = req1.cookies
+            req2 = requests.post(url=login_link_url, cookies=self.cookies, data=post_data, headers=self.headers)
+            self.cookies = req2.cookies
             if self.check_login_status():
                 return True
             return False
@@ -53,27 +52,28 @@ class HDU(Base):
         url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + str(kwargs['pid'])
         problem = Problem()
         try:
-            website_data = Spider.get_data(url, self.code_type)
-
+            website_data = requests.get(url, headers=self.headers, cookies=self.cookies)
+            self.cookies = website_data.cookies
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
             problem.remote_oj = 'HDU'
-            problem.title = re.search(r'color:#1A5CC8\'>([\s\S]*?)</h1>', website_data).group(1)
-            problem.time_limit = re.search(r'(\d* MS)', website_data).group(1)
-            problem.memory_limit = re.search(r'/(\d* K)', website_data).group(1)
-            problem.special_judge = re.search(r'color=red>Special Judge</font>', website_data) is not None
+            problem.title = re.search(r'color:#1A5CC8\'>([\s\S]*?)</h1>', website_data.text).group(1)
+            problem.time_limit = re.search(r'(\d* MS)', website_data.text).group(1)
+            problem.memory_limit = re.search(r'/(\d* K)', website_data.text).group(1)
+            problem.special_judge = re.search(r'color=red>Special Judge</font>', website_data.text) is not None
             problem.description = re.search(r'>Problem Description</div>[\s\S]*?panel_content>([\s\S]*?)</div>',
-                                            website_data).group(1)
-            problem.input = re.search(r'>Input</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data).group(1)
-            problem.output = re.search(r'>Output</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data).group(1)
-            match_group = re.search(r'>Sample Input</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data)
+                                            website_data.text).group(1)
+            problem.input = re.search(r'>Input</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data.text).group(1)
+            problem.output = re.search(r'>Output</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data.text).group(
+                1)
+            match_group = re.search(r'>Sample Input</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data.text)
             input_data = ''
 
             if match_group:
                 input_data = re.search(r'(<pre><div[\s\S]*?>)?([\s\S]*)', match_group.group(1)).group(2)
 
             output_data = ''
-            match_group = re.search(r'>Sample Output</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data)
+            match_group = re.search(r'>Sample Output</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data.text)
             if match_group:
                 output_data = re.search(r'(<pre><div[\s\S]*?>)?([\s\S]*)', match_group.group(1)).group(2)
                 if re.search('<div', output_data):
@@ -82,10 +82,10 @@ class HDU(Base):
                 {'input': input_data,
                  'output': output_data}]
 
-            match_group = re.search(r'>Author</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data)
+            match_group = re.search(r'>Author</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data.text)
             if match_group:
                 problem.author = match_group.group(1)
-            match_group = re.search(r'<i>Hint</i>[\s\S]*?/div>[\s]*([\s\S]+?)</div>', website_data)
+            match_group = re.search(r'<i>Hint</i>[\s\S]*?/div>[\s]*([\s\S]+?)</div>', website_data.text)
             if match_group:
                 problem.hint = match_group.group(1)
         except:
@@ -93,18 +93,20 @@ class HDU(Base):
         return problem
 
     def submit_code(self, *args, **kwargs):
-        if self.login_webside(*args, **kwargs) is False:
+        if not self.login_webside(*args, **kwargs):
             return False
         try:
             code = kwargs['code']
             language = kwargs['language']
             pid = kwargs['pid']
             url = 'http://acm.hdu.edu.cn/submit.php?action=submit'
-            post_data = parse.urlencode({'check': '0', 'language': language, 'problemid': pid, 'usercode': code})
-            req = request.Request(url=url, data=post_data.encode(self.code_type), headers=Config.custom_headers)
-            response = self.opener.open(req)
-            response.read().decode(self.code_type)
-            return True
+            post_data = {'check': '0', 'language': language, 'problemid': pid, 'usercode': code}
+            res = requests.post(url, data=post_data, headers=self.headers, cookies=self.cookies)
+            self.cookies = res.cookies
+            print(res.status_code)
+            if res.status_code == '200':
+                return True
+            return False
         except:
             return False
 
@@ -114,12 +116,12 @@ class HDU(Base):
         url = 'http://acm.hdu.edu.cn/submit.php'
         languages = {}
         try:
-            with self.opener.open(url) as fin:
-                data = fin.read().decode(self.code_type)
-                soup = BeautifulSoup(data, 'lxml')
-                options = soup.find('select', attrs={'name': 'language'}).find_all('option')
-                for option in options:
-                    languages[option.get('value')] = option.string
+            website_data = requests.get(url, headers=self.headers, cookies=self.cookies)
+            self.cookies = website_data.cookies
+            soup = BeautifulSoup(website_data.text, 'lxml')
+            options = soup.find('select', attrs={'name': 'language'}).find_all('option')
+            for option in options:
+                languages[option.get('value')] = option.string
         finally:
             return languages
 
@@ -136,17 +138,17 @@ class HDU(Base):
     def get_result_by_url(self, url):
         result = Result()
         try:
-            with request.urlopen(url) as fin:
-                data = fin.read().decode(self.code_type)
-                soup = BeautifulSoup(data, 'lxml')
-                line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
-                    'td')
-                if line is not None:
-                    result.origin_run_id = line[0].string
-                    result.verdict = line[2].string
-                    result.execute_time = line[4].string
-                    result.execute_memory = line[5].string
-                    return result
+            data = requests.get(url, headers=self.headers, cookies=self.cookies)
+            self.cookies = data.cookies
+            soup = BeautifulSoup(data.text, 'lxml')
+            line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
+                'td')
+            if line is not None:
+                result.origin_run_id = line[0].string
+                result.verdict = line[2].string
+                result.execute_time = line[4].string
+                result.execute_memory = line[5].string
+                return result
         except:
             pass
         return result
@@ -162,9 +164,9 @@ class HDU(Base):
     def check_status(self):
         url = 'http://acm.hdu.edu.cn/'
         try:
-            with request.urlopen(url, timeout=5) as fin:
-                data = fin.read().decode(self.code_type)
-                if re.search(r'<H1>Welcome to HDU Online Judge System</H1>', data):
-                    return True
+            website_data = requests.get(url, headers=self.headers, cookies=self.cookies)
+            self.cookies = website_data.cookies
+            if re.search(r'<H1>Welcome to HDU Online Judge System</H1>', website_data.text):
+                return True
         except:
             return False

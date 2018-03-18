@@ -1,12 +1,14 @@
-from bs4 import BeautifulSoup
+import base64
+import re
 from http import cookiejar
 from urllib import request, parse
-import re
-import base64
+
+from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Spider, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
+
 
 class POJ(Base):
     def __init__(self):
@@ -45,9 +47,6 @@ class POJ(Base):
         except:
             return False
 
-
-
-
     # 检查登录状态
     def check_login_status(self, *args, **kwargs):
         url = 'http://poj.org/'
@@ -75,7 +74,7 @@ class POJ(Base):
 
             problem.special_judge = re.search(r'red;">Special Judge</td>', website_data) is not None
             problem.description = re.search(r'>Description</p>[\s\S]*?lang="en-US">([\s\S]*?)</div>',
-                                            website_data).group(1) #
+                                            website_data).group(1)  #
             problem.input = re.search(r'>Input</p>[\s\S]*?lang="en-US">([\s\S]*?)</div>', website_data).group(1)
             problem.output = re.search(r'>Output</p>[\s\S]*?lang="en-US">([\s\S]*?)</div>', website_data).group(1)
             match_group = re.search(r'>Sample Input</p>([\s\S]*?)<p class', website_data)
@@ -90,8 +89,8 @@ class POJ(Base):
             problem.sample = [
                 {'input': input_data,
                  'output': output_data}]
-            #match_group = re.search(r'>Author</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data)
-            #if match_group:
+            # match_group = re.search(r'>Author</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data)
+            # if match_group:
             #    problem.author = match_group.group(1)
 
             match_group = re.search(r'>Hint</p>[\s\S]*?"en-US">([\s\S]*?)</div>', website_data)
@@ -137,7 +136,7 @@ class POJ(Base):
     # 根据源OJ的运行id获取结构
     def get_result_by_rid(self, rid):
         url = 'http://poj.org/status?problem_id=&result=&language=&top=' + rid
-        return self.get_result_by_url(url = url)
+        return self.get_result_by_url(url=url)
 
     # 根据源OJ的url获取结果
     def get_result_by_url(self, url):
@@ -158,7 +157,6 @@ class POJ(Base):
             pass
         return None
 
-
     # 获取源OJ支持的语言类型
     def find_language(self, *args, **kwargs):
         if self.login_webside(*args, **kwargs) is False:
@@ -169,7 +167,7 @@ class POJ(Base):
             with self.opener.open(url) as fin:
                 data = fin.read().decode(self.code_type)
                 soup = BeautifulSoup(data, 'lxml')
-                options = soup.find('select', attrs={'name' : 'language'}).find_all('option')
+                options = soup.find('select', attrs={'name': 'language'}).find_all('option')
                 for option in options:
                     language[option.get('value')] = option.string
         finally:

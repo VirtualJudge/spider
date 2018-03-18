@@ -1,7 +1,6 @@
 import json
 from urllib import request
 
-ACCOUNTS_FILE = '/Users/prefixai/static_files/accounts.json'
 
 custom_headers = {
     'Connection': 'Keep-Alive',

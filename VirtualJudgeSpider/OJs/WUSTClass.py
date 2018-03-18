@@ -2,8 +2,8 @@ import re
 from http import cookiejar
 from urllib import request, parse
 
-from bs4 import BeautifulSoup
 import bs4
+from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Spider, Result

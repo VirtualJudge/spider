@@ -1,8 +1,19 @@
 from VirtualJudgeSpider.OJs.HDUClass import HDU
 from VirtualJudgeSpider.OJs.POJClass import POJ
 from VirtualJudgeSpider.OJs.WUSTClass import WUST
+from VirtualJudgeSpider.OJs.AizuClass import Aizu
 
-supports = ['HDU', 'WUST', 'POJ']
+supports = ['HDU', 'WUST', 'POJ', 'Aizu']
+
+
+class Config:
+    custom_headers = {
+        'Connection': 'Keep-Alive',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
+        'User-Agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36'
+    }
 
 
 class OJBuilder:
@@ -14,6 +25,8 @@ class OJBuilder:
             return OJBuilder.build_poj()
         if name == 'WUST':
             return OJBuilder.build_wust()
+        if name == 'Aizu':
+            return OJBuilder.build_aizu()
 
     @staticmethod
     def build_hdu():
@@ -27,6 +40,10 @@ class OJBuilder:
     def build_wust():
         return WUST()
 
+    @staticmethod
+    def build_aizu():
+        return Aizu()
+
 
 class Controller:
     # 获取支持的OJ列表
@@ -37,7 +54,7 @@ class Controller:
     # 判断当前是否支持
     @staticmethod
     def is_support(oj_name):
-        if oj_name in support_ojs:
+        if oj_name in supports:
             return True
         return False
 
