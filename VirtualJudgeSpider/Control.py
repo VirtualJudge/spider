@@ -3,7 +3,7 @@ from VirtualJudgeSpider.OJs.POJClass import POJ
 from VirtualJudgeSpider.OJs.WUSTClass import WUST
 from VirtualJudgeSpider.OJs.AizuClass import Aizu
 
-supports = ['HDU', 'WUST', 'POJ', 'Aizu']
+supports = ['HDU', 'WUST', 'POJ']
 
 
 class Config:
@@ -27,6 +27,8 @@ class OJBuilder:
             return OJBuilder.build_wust()
         if name == 'Aizu':
             return OJBuilder.build_aizu()
+        else:
+            return None
 
     @staticmethod
     def build_hdu():
