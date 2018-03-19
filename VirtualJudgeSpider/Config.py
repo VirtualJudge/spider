@@ -1,7 +1,6 @@
 import json
 from urllib import request
 
-
 custom_headers = {
     'Connection': 'Keep-Alive',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -116,14 +115,13 @@ class Result:
         self.execute_memory = None
 
     def get_dict(self):
-        ret_dict = {'origin_run_id': self.origin_run_id,
-                    'verdict': self.verdict,
-                    'execute_time': self.execute_time,
-                    'execute_memory': self.execute_memory}
-        pass
+        return {'origin_run_id': self.origin_run_id,
+                'verdict': self.verdict,
+                'execute_time': self.execute_time,
+                'execute_memory': self.execute_memory}
 
     def show(self):
-        print(self.origin_run_id)
-        print(self.verdict)
-        print(self.execute_time)
-        print(self.execute_memory)
+        print('origin_run_id', self.origin_run_id)
+        print('verdict', self.verdict)
+        print('execute_time', self.execute_time)
+        print('execute_memory', self.execute_memory)

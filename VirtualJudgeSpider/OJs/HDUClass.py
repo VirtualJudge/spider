@@ -42,7 +42,7 @@ class HDU(Base):
             if self.check_login_status():
                 return True
             return False
-        except Exception as e:
+        except:
             return False
 
     def get_problem(self, *args, **kwargs):
@@ -93,7 +93,6 @@ class HDU(Base):
         if not self.login_webside(*args, **kwargs):
             return False
         try:
-            self.check_status()
             code = kwargs['code']
             language = kwargs['language']
             pid = kwargs['pid']
@@ -104,8 +103,7 @@ class HDU(Base):
             if res.status_code == 200:
                 return True
             return False
-        except Exception as e:
-            print(e)
+        except:
             return False
 
     def find_language(self, *args, **kwargs):
@@ -145,10 +143,9 @@ class HDU(Base):
                 result.verdict = line[2].string
                 result.execute_time = line[4].string
                 result.execute_memory = line[5].string
-                result.show()
                 return result
-        except Exception as e:
-            print(e)
+        except:
+            pass
         return result
 
     def get_class_name(self):
