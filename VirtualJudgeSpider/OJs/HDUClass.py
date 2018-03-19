@@ -23,7 +23,6 @@ class HDU(Base):
         url = 'http://acm.hdu.edu.cn/'
         try:
             website_data = requests.get(url, cookies=self.cookies, headers=self.headers)
-            self.cookies = website_data.cookies
             if re.search(r'userloginex\.php\?action=logout', website_data.text) is not None:
                 return True
             return False
@@ -33,19 +32,17 @@ class HDU(Base):
     def login_webside(self, *args, **kwargs):
         if self.check_login_status():
             return True
-        login_page_url = 'http://acm.hdu.edu.cn/'
-        login_link_url = 'http://acm.hdu.edu.cn/userloginex.php?action=login&cid=0&notice=0'
-
-        post_data = {'username': kwargs['account'].get_username(), 'userpass': kwargs['account'].get_password()}
+        login_link_url = 'http://acm.hdu.edu.cn/userloginex.php'
+        post_data = {'username': kwargs['account'].get_username(), 'userpass': kwargs['account'].get_password(),
+                     'login': 'Sign In'}
         try:
-            req1 = requests.get(login_page_url, cookies=self.cookies, headers=self.headers)
-            self.cookies = req1.cookies
-            req2 = requests.post(url=login_link_url, cookies=self.cookies, data=post_data, headers=self.headers)
-            self.cookies = req2.cookies
+            res = requests.post(url=login_link_url, cookies=self.cookies, data=post_data, headers=self.headers,
+                                params={'action': 'login'})
+            self.cookies = res.cookies
             if self.check_login_status():
                 return True
             return False
-        except:
+        except Exception as e:
             return False
 
     def get_problem(self, *args, **kwargs):
@@ -96,18 +93,19 @@ class HDU(Base):
         if not self.login_webside(*args, **kwargs):
             return False
         try:
+            self.check_status()
             code = kwargs['code']
             language = kwargs['language']
             pid = kwargs['pid']
-            url = 'http://acm.hdu.edu.cn/submit.php?action=submit'
+            url = 'http://acm.hdu.edu.cn/submit.php'
             post_data = {'check': '0', 'language': language, 'problemid': pid, 'usercode': code}
-            res = requests.post(url, data=post_data, headers=self.headers, cookies=self.cookies)
-            self.cookies = res.cookies
-            print(res.status_code)
-            if res.status_code == '200':
+            res = requests.post(url=url, data=post_data, headers=self.headers, cookies=self.cookies,
+                                params={'action': 'submit'})
+            if res.status_code == 200:
                 return True
             return False
-        except:
+        except Exception as e:
+            print(e)
             return False
 
     def find_language(self, *args, **kwargs):
@@ -117,7 +115,6 @@ class HDU(Base):
         languages = {}
         try:
             website_data = requests.get(url, headers=self.headers, cookies=self.cookies)
-            self.cookies = website_data.cookies
             soup = BeautifulSoup(website_data.text, 'lxml')
             options = soup.find('select', attrs={'name': 'language'}).find_all('option')
             for option in options:
@@ -143,14 +140,15 @@ class HDU(Base):
             soup = BeautifulSoup(data.text, 'lxml')
             line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
                 'td')
-            if line is not None:
+            if line:
                 result.origin_run_id = line[0].string
                 result.verdict = line[2].string
                 result.execute_time = line[4].string
                 result.execute_memory = line[5].string
+                result.show()
                 return result
-        except:
-            pass
+        except Exception as e:
+            print(e)
         return result
 
     def get_class_name(self):
@@ -165,7 +163,6 @@ class HDU(Base):
         url = 'http://acm.hdu.edu.cn/'
         try:
             website_data = requests.get(url, headers=self.headers, cookies=self.cookies)
-            self.cookies = website_data.cookies
             if re.search(r'<H1>Welcome to HDU Online Judge System</H1>', website_data.text):
                 return True
         except:
