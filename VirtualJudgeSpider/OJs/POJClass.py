@@ -1,20 +1,18 @@
 import base64
 import re
-from http import cookiejar
-from urllib import request, parse
 
+import requests
 from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import Config
-from VirtualJudgeSpider.Config import Problem, Spider, Result
+from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
 
 
 class POJ(Base):
     def __init__(self):
         self.code_type = 'utf-8'
-        self.cj = cookiejar.CookieJar()
-        self.opener = request.build_opener(request.HTTPCookieProcessor(self.cj))
+        self.cookies = None
         self.headers = Config.custom_headers
         self.headers['Referer'] = 'http://poj.org/'
         self.headers['Content-Type'] = 'application/x-www-form-urlencoded'
@@ -30,18 +28,15 @@ class POJ(Base):
             return True
         login_page_url = 'http://poj.org/'
         login_link_url = 'http://poj.org/login'
-        post_data = parse.urlencode(
-            {'user_id1': kwargs['account'].get_username(),
-             'password1': kwargs['account'].get_password(),
-             'B1': 'login',
-             'url': '/'}
-        )
+        post_data = {'user_id1': kwargs['account'].get_username(),
+                     'password1': kwargs['account'].get_password(),
+                     'B1': 'login',
+                     'url': '/'}
         try:
-            self.opener.open(login_page_url)
-            req = request.Request(url=login_link_url, data=post_data.encode(self.code_type),
-                                  headers=self.headers)
-            self.opener.open(req)
-            if self.check_login_status():
+            res1 = requests.get(url=login_page_url, data=post_data, headers=self.headers, cookies=self.cookies)
+            self.cookies = res1.cookies
+            res2 = requests.post(url=login_link_url, data=post_data, headers=self.headers, cookies=res1.cookies)
+            if res2.status_code == 200 and self.check_login_status():
                 return True
             return False
         except:
@@ -51,11 +46,11 @@ class POJ(Base):
     def check_login_status(self, *args, **kwargs):
         url = 'http://poj.org/'
         try:
-            with self.opener.open(url) as fin:
-                website_data = fin.read().decode(self.code_type)
-                # print(website_data)
-                if re.search(r'action=logout&', website_data) is not None:
-                    return True
+            res = requests.get(url=url, headers=self.headers, cookies=self.cookies)
+            website_data = res.text
+            if re.search(r'action=logout&', website_data):
+                return True
+            return False
         except:
             return False
 
@@ -64,7 +59,8 @@ class POJ(Base):
         url = 'http://poj.org/problem?id=' + str(kwargs['pid'])
         problem = Problem()
         try:
-            website_data = Spider.get_data(url, self.code_type)
+            res = requests.get(url=url, headers=self.headers, cookies=self.cookies)
+            website_data = res.text
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
             problem.remote_oj = 'POJ'
@@ -106,23 +102,22 @@ class POJ(Base):
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
-        if self.login_webside(*args, **kwargs) is False:
+        if not self.login_webside(*args, **kwargs):
             return False
         try:
             code = kwargs['code']
             language = kwargs['language']
             pid = kwargs['pid']
             url = 'http://poj.org/submit'
-            post_data = parse.urlencode({'problem_id': pid,
-                                         'language': language,
-                                         'source': base64.b64encode(str.encode(code)),
-                                         'submit': 'Submit',
-                                         'encoded': '1'})
-            req = request.Request(url=url, data=post_data.encode(self.code_type),
-                                  headers=self.headers)
-            response = self.opener.open(req)
-            response.read().decode(self.code_type)
-            return True
+            post_data = {'problem_id': pid,
+                         'language': language,
+                         'source': base64.b64encode(str.encode(code)),
+                         'submit': 'Submit',
+                         'encoded': '1'}
+            res = requests.post(url=url, data=post_data, headers=self.headers, cookies=self.cookies)
+            if res.status_code == 200:
+                return True
+            return False
         except:
             return False
 
@@ -142,17 +137,15 @@ class POJ(Base):
     def get_result_by_url(self, url):
         result = Result()
         try:
-            with request.urlopen(url) as fin:
-                data = fin.read().decode(self.code_type)
-                soup = BeautifulSoup(data, 'lxml')
-                line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
-                print(line)
-                if line is not None:
-                    result.origin_run_id = line[0].string
-                    result.verdict = line[3].string
-                    result.execute_time = line[5].string
-                    result.execute_memory = line[4].string
-                    return result
+            res = requests.get(url=url, headers=self.headers, cookies=self.cookies)
+            soup = BeautifulSoup(res.text, 'lxml')
+            line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
+            if line is not None:
+                result.origin_run_id = line[0].string
+                result.verdict = line[3].string
+                result.execute_time = line[5].string
+                result.execute_memory = line[4].string
+                return result
         except:
             pass
         return None
@@ -164,12 +157,11 @@ class POJ(Base):
         url = 'http://poj.org/submit'
         language = {}
         try:
-            with self.opener.open(url) as fin:
-                data = fin.read().decode(self.code_type)
-                soup = BeautifulSoup(data, 'lxml')
-                options = soup.find('select', attrs={'name': 'language'}).find_all('option')
-                for option in options:
-                    language[option.get('value')] = option.string
+            res = requests.get(url=url, headers=self.headers, cookies=self.cookies)
+            soup = BeautifulSoup(res.text, 'lxml')
+            options = soup.find('select', attrs={'name': 'language'}).find_all('option')
+            for option in options:
+                language[option.get('value')] = option.string
         finally:
             return language
 
@@ -186,8 +178,7 @@ class POJ(Base):
     # 检查源OJ是否运行正常
     def check_status(self):
         url = "http://poj.org/"
-        with request.urlopen(url, timeout=5) as fin:
-            data = fin.read().decode(self.code_type)
-            if re.search(r'color=blue>Welcome To PKU JudgeOnline</font>', data):
-                return True
+        res = requests.get(url, headers=self.headers, cookies=self.cookies)
+        if re.search(r'color=blue>Welcome To PKU JudgeOnline</font>', res.text):
+            return True
         return False
