@@ -1,5 +1,6 @@
 import ssl
-
+import requests
+import re
 from VirtualJudgeSpider import Config
 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -19,11 +20,32 @@ class Aizu:
 
     # 登录页面
     def login_webside(self, *args, **kwargs):
+        login_page_url = 'http://judge.u-aizu.ac.jp/onlinejudge/signin.jsp'
+        login_link_url = 'https://judge.u-aizu.ac.jp/session'
+        res1 = requests.get(url=login_page_url, headers=self.headers, cookies=self.cookies)
+        self.cookies = res1.cookies
+        account = kwargs['account']
+        post_data = {
+            'id': account.username,
+            'password': account.password
+        }
+        print(post_data)
+        res2 = requests.options(login_link_url, headers=self.headers, cookies=self.cookies, verify=False)
+        res3 = requests.post(url=login_link_url, data=post_data, headers=self.headers, cookies=self.cookies,
+                             verify=False)
+        print(res3.text)
         pass
 
     # 检查登录状态
     def check_login_status(self, *args, **kwargs):
-        pass
+        url = 'http://acm.hdu.edu.cn/'
+        try:
+            website_data = requests.get(url, cookies=self.cookies, headers=self.headers)
+            if re.search(r'userloginex\.php\?action=logout', website_data.text) is not None:
+                return True
+            return False
+        except:
+            return False
 
     # 获取题目
     def get_problem(self, *args, **kwargs):
