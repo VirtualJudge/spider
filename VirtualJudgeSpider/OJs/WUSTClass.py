@@ -1,20 +1,20 @@
 import re
-from http import cookiejar
-from urllib import request, parse
 
 import bs4
+import requests
 from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import Config
-from VirtualJudgeSpider.Config import Problem, Spider, Result
+from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
 
 
 class WUST(Base):
     def __init__(self):
         self.code_type = 'UTF-8'
-        self.cj = cookiejar.CookieJar()
-        self.opener = request.build_opener(request.HTTPCookieProcessor(self.cj))
+        self.headers = Config.custom_headers
+        self.req = requests.Session()
+        self.req.headers.update(self.headers)
 
     @staticmethod
     def home_page_url(self):
@@ -24,11 +24,10 @@ class WUST(Base):
     def check_login_status(self):
         url = 'http://acm.wust.edu.cn/index.php'
         try:
-            with self.opener.open(url) as fin:
-                website_data = fin.read().decode(self.code_type)
-
-                if re.search(r'<a href="logout.php">Logout</a>', website_data) is not None:
-                    return True
+            res = self.req.get(url)
+            website_data = res.text
+            if re.search(r'<a href="logout.php">Logout</a>', website_data) is not None:
+                return True
         except:
             return False
 
@@ -38,15 +37,11 @@ class WUST(Base):
         login_page_url = 'http://acm.wust.edu.cn/loginpage.php'
         login_link_url = 'http://acm.wust.edu.cn/login.php'
 
-        post_data = parse.urlencode(
-            {'user_id': kwargs['account'].get_username(), 'password': kwargs['account'].get_password(),
-             'submit': 'Submit'})
+        post_data = {'user_id': kwargs['account'].get_username(), 'password': kwargs['account'].get_password(),
+                     'submit': 'Submit'}
         try:
-            self.opener.open(login_page_url)
-            req = request.Request(url=login_link_url, data=post_data.encode(self.code_type),
-                                  headers=Config.custom_headers)
-            self.opener.open(req)
-
+            self.req.get(login_page_url)
+            self.req.post(login_link_url, post_data)
             if self.check_login_status():
                 return True
             return False
@@ -95,8 +90,8 @@ class WUST(Base):
         url = 'http://acm.wust.edu.cn/problem.php?id=' + str(kwargs['pid']) + '&soj=0'
         problem = Problem()
         try:
-            website_data = Spider.get_data(url, self.code_type)
-
+            res = self.req.get(url)
+            website_data = res.text
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
             problem.remote_oj = 'WUST'
@@ -105,7 +100,6 @@ class WUST(Base):
             problem.memory_limit = re.search(r'(\d* MB)', website_data).group(1)
             problem.special_judge = re.search(r'class=red>Special Judge</span>', website_data) is not None
             soup = BeautifulSoup(website_data, 'lxml')
-
             # case:problem.picture=self.parse_html("img", soup, website_data)
             problem.description = self.parse_html("Description", soup, website_data)
             problem.input = self.parse_html("Input", soup, website_data)
@@ -123,34 +117,23 @@ class WUST(Base):
         return problem
 
     def submit_code(self, *args, **kwargs):
-        if self.login_webside(*args, **kwargs) is False:
+        if not self.login_webside(*args, **kwargs):
+            print('Login Failed')
             return False
         try:
-
             code = kwargs['code']
             language = kwargs['language']
             pid = kwargs['pid']
             link_page_url = 'http://acm.wust.edu.cn/submitpage.php?id=' + str(pid) + '&soj=0'
             link_post_url = 'http://acm.wust.edu.cn/submit.php?'
-            Config.custom_headers['Referer'] = link_page_url
-
-            with self.opener.open(link_page_url) as response:
-                soup = BeautifulSoup(response, 'lxml')
-                submitkey = soup.find('input', attrs={'name': 'submitkey'})['value']
-                # 获取提交的语言信息
-                languages = {}
-                options = soup.find('select', attrs={'name': 'language'}).find_all('option')
-                for option in options:
-                    languages[option.get('value')] = option.string
-                # 语言字典键值反转
-                languages = {value: key for key, value in languages.items()}
-                # 字典键值映射
-                language = languages[language]
-            post_data = parse.urlencode(
-                {'id': str(pid), 'soj': '0', 'language': language, 'source': code, 'submitkey': str(submitkey)})
-            req = request.Request(url=link_post_url, data=post_data.encode(self.code_type),
-                                  headers=Config.custom_headers)
-            self.opener.open(req)
+            self.req.headers.update({'Referer': link_page_url})
+            res = self.req.get(link_page_url)
+            soup = BeautifulSoup(res.text, 'lxml')
+            submitkey = soup.find('input', attrs={'name': 'submitkey'})['value']
+            post_data = {'id': str(pid), 'soj': '0', 'language': language, 'source': code, 'submitkey': str(submitkey)}
+            res = self.req.post(url=link_post_url, data=post_data)
+            if res.status_code != 200:
+                return False
             return True
         except:
             return False
@@ -161,12 +144,11 @@ class WUST(Base):
         url = 'http://acm.wust.edu.cn/submitpage.php?id=1000&soj=0'
         languages = {}
         try:
-            with self.opener.open(url) as fin:
-                data = fin.read().decode(self.code_type)
-                soup = BeautifulSoup(data, 'lxml')
-                options = soup.find('select', attrs={'name': 'language'}).find_all('option')
-                for option in options:
-                    languages[option.get('value')] = option.string
+            res = self.req.get(url)
+            soup = BeautifulSoup(res.text, 'lxml')
+            options = soup.find('select', attrs={'name': 'language'}).find_all('option')
+            for option in options:
+                languages[option.get('value')] = option.string
         finally:
             return languages
 
@@ -177,26 +159,23 @@ class WUST(Base):
 
         return self.get_result_by_url(url=url)
 
-    '''
     def get_result_by_rid(self, rid):
         url = 'http://acm.hdu.edu.cn/status.php?first=' + rid + '&pid=&user=&lang=0&status=0'
         return self.get_result_by_url(url=url)
-    '''
 
     def get_result_by_url(self, url):
         result = Result()
         try:
-            with request.urlopen(url) as fin:
-                data = fin.read().decode(self.code_type)
-                soup = BeautifulSoup(data, 'lxml')
-                line = soup.find('table', attrs={'id': 'result-tab'}).find('tr', attrs={'class': 'evenrow'}).find_all(
-                    'td')
-                if line is not None:
-                    result.origin_run_id = line[0].string
-                    result.verdict = line[4].string
-                    result.execute_time = line[6].string
-                    result.execute_memory = line[5].string
-                    return result
+            res = self.req.get(url)
+            soup = BeautifulSoup(res.text, 'lxml')
+            line = soup.find('table', attrs={'id': 'result-tab'}).find('tr', attrs={'class': 'evenrow'}).find_all(
+                'td')
+            if line is not None:
+                result.origin_run_id = line[0].string
+                result.verdict = line[4].string
+                result.execute_time = line[6].string
+                result.execute_memory = line[5].string
+                return result
         except:
             pass
         return None
@@ -212,9 +191,8 @@ class WUST(Base):
     def check_status(self):
         url = 'http://acm.wust.edu.cn/'
         try:
-            with request.urlopen(url, timeout=5) as fin:
-                data = fin.read().decode(self.code_type)
-                if re.search(r'<a href="index.php">WUST Online Judge</a>', data):
-                    return True
+            res = self.req.get(url)
+            if re.search(r'<a href="index.php">WUST Online Judge</a>', res.text):
+                return True
         except:
             return False
