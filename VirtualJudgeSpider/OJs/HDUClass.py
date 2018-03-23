@@ -10,9 +10,8 @@ from VirtualJudgeSpider.OJs.BaseClass import Base
 
 class HDU(Base):
     def __init__(self):
-        self.code_type = 'gb18030'
-        self.headers = Config.custom_headers
-        self.cookies = None
+        self.req = requests.Session()
+        self.req.headers.update(Config.custom_headers)
 
     @staticmethod
     def home_page_url(self):
@@ -22,7 +21,7 @@ class HDU(Base):
     def check_login_status(self):
         url = 'http://acm.hdu.edu.cn/'
         try:
-            website_data = requests.get(url, cookies=self.cookies, headers=self.headers)
+            website_data = self.req.get(url)
             if re.search(r'userloginex\.php\?action=logout', website_data.text) is not None:
                 return True
             return False
@@ -36,9 +35,8 @@ class HDU(Base):
         post_data = {'username': kwargs['account'].get_username(), 'userpass': kwargs['account'].get_password(),
                      'login': 'Sign In'}
         try:
-            res = requests.post(url=login_link_url, cookies=self.cookies, data=post_data, headers=self.headers,
+            res = self.req.post(url=login_link_url, data=post_data,
                                 params={'action': 'login'})
-            self.cookies = res.cookies
             if self.check_login_status():
                 return True
             return False
@@ -49,7 +47,7 @@ class HDU(Base):
         url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + str(kwargs['pid'])
         problem = Problem()
         try:
-            website_data = requests.get(url, headers=self.headers, cookies=self.cookies)
+            website_data = self.req.get(url)
             self.cookies = website_data.cookies
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
@@ -98,8 +96,7 @@ class HDU(Base):
             pid = kwargs['pid']
             url = 'http://acm.hdu.edu.cn/submit.php'
             post_data = {'check': '0', 'language': language, 'problemid': pid, 'usercode': code}
-            res = requests.post(url=url, data=post_data, headers=self.headers, cookies=self.cookies,
-                                params={'action': 'submit'})
+            res = self.req.post(url=url, data=post_data, params={'action': 'submit'})
             if res.status_code == 200:
                 return True
             return False
@@ -112,7 +109,7 @@ class HDU(Base):
         url = 'http://acm.hdu.edu.cn/submit.php'
         languages = {}
         try:
-            website_data = requests.get(url, headers=self.headers, cookies=self.cookies)
+            website_data = self.req.get(url)
             soup = BeautifulSoup(website_data.text, 'lxml')
             options = soup.find('select', attrs={'name': 'language'}).find_all('option')
             for option in options:
@@ -133,7 +130,7 @@ class HDU(Base):
     def get_result_by_url(self, url):
         result = Result()
         try:
-            data = requests.get(url, headers=self.headers, cookies=self.cookies)
+            data = self.req.get(url)
             self.cookies = data.cookies
             soup = BeautifulSoup(data.text, 'lxml')
             line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
@@ -159,7 +156,7 @@ class HDU(Base):
     def check_status(self):
         url = 'http://acm.hdu.edu.cn/'
         try:
-            website_data = requests.get(url, headers=self.headers, cookies=self.cookies)
+            website_data = self.req.get(url)
             if re.search(r'<H1>Welcome to HDU Online Judge System</H1>', website_data.text):
                 return True
         except:

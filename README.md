@@ -18,5 +18,6 @@ VirtualJudge - Judge Spider
  - Aizu
  - ACdream
  - UESTC
+ - WHU
  - UVA
  

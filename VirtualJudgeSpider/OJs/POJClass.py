@@ -12,10 +12,11 @@ from VirtualJudgeSpider.OJs.BaseClass import Base
 class POJ(Base):
     def __init__(self):
         self.code_type = 'utf-8'
-        self.cookies = None
         self.headers = Config.custom_headers
         self.headers['Referer'] = 'http://poj.org/'
         self.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+        self.req = requests.Session()
+        self.req.headers.update(self.headers)
 
     @staticmethod
     def home_page_url(self):
@@ -33,10 +34,9 @@ class POJ(Base):
                      'B1': 'login',
                      'url': '/'}
         try:
-            res1 = requests.get(url=login_page_url, data=post_data, headers=self.headers, cookies=self.cookies)
-            self.cookies = res1.cookies
-            res2 = requests.post(url=login_link_url, data=post_data, headers=self.headers, cookies=res1.cookies)
-            if res2.status_code == 200 and self.check_login_status():
+            self.req.get(url=login_page_url)
+            res = self.req.post(url=login_link_url, data=post_data)
+            if res.status_code == 200 and self.check_login_status():
                 return True
             return False
         except:
@@ -46,7 +46,7 @@ class POJ(Base):
     def check_login_status(self, *args, **kwargs):
         url = 'http://poj.org/'
         try:
-            res = requests.get(url=url, headers=self.headers, cookies=self.cookies)
+            res = self.req.get(url=url)
             website_data = res.text
             if re.search(r'action=logout&', website_data):
                 return True
@@ -59,7 +59,7 @@ class POJ(Base):
         url = 'http://poj.org/problem?id=' + str(kwargs['pid'])
         problem = Problem()
         try:
-            res = requests.get(url=url, headers=self.headers, cookies=self.cookies)
+            res = self.req.get(url=url)
             website_data = res.text
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
@@ -114,7 +114,7 @@ class POJ(Base):
                          'source': base64.b64encode(str.encode(code)),
                          'submit': 'Submit',
                          'encoded': '1'}
-            res = requests.post(url=url, data=post_data, headers=self.headers, cookies=self.cookies)
+            res = self.req.post(url=url, data=post_data)
             if res.status_code == 200:
                 return True
             return False
@@ -137,7 +137,7 @@ class POJ(Base):
     def get_result_by_url(self, url):
         result = Result()
         try:
-            res = requests.get(url=url, headers=self.headers, cookies=self.cookies)
+            res = self.req.get(url=url)
             soup = BeautifulSoup(res.text, 'lxml')
             line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
             if line is not None:
@@ -157,7 +157,7 @@ class POJ(Base):
         url = 'http://poj.org/submit'
         language = {}
         try:
-            res = requests.get(url=url, headers=self.headers, cookies=self.cookies)
+            res = self.req.get(url=url)
             soup = BeautifulSoup(res.text, 'lxml')
             options = soup.find('select', attrs={'name': 'language'}).find_all('option')
             for option in options:
@@ -178,7 +178,7 @@ class POJ(Base):
     # 检查源OJ是否运行正常
     def check_status(self):
         url = "http://poj.org/"
-        res = requests.get(url, headers=self.headers, cookies=self.cookies)
+        res = self.req.get(url)
         if re.search(r'color=blue>Welcome To PKU JudgeOnline</font>', res.text):
             return True
         return False
