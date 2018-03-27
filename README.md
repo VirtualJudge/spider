@@ -8,14 +8,14 @@ VirtualJudge - Judge Spider
  - HDU
  - WUST
  - POJ
+ - FZU
 ### working
- - FZU 
+ - Aizu
+ - ZOJ
  - Codeforces
  
 ### pending
- - ZOJ
  - URAL
- - Aizu
  - ACdream
  - UESTC
  - WHU
