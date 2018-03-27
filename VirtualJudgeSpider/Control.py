@@ -2,18 +2,9 @@ from VirtualJudgeSpider.OJs.HDUClass import HDU
 from VirtualJudgeSpider.OJs.POJClass import POJ
 from VirtualJudgeSpider.OJs.WUSTClass import WUST
 from VirtualJudgeSpider.OJs.AizuClass import Aizu
+from VirtualJudgeSpider.OJs.FZUClass import FZU
 
-supports = ['HDU', 'WUST', 'POJ']
-
-
-class Config:
-    custom_headers = {
-        'Connection': 'Keep-Alive',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
-        'User-Agent':
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36'
-    }
+support_ojs = ['HDU', 'POJ','Aizu', 'WUST','FZU']
 
 
 class OJBuilder:
@@ -27,8 +18,8 @@ class OJBuilder:
             return OJBuilder.build_wust()
         if name == 'Aizu':
             return OJBuilder.build_aizu()
-        else:
-            return None
+        if name == 'FZU':
+            return OJBuilder.build_fzu()
 
     @staticmethod
     def build_hdu():
@@ -45,6 +36,9 @@ class OJBuilder:
     @staticmethod
     def build_aizu():
         return Aizu()
+    @staticmethod
+    def build_fzu():
+        return FZU()
 
 
 class Controller:
