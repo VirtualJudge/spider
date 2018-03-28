@@ -8,5 +8,5 @@ setup(name='VirtualJudgeSpider',
       author='dian xu',
       author_email='xudian.cn@gmail.com',
       packages=['VirtualJudgeSpider','VirtualJudgeSpider/OJs'],
-      install_requires=['beautifulsoup4', 'lxml']
+      install_requires=['beautifulsoup4', 'lxml','requests']
       )
