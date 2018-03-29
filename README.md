@@ -10,7 +10,6 @@ VirtualJudge - Judge Spider
  - POJ
  - FZU
 ### working
- - Aizu
  - ZOJ
  - Codeforces
  
@@ -20,4 +19,5 @@ VirtualJudge - Judge Spider
  - UESTC
  - WHU
  - UVA
+ - Aizu
  
