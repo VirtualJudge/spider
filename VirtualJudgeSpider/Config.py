@@ -2,7 +2,7 @@ import json
 from urllib import request
 
 custom_headers = {
-    'Connection': 'Keep-Alive',
+ #   'Connection': 'Keep-Alive',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
     'User-Agent':

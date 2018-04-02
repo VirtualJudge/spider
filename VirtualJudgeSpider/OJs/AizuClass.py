@@ -1,47 +1,54 @@
+import json
 import ssl
+import traceback
+
 import requests
-import re
-from VirtualJudgeSpider import Config
+
+from VirtualJudgeSpider.Config import Problem
+from VirtualJudgeSpider.OJs.BaseClass import Base
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
-class Aizu:
+class Aizu(Base):
     def __init__(self):
-        self.code_type = 'UTF-8'
-        self.cookies = None
-        self.headers = Config.custom_headers
+        self.headers = {'Content-Type': 'application/json'}
+
+        self.req = requests.session()
+        self.req.headers.update(self.headers)
 
     # 主页链接
     @staticmethod
     def home_page_url(self):
-        url = 'http://judge.u-aizu.ac.jp/onlinejudge/'
+        url = 'https://onlinejudge.u-aizu.ac.jp/'
         return url
 
     # 登录页面
     def login_webside(self, *args, **kwargs):
-        login_page_url = 'http://judge.u-aizu.ac.jp/onlinejudge/signin.jsp'
-        login_link_url = 'https://judge.u-aizu.ac.jp/session'
-        res1 = requests.get(url=login_page_url, headers=self.headers, cookies=self.cookies)
-        self.cookies = res1.cookies
+        if self.check_login_status(self, *args, **kwargs):
+            return True
+        login_link_url = 'https://judgeapi.u-aizu.ac.jp/session'
         account = kwargs['account']
         post_data = {
             'id': account.username,
             'password': account.password
         }
-        print(post_data)
-        res2 = requests.options(login_link_url, headers=self.headers, cookies=self.cookies, verify=False)
-        res3 = requests.post(url=login_link_url, data=post_data, headers=self.headers, cookies=self.cookies,
-                             verify=False)
-        print(res3.text)
-        pass
+        try:
+            res = self.req.post(url=login_link_url, data=json.dumps(post_data))
+            if res.status_code != 200:
+                return False
+            if self.check_login_status(self, *args, **kwargs):
+                return True
+            return False
+        except:
+            return False
 
     # 检查登录状态
     def check_login_status(self, *args, **kwargs):
-        url = 'http://acm.hdu.edu.cn/'
+        url = 'https://judgeapi.u-aizu.ac.jp/self'
         try:
-            website_data = requests.get(url, cookies=self.cookies, headers=self.headers)
-            if re.search(r'userloginex\.php\?action=logout', website_data.text) is not None:
+            res = self.req.get(url)
+            if res.status_code == 200:
                 return True
             return False
         except:
@@ -49,13 +56,35 @@ class Aizu:
 
     # 获取题目
     def get_problem(self, *args, **kwargs):
-
-        pass
+        problem = Problem()
+        try:
+            pid = kwargs['pid']
+            url = 'https://judgeapi.u-aizu.ac.jp/resources/descriptions/en/' + str(pid)
+            res = self.req.get(url)
+            js = json.loads(res.text)
+            print(json.dumps(js, indent=4))
+            problem.time_limit = str(js.time_limit) + ' sec'
+            problem.memory_limit = str(js.memory_limit) + ' KB'
+            problem.description = js.html
+            return problem
+        except:
+            traceback.print_exc()
+        return None
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
-
-        pass
+        url = 'https://judgeapi.u-aizu.ac.jp/submissions'
+        try:
+            problemId = kwargs['pid']
+            language = kwargs['language']
+            sourceCode = kwargs['code']
+            res = self.req.post(url, json.dumps(
+                {'problemId': str(problemId), 'language': str(language), 'sourceCode': str(sourceCode)}))
+            if res.status_code == 200:
+                return True
+            return False
+        except:
+            return False
 
     # 获取当然运行结果
     def get_result(self, *args, **kwargs):
@@ -63,7 +92,7 @@ class Aizu:
         pass
 
     # 根据源OJ的运行id获取结构
-    def get_result_by_rid(self, rid):
+    def get_result_by_rid_and_pid(self, rid, pid):
 
         pass
 
@@ -74,20 +103,28 @@ class Aizu:
 
     # 获取源OJ支持的语言类型
     def find_language(self, *args, **kwargs):
-
-        pass
+        return {'C': 'C', 'C++': 'C++', 'JAVA': 'JAVA', 'C++11': 'C++11', 'C++14': 'C++14', 'C#': 'C#', 'D': 'D',
+                'Go': 'Go', 'Ruby': 'Ruby', 'Rust': 'Rust', 'Python': 'Python', 'Python3': 'Python3',
+                'JavaScript': 'JavaScript', 'Scala': 'Scala', 'Haskell': 'Haskell', 'OCaml': 'OCaml', 'PHP': 'PHP',
+                'Kotlin': 'Kotlin'}
 
     # 获取当前类名
     def get_class_name(self):
-
-        pass
+        return str('Aizu')
 
     # 判断当前提交结果的运行状态
     def is_waiting_for_judge(self, verdict):
-
-        pass
+        if verdict in [5, 9]:
+            return True
+        return False
 
     # 检查源OJ是否运行正常
     def check_status(self):
-
-        pass
+        url = 'https://judgeapi.u-aizu.ac.jp/categories'
+        try:
+            res = self.req.get(url)
+            if res.status_code == 200:
+                return True
+            return False
+        except:
+            return False
