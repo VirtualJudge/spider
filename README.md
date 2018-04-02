@@ -21,4 +21,10 @@ VirtualJudge - Judge Spider
  - WHU
  - UVA
  - Aizu
- 
+ - NBUT
+ - HihoCoder
+ - CodeChef
+ - HYSBZ
+ - AtCoder
+ - UOJ
+ - LeetCode
