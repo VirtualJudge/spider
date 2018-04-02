@@ -86,7 +86,7 @@ class FZU(Base):
 
 
         except Exception as e:
-            #print(e)
+            # print(e)
             return Problem.PROBLEM_NOT_FOUND
         return problem
 
@@ -135,11 +135,9 @@ class FZU(Base):
         url = 'http://acm.fzu.edu.cn/log.php?pid=' + pid + '&user=' + account.username + '&language=99&state=99&submit=Go'
         return self.get_result_by_url(url=url)
 
-    '''
-    def get_result_by_rid(self, rid):
+    def get_result_by_rid_and_pid(self, rid, pid):
         url = 'http://acm.hdu.edu.cn/status.php?first=' + rid + '&pid=&user=&lang=0&status=0'
         return self.get_result_by_url(url=url)
-    '''
 
     def get_result_by_url(self, url):
         result = Result()
@@ -174,5 +172,6 @@ class FZU(Base):
                 data = fin.read().decode(self.code_type)
                 if re.search(r'<title>Fuzhou University OnlineJudge</title>', data):
                     return True
+            return False
         except:
             return False

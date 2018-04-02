@@ -129,7 +129,7 @@ class POJ(Base):
         return self.get_result_by_url(url=url)
 
     # 根据源OJ的运行id获取结构
-    def get_result_by_rid(self, rid):
+    def get_result_by_rid_and_pid(self, rid, pid):
         url = 'http://poj.org/status?problem_id=&result=&language=&top=' + rid
         return self.get_result_by_url(url=url)
 

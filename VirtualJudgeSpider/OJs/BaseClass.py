@@ -25,7 +25,7 @@ class Base:
         pass
 
     # 根据源OJ的运行id获取结构
-    def get_result_by_rid(self, rid):
+    def get_result_by_rid_and_pid(self, rid, pid):
         pass
 
     # 根据源OJ的url获取结果

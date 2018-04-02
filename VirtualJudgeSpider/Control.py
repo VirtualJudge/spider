@@ -68,9 +68,9 @@ class Controller:
 
     # 通过运行id获取结果
     @staticmethod
-    def get_result_by_rid(oj_name, rid):
+    def get_result_by_rid(oj_name, rid, pid):
         oj = OJBuilder.build_oj(oj_name)
-        return oj.get_result_by_rid(rid)
+        return oj.get_result_by_rid_and_pid(rid, pid)
 
     # 获取源OJ语言
     @staticmethod
