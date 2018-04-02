@@ -153,6 +153,9 @@ class CODEFORCES(Base):
         return result
 
     def get_result(self, *args, **kwargs):
+        pass
+
+    def get_result_by_rid_and_pid(self, *args, **kwargs):
         pid = kwargs.get('pid')
         rid = kwargs.get('rid')
         url = 'http://codeforces.com/contest/' + pid[:-1] + '/submission/' + rid
@@ -176,8 +179,5 @@ class CODEFORCES(Base):
             return False
 
 
-if __name__ == '__main__':
-    oj = CODEFORCES()
-    oj.get_result(pid='754A', rid='36867638')
 
 
