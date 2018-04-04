@@ -2,11 +2,11 @@ import json
 from urllib import request
 
 custom_headers = {
- #   'Connection': 'Keep-Alive',
+    'Connection': 'Keep-Alive',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
-    'User-Agent':
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36'
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36'
+                  ' (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36'
 }
 
 
@@ -26,17 +26,6 @@ class Account:
         return self.status
 
 
-class Spider:
-    @staticmethod
-    def get_data(url, codec):
-        try:
-            with request.urlopen(url) as fin:
-                data = fin.read()
-                return data.decode(codec)
-        except:
-            return None
-
-
 '''
 :param title
 :param origin_id
@@ -53,9 +42,36 @@ class Spider:
 '''
 
 
-class Problem:
-    PROBLEM_NOT_FOUND = None
+class Desc(object):
+    def __init__(self):
+        self.type = Desc.Type.UNKNOWN
+        self.content = None
+        self.link = None
 
+    class Type(object):
+        UNKNOWN = 0
+        TEXT = 1
+        ANCHOR = 2
+        PDF = 3
+        IMG = 4
+
+
+class DescList(object):
+    def __init__(self):
+        self.value = []
+
+    def get(self):
+        return self.value
+
+    def append(self, desc):
+        if type(desc) == Desc:
+            self.value.append(desc)
+
+    def update(self, desc, index):
+        self.value[index] = desc
+
+
+class Problem:
     def __init__(self):
         self.remote_id = None
         self.remote_url = None
@@ -74,21 +90,20 @@ class Problem:
         self.source = None
 
     def get_dict(self):
-        ret_dict = {'remote_id': self.remote_id,
-                    'remote_oj': self.remote_oj,
-                    'remote_url': self.remote_url,
-                    'title': self.title,
-                    'time_limit': self.time_limit,
-                    'memory_limit': self.memory_limit,
-                    'description': self.description,
-                    'special_judge': self.special_judge,
-                    'input': self.input,
-                    'output': self.output,
-                    'sample': self.sample,
-                    'hint': self.hint,
-                    'author': self.author,
-                    'source': self.source}
-        return ret_dict
+        return {'remote_id': self.remote_id,
+                'remote_oj': self.remote_oj,
+                'remote_url': self.remote_url,
+                'title': self.title,
+                'time_limit': self.time_limit,
+                'memory_limit': self.memory_limit,
+                'description': self.description,
+                'special_judge': self.special_judge,
+                'input': self.input,
+                'output': self.output,
+                'sample': self.sample,
+                'hint': self.hint,
+                'author': self.author,
+                'source': self.source}
 
     def show(self):
         print('remote_id', self.remote_id)
