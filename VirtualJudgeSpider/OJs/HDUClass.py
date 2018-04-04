@@ -1,4 +1,5 @@
 import re
+import traceback
 
 import requests
 from bs4 import BeautifulSoup
@@ -35,56 +36,86 @@ class HDU(Base):
         post_data = {'username': kwargs['account'].get_username(), 'userpass': kwargs['account'].get_password(),
                      'login': 'Sign In'}
         try:
-            res = self.req.post(url=login_link_url, data=post_data,
-                                params={'action': 'login'})
+            self.req.post(url=login_link_url, data=post_data,
+                          params={'action': 'login'})
             if self.check_login_status():
                 return True
             return False
         except:
             return False
 
+    def parse_desc(self, raw_descs):
+        descList = Config.DescList()
+        for raw_desc in raw_descs.split('<br>'):
+            if raw_desc.strip(''):
+                match_groups = re.search(r'<img([\s\S]*)src=([\s\S]*(gif|png|jpeg|jpg))', raw_desc)
+                if match_groups:
+                    descList.append(
+                        Config.Desc(type=Config.Desc.Type.IMG,
+                                    link=match_groups.group(2)))
+                else:
+                    descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
+        return descList.get()
+
     def get_problem(self, *args, **kwargs):
         url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + str(kwargs['pid'])
         problem = Problem()
         try:
-            website_data = self.req.get(url)
-            self.cookies = website_data.cookies
-            problem.remote_id = kwargs['pid']
+            res = self.req.get(url)
+            website_data = res.text
+            problem.remote_id = str(kwargs['pid'])
             problem.remote_url = url
             problem.remote_oj = 'HDU'
-            problem.title = re.search(r'color:#1A5CC8\'>([\s\S]*?)</h1>', website_data.text).group(1)
-            problem.time_limit = re.search(r'(\d* MS)', website_data.text).group(1)
-            problem.memory_limit = re.search(r'/(\d* K)', website_data.text).group(1)
-            problem.special_judge = re.search(r'color=red>Special Judge</font>', website_data.text) is not None
-            problem.description = re.search(r'>Problem Description</div>[\s\S]*?panel_content>([\s\S]*?)</div>',
-                                            website_data.text).group(1)
-            print(problem.description)
-            problem.input = re.search(r'>Input</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data.text).group(1)
-            problem.output = re.search(r'>Output</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data.text).group(
-                1)
-            match_group = re.search(r'>Sample Input</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data.text)
+            problem.title = re.search(r'color:#1A5CC8\'>([\s\S]*?)</h1>', website_data).group(1)
+            problem.time_limit = re.search(r'(\d* MS)', website_data).group(1)
+            problem.memory_limit = re.search(r'/(\d* K)', website_data).group(1)
+
+            problem.special_judge = re.search(r'color=red>Special Judge</font>', website_data) is not None
+
+            # description
+            match_groups = re.search(r'>Problem Description</div>[\s\S]*?panel_content>([\s\S]*?)</div>',
+                                     website_data)
+            if match_groups:
+                problem.description = self.parse_desc(match_groups.group(1))
+            # input
+            match_groups = re.search(r'>Input</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data)
+            if match_groups:
+                problem.input = self.parse_desc(match_groups.group(1))
+
+            # output
+
+            match_groups = re.search(r'>Output</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data)
+            if match_groups:
+                problem.output = self.parse_desc(match_groups.group(1))
+
+            # input data
+            match_groups = re.search(r'>Sample Input</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data)
             input_data = ''
+            if match_groups:
+                input_data = re.search(r'(<pre><div[\s\S]*?>)?([\s\S]*)', match_groups.group(1)).group(2)
 
-            if match_group:
-                input_data = re.search(r'(<pre><div[\s\S]*?>)?([\s\S]*)', match_group.group(1)).group(2)
-
+            # output data
             output_data = ''
-            match_group = re.search(r'>Sample Output</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data.text)
-            if match_group:
-                output_data = re.search(r'(<pre><div[\s\S]*?>)?([\s\S]*)', match_group.group(1)).group(2)
+            match_groups = re.search(r'>Sample Output</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data)
+            if match_groups:
+                output_data = re.search(r'(<pre><div[\s\S]*?>)?([\s\S]*)', match_groups.group(1)).group(2)
                 if re.search('<div', output_data):
                     output_data = re.search(r'([\s\S]*?)<div', output_data).group(1)
             problem.sample = [
                 {'input': input_data,
                  'output': output_data}]
 
-            match_group = re.search(r'>Author</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data.text)
-            if match_group:
-                problem.author = match_group.group(1)
-            match_group = re.search(r'<i>Hint</i>[\s\S]*?/div>[\s]*([\s\S]+?)</div>', website_data.text)
-            if match_group:
-                problem.hint = match_group.group(1)
+            # author
+            match_groups = re.search(r'>Author</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data)
+            if match_groups:
+                problem.author = match_groups.group(1)
+
+            # hint
+            match_groups = re.search(r'<i>Hint</i>[\s\S]*?/div>[\s]*([\s\S]+?)</div>', website_data)
+            if match_groups:
+                problem.hint = self.parse_desc(match_groups.group(1))
         except:
+            traceback.print_exc()
             return None
         return problem
 
@@ -132,7 +163,6 @@ class HDU(Base):
         result = Result()
         try:
             data = self.req.get(url)
-            self.cookies = data.cookies
             soup = BeautifulSoup(data.text, 'lxml')
             line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
                 'td')

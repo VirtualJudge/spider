@@ -43,32 +43,42 @@ class Account:
 
 
 class Desc(object):
-    def __init__(self):
-        self.type = Desc.Type.UNKNOWN
-        self.content = None
-        self.link = None
+    def __init__(self, **kwargs):
+        if kwargs.get('type'):
+            self.type = kwargs['type']
+        else:
+            self.type = Desc.Type.TEXT
+
+        if kwargs.get('content'):
+            self.content = kwargs['content']
+        else:
+            self.content = None
+
+        if kwargs.get('link'):
+            self.link = kwargs['link']
+        else:
+            self.link = None
 
     class Type(object):
-        UNKNOWN = 0
-        TEXT = 1
-        ANCHOR = 2
-        PDF = 3
-        IMG = 4
+        TEXT = 0
+        ANCHOR = 1
+        PDF = 2
+        IMG = 3
 
 
 class DescList(object):
     def __init__(self):
-        self.value = []
+        self.values = []
 
     def get(self):
-        return self.value
+        return self.values
 
     def append(self, desc):
         if type(desc) == Desc:
-            self.value.append(desc)
+            self.values.append(desc.__dict__)
 
     def update(self, desc, index):
-        self.value[index] = desc
+        self.values[index] = desc
 
 
 class Problem:

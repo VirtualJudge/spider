@@ -54,6 +54,18 @@ class POJ(Base):
         except:
             return False
 
+    def parse_desc(self, raw_descs):
+        descList = Config.DescList()
+        for raw_desc in raw_descs:
+            if raw_desc.strip():
+                match_groups = re.search(r'<a[\s\S]*href=\"([\s\S]*)\"[\s\S]*>([\s\S]*)</a>', raw_desc)
+                if match_groups:
+                    descList.append(Config.Desc(type=Config.Desc.Type.ANCHOR, content=match_groups.group(2),
+                                                link=match_groups.group(1)))
+                else:
+                    descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
+        return descList.get()
+
     # 获取题目
     def get_problem(self, *args, **kwargs):
         url = 'http://poj.org/problem?id=' + str(kwargs['pid'])
@@ -61,6 +73,8 @@ class POJ(Base):
         try:
             res = self.req.get(url=url)
             website_data = res.text
+            soup = BeautifulSoup(website_data, 'lxml')
+
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
             problem.remote_oj = 'POJ'
@@ -69,32 +83,56 @@ class POJ(Base):
             problem.memory_limit = re.search(r'Memory Limit:</b> ([\s\S]*?)</td>', website_data).group(1)
 
             problem.special_judge = re.search(r'red;">Special Judge</td>', website_data) is not None
-            problem.description = re.search(r'>Description</p>[\s\S]*?lang="en-US">([\s\S]*?)</div>',
-                                            website_data).group(1)  #
-            problem.input = re.search(r'>Input</p>[\s\S]*?lang="en-US">([\s\S]*?)</div>', website_data).group(1)
-            problem.output = re.search(r'>Output</p>[\s\S]*?lang="en-US">([\s\S]*?)</div>', website_data).group(1)
-            match_group = re.search(r'>Sample Input</p>([\s\S]*?)<p class', website_data)
-            input_data = ''
-            if match_group:
-                input_data = re.search('"sio">([\s\S]*?)</pre>', match_group.group(1)).group(1)
 
+            titles = soup.find_all('p', attrs={'class': 'pst'})
+            input_data = ''
             output_data = ''
-            match_group = re.search(r'>Sample Output</p>([\s\S]*?)<p class', website_data)
-            if match_group:
-                output_data = re.search('"sio">([\s\S]*?)</pre>', match_group.group(1)).group(1)
+            for title in titles:
+                print(title.string)
+                if title.string == 'Description':
+                    raw_descs = []
+                    for_list = title.find_next().find('span')
+                    if not for_list:
+                        for_list = title.find_next()
+                    for child in for_list:
+                        raw_descs.append(str(child))
+                    problem.description = self.parse_desc(raw_descs)
+                elif title.string == 'Input':
+                    raw_descs = []
+
+                    for child in title.find_next():
+                        raw_descs.append(str(child))
+                    problem.input = self.parse_desc(raw_descs)
+                elif title.string == 'Output':
+                    raw_descs = []
+                    for child in title.find_next():
+                        print(child)
+                        raw_descs.append(str(child))
+                    problem.output = self.parse_desc(raw_descs)
+                elif title.string == 'Sample Input':
+                    raw_descs = []
+                    for child in title.find_next():
+                        raw_descs.append(str(child))
+                    input_data = raw_descs
+                elif title.string == 'Sample Output':
+                    raw_descs = []
+                    for child in title.find_next():
+                        raw_descs.append(str(child))
+                    output_data = raw_descs
+                elif title.string == 'Hint':
+                    raw_descs = []
+                    for child in title.find_next():
+                        raw_descs.append(str(child))
+                    problem.hint = self.parse_desc(raw_descs)
+                elif title.string == 'Source':
+                    raw_descs = []
+                    for child in title.find_next():
+                        raw_descs.append(str(child))
+                    problem.source = self.parse_desc(raw_descs)
+
             problem.sample = [
                 {'input': input_data,
                  'output': output_data}]
-            # match_group = re.search(r'>Author</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data)
-            # if match_group:
-            #    problem.author = match_group.group(1)
-
-            match_group = re.search(r'>Hint</p>[\s\S]*?"en-US">([\s\S]*?)</div>', website_data)
-            if match_group:
-                problem.hint = match_group.group(1)
-            match_group = re.search(r'>Source</p>[\s\S]*?"en-US">([\s\S]*?)</div>', website_data)
-            if match_group:
-                problem.source = match_group.group(1)
             return problem
         except:
             pass
