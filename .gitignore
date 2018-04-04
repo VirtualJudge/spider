@@ -20,3 +20,4 @@ VirtualJudgeSpider/__pycache__/
 VirtualJudgeSpider/OJs/__pycache__/
 
 .DS_Store
+test/
