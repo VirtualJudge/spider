@@ -13,6 +13,8 @@ VirtualJudge - Judge Spider
 ### working
  - ZOJ
  - Codeforces
+ - hihoCoder
+ - Aizu
  
 ### pending
  - URAL
@@ -20,9 +22,7 @@ VirtualJudge - Judge Spider
  - UESTC
  - WHU
  - UVA
- - Aizu
  - NBUT
- - HihoCoder
  - CodeChef
  - HYSBZ
  - AtCoder
