@@ -2,10 +2,11 @@ import re
 from http import cookiejar
 from urllib import request, parse
 
+import requests
 from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import Config
-from VirtualJudgeSpider.Config import Problem, Spider, Result
+from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
 
 
@@ -53,7 +54,7 @@ class FZU(Base):
         url = 'http://acm.fzu.edu.cn/problem.php?pid=' + str(kwargs['pid'])
         problem = Problem()
         try:
-            website_data = Spider.get_data(url, self.code_type)
+            website_data = requests.get(url).text
             soup = BeautifulSoup(website_data, 'lxml')
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
@@ -78,16 +79,14 @@ class FZU(Base):
 
             h2s = soup.find_all('h2')
             for h2 in h2s[-2:]:
-                if (h2.get_text().strip() == 'Hint'):
+                if h2.get_text().strip() == 'Hint':
                     problem.hint = h2.next_sibling
 
-                if (h2.get_text().strip() == 'Source'):
+                if h2.get_text().strip() == 'Source':
                     problem.source = h2.next_sibling
 
-
         except Exception as e:
-            # print(e)
-            return Problem.PROBLEM_NOT_FOUND
+            return None
         return problem
 
     def submit_code(self, *args, **kwargs):
@@ -155,7 +154,7 @@ class FZU(Base):
                     return result
         except:
             pass
-        return result
+        return None
 
     def get_class_name(self):
         return str('FZU')

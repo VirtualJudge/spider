@@ -58,6 +58,7 @@ class HDU(Base):
             problem.special_judge = re.search(r'color=red>Special Judge</font>', website_data.text) is not None
             problem.description = re.search(r'>Problem Description</div>[\s\S]*?panel_content>([\s\S]*?)</div>',
                                             website_data.text).group(1)
+            print(problem.description)
             problem.input = re.search(r'>Input</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data.text).group(1)
             problem.output = re.search(r'>Output</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data.text).group(
                 1)
