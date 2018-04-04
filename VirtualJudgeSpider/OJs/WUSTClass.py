@@ -118,7 +118,6 @@ class WUST(Base):
 
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):
-            print('Login Failed')
             return False
         try:
             code = kwargs['code']
@@ -128,6 +127,8 @@ class WUST(Base):
             link_post_url = 'http://acm.wust.edu.cn/submit.php?'
             self.req.headers.update({'Referer': link_page_url})
             res = self.req.get(link_page_url)
+            if res.status_code != 200:
+                return False
             soup = BeautifulSoup(res.text, 'lxml')
             submitkey = soup.find('input', attrs={'name': 'submitkey'})['value']
             post_data = {'id': str(pid), 'soj': '0', 'language': language, 'source': code, 'submitkey': str(submitkey)}

@@ -1,6 +1,4 @@
 import re
-from http import cookiejar
-from urllib import request, parse
 
 import requests
 from bs4 import BeautifulSoup
@@ -12,9 +10,9 @@ from VirtualJudgeSpider.OJs.BaseClass import Base
 
 class FZU(Base):
     def __init__(self):
-        self.code_type = 'utf-8'
-        self.cj = cookiejar.CookieJar()
-        self.opener = request.build_opener(request.HTTPCookieProcessor(self.cj))
+        self.req = requests.session()
+        self.header = Config.custom_headers
+        self.req.headers.update(self.header)
 
     @staticmethod
     def home_page_url(self):
@@ -24,26 +22,25 @@ class FZU(Base):
     def check_login_status(self):
         url = 'http://acm.fzu.edu.cn/'
         try:
-            with self.opener.open(url) as fin:
-                website_data = fin.read().decode(self.code_type)
-                if re.search(r'<a href="user.php', website_data) is not None:
+            res = self.req.get(url)
+            if res.status_code == 200:
+                website_data = res.text
+                if re.search(r'<a href="user.php', website_data):
                     return True
         except:
-            return False
+            pass
+        return False
 
     def login_webside(self, *args, **kwargs):
         if self.check_login_status():
             return True
-        login_page_url = 'http://acm.fzu.edu.cn/login.php'
-        login_link_url = 'http://acm.fzu.edu.cn/login.php?act=1&dir='
-        post_data = parse.urlencode(
-            {'uname': kwargs['account'].get_username(), 'upassword': kwargs['account'].get_password(),
-             'submit': 'Submit'})
         try:
-            self.opener.open(login_page_url)
-            req = request.Request(url=login_link_url, data=post_data.encode(self.code_type),
-                                  headers=Config.custom_headers, )
-            self.opener.open(req)
+            login_page_url = 'http://acm.fzu.edu.cn/login.php'
+            login_link_url = 'http://acm.fzu.edu.cn/login.php?act=1&dir='
+            post_data = {'uname': kwargs['account'].get_username(), 'upassword': kwargs['account'].get_password(),
+                         'submit': 'Submit'}
+            self.req.get(login_page_url)
+            self.req.post(login_link_url, post_data)
             if self.check_login_status():
                 return True
             return False
@@ -54,7 +51,10 @@ class FZU(Base):
         url = 'http://acm.fzu.edu.cn/problem.php?pid=' + str(kwargs['pid'])
         problem = Problem()
         try:
-            website_data = requests.get(url).text
+            res = self.req.get(url)
+            if res.status_code != 200:
+                return None
+            website_data = res.text
             soup = BeautifulSoup(website_data, 'lxml')
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
@@ -70,6 +70,8 @@ class FZU(Base):
             if len(pro_desc) >= 3:
                 problem.output = pro_desc[2].get_text()
             data = soup.find_all(attrs={"class": 'data'})
+            input_data = ''
+            output_data = ''
             if len(data) > 1:
                 input_data = data[0].get_text()
                 output_data = data[1].get_text()
@@ -85,12 +87,12 @@ class FZU(Base):
                 if h2.get_text().strip() == 'Source':
                     problem.source = h2.next_sibling
 
-        except Exception as e:
+        except:
             return None
         return problem
 
     def submit_code(self, *args, **kwargs):
-        if self.login_webside(*args, **kwargs) is False:
+        if not self.login_webside(*args, **kwargs):
             return False
         try:
             code = kwargs['code']
@@ -99,17 +101,12 @@ class FZU(Base):
             username = kwargs['account'].get_username()
             url = 'http://acm.fzu.edu.cn/submit.php?act=5'
             Config.custom_headers['Referer'] = 'http://acm.fzu.edu.cn/submit.php?pid=' + str(pid)
-            languages = self.find_language()
-            # 语言字典键值反转
-            languages = {value: key for key, value in languages.items()}
-            # 字典键值映射
-            language = languages[language]
-            post_data = parse.urlencode(
-                {'usr': username, 'lang': str(language), 'pid': pid, 'code': code, 'submit': 'Submit'})
-            req = request.Request(url=url, data=post_data.encode(self.code_type), headers=Config.custom_headers)
-            response = self.opener.open(req)
-            response.read().decode(self.code_type)
-            return True
+
+            post_data = {'usr': username, 'lang': str(language), 'pid': pid, 'code': code, 'submit': 'Submit'}
+            res = self.req.post(url, post_data)
+            if res.status_code == 200:
+                return True
+            return False
         except:
             return False
 
@@ -119,12 +116,12 @@ class FZU(Base):
         url = 'http://acm.fzu.edu.cn/submit.php?'
         languages = {}
         try:
-            with self.opener.open(url) as fin:
-                data = fin.read().decode(self.code_type)
-                soup = BeautifulSoup(data, 'lxml')
-                options = soup.find('select', attrs={'name': 'lang'}).find_all('option')
-                for option in options:
-                    languages[option.get('value')] = option.string
+            res = self.req.get(url)
+            website_data = res.text
+            soup = BeautifulSoup(website_data, 'lxml')
+            options = soup.find('select', attrs={'name': 'lang'}).find_all('option')
+            for option in options:
+                languages[option.get('value')] = option.string
         finally:
             return languages
 
@@ -141,17 +138,17 @@ class FZU(Base):
     def get_result_by_url(self, url):
         result = Result()
         try:
-            with request.urlopen(url) as fin:
-                data = fin.read().decode(self.code_type)
-                soup = BeautifulSoup(data, 'lxml')
-                line = soup.find('table').find('tr', attrs={'onmouseover': 'hl(this);'}).find_all(
-                    'td')
-                if line is not None:
-                    result.origin_run_id = line[0].string
-                    result.verdict = line[2].string
-                    result.execute_time = line[5].string
-                    result.execute_memory = line[6].string
-                    return result
+            res = self.req.get(url)
+            website_data = res.text
+            soup = BeautifulSoup(website_data, 'lxml')
+            line = soup.find('table').find('tr', attrs={'onmouseover': 'hl(this);'}).find_all(
+                'td')
+            if line is not None:
+                result.origin_run_id = line[0].string
+                result.verdict = line[2].string
+                result.execute_time = line[5].string
+                result.execute_memory = line[6].string
+                return result
         except:
             pass
         return None
@@ -167,10 +164,12 @@ class FZU(Base):
     def check_status(self):
         url = 'http://acm.fzu.edu.cn/index.php'
         try:
-            with request.urlopen(url, timeout=5) as fin:
-                data = fin.read().decode(self.code_type)
-                if re.search(r'<title>Fuzhou University OnlineJudge</title>', data):
-                    return True
+            res = self.req.get(url)
+            if res.status_code != 200:
+                return False
+            website_data = res.text
+            if re.search(r'<title>Fuzhou University OnlineJudge</title>', website_data):
+                return True
             return False
         except:
             return False
