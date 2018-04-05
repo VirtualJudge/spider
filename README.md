@@ -1,5 +1,6 @@
 # VirtualJudgeSpider
-VirtualJudge - Judge Spider
+VirtualJudge - Judge Spider  
+[![Build Status](https://travis-ci.org/VirtualJudge/VirtualJudgeSpider.svg?branch=master)](https://travis-ci.org/VirtualJudge/VirtualJudgeSpider)
 ***
 ### build script
 `python3 setup.py bdist_wheel`
