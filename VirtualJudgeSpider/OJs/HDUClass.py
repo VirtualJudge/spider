@@ -56,7 +56,7 @@ class HDU(Base):
                     else:
                         remote_path = 'http://acm.hdu.edu.cn/' + remote_path
 
-                    local_path = '/public/HDU/' + str(os.path.split(remote_path)[-1])
+                    local_path = str(remote_path.split('/')[-1])
                     descList.append(
                         Config.Desc(type=Config.Desc.Type.IMG,
                                     link=local_path,

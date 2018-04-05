@@ -81,7 +81,7 @@ class POJ(Base):
                         else:
                             remote_path = 'http://poj.org/' + remote_path
 
-                        local_path = '/public/POJ/' + str(os.path.split(remote_path)[-1])
+                        local_path = str(remote_path.split('/')[-1])
                         descList.append(
                             Config.Desc(type=Config.Desc.Type.IMG,
                                         link=local_path,
