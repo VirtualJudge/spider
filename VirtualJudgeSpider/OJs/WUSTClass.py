@@ -99,10 +99,10 @@ class WUST(Base):
                     else:
                         remote_path = 'http://acm.wust.edu.cn/' + remote_path
 
-                    local_path = str(remote_path.split('/')[-1])
+                    file_name = str(remote_path.split('/')[-1])
                     descList.append(
                         Config.Desc(type=Config.Desc.Type.IMG,
-                                    link=local_path,
+                                    file_name=file_name,
                                     origin=remote_path))
                 else:
                     match_groups = re.search(r'<a[\s\S]*href=\"([\s\S]*)\"[\s\S]*>([\s\S]*?)<', raw_desc)

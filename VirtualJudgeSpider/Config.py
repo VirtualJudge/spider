@@ -54,8 +54,8 @@ class Desc(object):
         else:
             self.content = None
 
-        if kwargs.get('link'):
-            self.link = kwargs['link']
+        if kwargs.get('file_name'):
+            self.link = kwargs['file_name']
         else:
             self.link = None
 

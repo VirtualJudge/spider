@@ -69,8 +69,7 @@ class POJ(Base):
                         remote_path = 'http://poj.org/' + remote_path
 
                     descList.append(Config.Desc(type=Config.Desc.Type.ANCHOR, content=match_groups.group(2),
-                                                origin=remote_path,
-                                                link=remote_path))
+                                                origin=remote_path))
                 else:
                     match_groups = re.search(r'<img([\s\S]*)src=\"([\s\S]*(gif|png|jpeg|jpg|GIF))\"', raw_desc)
                     if match_groups:
@@ -81,10 +80,10 @@ class POJ(Base):
                         else:
                             remote_path = 'http://poj.org/' + remote_path
 
-                        local_path = str(remote_path.split('/')[-1])
+                        file_name = str(remote_path.split('/')[-1])
                         descList.append(
                             Config.Desc(type=Config.Desc.Type.IMG,
-                                        link=local_path,
+                                        file_name=file_name,
                                         origin=remote_path))
                     else:
                         descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
