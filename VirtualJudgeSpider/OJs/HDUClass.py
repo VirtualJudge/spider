@@ -15,7 +15,7 @@ class HDU(Base):
         self.req.headers.update(Config.custom_headers)
 
     @staticmethod
-    def home_page_url(self):
+    def home_page_url():
         url = 'http://acm.hdu.edu.cn/'
         return url
 

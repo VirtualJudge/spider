@@ -22,7 +22,7 @@ class POJ(Base):
         self.req.headers.update(self.headers)
 
     @staticmethod
-    def home_page_url(self):
+    def home_page_url():
         url = 'http://poj.org/'
         return url
 

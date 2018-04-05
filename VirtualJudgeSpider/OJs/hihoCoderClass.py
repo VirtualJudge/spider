@@ -13,7 +13,7 @@ class hihoCoder(Base):
 
     # 主页链接
     @staticmethod
-    def home_page_url(self):
+    def home_page_url():
         url = 'https://hihocoder.com/'
         return url
 

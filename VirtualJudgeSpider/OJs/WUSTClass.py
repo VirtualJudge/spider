@@ -19,7 +19,7 @@ class WUST(Base):
         self.req.headers.update(self.headers)
 
     @staticmethod
-    def home_page_url(self):
+    def home_page_url():
         url = 'http://acm.wust.edu.cn/'
         return url
 
@@ -130,6 +130,7 @@ class WUST(Base):
         problem = Problem()
         try:
             res = self.req.get(url)
+            res.encoding = self.code_type
             website_data = res.text
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
