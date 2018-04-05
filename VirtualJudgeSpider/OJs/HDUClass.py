@@ -1,6 +1,6 @@
 import re
 import traceback
-
+import os
 import requests
 from bs4 import BeautifulSoup
 
@@ -48,11 +48,19 @@ class HDU(Base):
         descList = Config.DescList()
         for raw_desc in raw_descs.split('<br>'):
             if raw_desc.strip(''):
-                match_groups = re.search(r'<img([\s\S]*)src=([\s\S]*(gif|png|jpeg|jpg))', raw_desc)
+                match_groups = re.search(r'<img([\s\S]*)src=([\s\S]*(gif|png|jpeg|jpg|GIF))', raw_desc)
                 if match_groups:
+                    remote_path = str(match_groups.group(2))
+                    if remote_path.startswith('/'):
+                        remote_path = 'http://acm.hdu.edu.cn' + remote_path
+                    else:
+                        remote_path = 'http://acm.hdu.edu.cn/' + remote_path
+
+                    local_path = '/public/HDU/' + str(os.path.split(remote_path)[-1])
                     descList.append(
                         Config.Desc(type=Config.Desc.Type.IMG,
-                                    link=match_groups.group(2)))
+                                    link=local_path,
+                                    origin=remote_path))
                 else:
                     descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
         return descList.get()

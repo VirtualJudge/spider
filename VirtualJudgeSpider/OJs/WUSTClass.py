@@ -7,6 +7,7 @@ import traceback
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
+import os
 
 
 class WUST(Base):
@@ -90,14 +91,30 @@ class WUST(Base):
         descList = Config.DescList()
         for raw_desc in raw_descs:
             if raw_desc.strip():
-                match_groups = re.search(r'<img[\s\S]*src=\"([\s\S]*)\"', raw_desc)
+                match_groups = re.search(r'<img[\s\S]*src=\"([\s\S]*?)\"', raw_desc)
                 if match_groups:
-                    descList.append(Config.Desc(type=Config.Desc.Type.IMG, link=match_groups.group(1)))
+                    remote_path = str(match_groups.group(1))
+                    if remote_path.startswith('/'):
+                        remote_path = 'http://acm.wust.edu.cn' + remote_path
+                    else:
+                        remote_path = 'http://acm.wust.edu.cn/' + remote_path
+
+                    local_path = '/public/WUST/' + str(os.path.split(remote_path)[-1])
+                    descList.append(
+                        Config.Desc(type=Config.Desc.Type.IMG,
+                                    link=local_path,
+                                    origin=remote_path))
                 else:
-                    match_groups = re.search(r'<a[\s\S]*href=\"([\s\S]*)\"[\s\S]*>([\s\S]*)<', raw_desc)
+                    match_groups = re.search(r'<a[\s\S]*href=\"([\s\S]*)\"[\s\S]*>([\s\S]*?)<', raw_desc)
                     if match_groups:
+                        remote_path = str(match_groups.group(1))
+                        if remote_path.startswith('/'):
+                            remote_path = 'http://acm.wust.edu.cn' + remote_path
+                        else:
+                            remote_path = 'http://acm.wust.edu.cn/' + remote_path
+
                         descList.append(Config.Desc(type=Config.Desc.Type.ANCHOR, content=match_groups.group(2),
-                                                    link=match_groups.group(1)))
+                                                    origin=remote_path))
                     else:
                         descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
         return descList.get()

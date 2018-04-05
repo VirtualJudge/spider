@@ -59,6 +59,13 @@ class Desc(object):
         else:
             self.link = None
 
+        if kwargs.get('origin'):
+            self.origin = kwargs['origin']
+        else:
+            self.origin = None
+
+
+
     class Type(object):
         TEXT = 0
         ANCHOR = 1

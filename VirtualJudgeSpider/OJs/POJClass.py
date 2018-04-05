@@ -1,7 +1,9 @@
 import base64
+import os
 import re
 
 import requests
+import traceback
 from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import Config
@@ -60,10 +62,33 @@ class POJ(Base):
             if raw_desc.strip():
                 match_groups = re.search(r'<a[\s\S]*href=\"([\s\S]*)\"[\s\S]*>([\s\S]*)</a>', raw_desc)
                 if match_groups:
+                    remote_path = str(match_groups.group(1))
+                    if remote_path.startswith('/'):
+                        remote_path = 'http://poj.org' + remote_path
+                    else:
+                        remote_path = 'http://poj.org/' + remote_path
+
                     descList.append(Config.Desc(type=Config.Desc.Type.ANCHOR, content=match_groups.group(2),
-                                                link=match_groups.group(1)))
+                                                origin=remote_path,
+                                                link=remote_path))
                 else:
-                    descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
+                    match_groups = re.search(r'<img([\s\S]*)src=\"([\s\S]*(gif|png|jpeg|jpg|GIF))\"', raw_desc)
+                    if match_groups:
+                        print(match_groups.groups())
+                        remote_path = str(match_groups.group(2))
+                        if remote_path.startswith('/'):
+                            remote_path = 'http://poj.org' + remote_path
+                        else:
+                            remote_path = 'http://poj.org/' + remote_path
+
+                        local_path = '/public/POJ/' + str(os.path.split(remote_path)[-1])
+                        descList.append(
+                            Config.Desc(type=Config.Desc.Type.IMG,
+                                        link=local_path,
+                                        origin=remote_path))
+                    else:
+                        descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
+        print(descList.values)
         return descList.get()
 
     # 获取题目
@@ -87,7 +112,6 @@ class POJ(Base):
             input_data = ''
             output_data = ''
             for title in titles:
-                print(title.string)
                 if title.string == 'Description':
                     raw_descs = []
                     for_list = title.find_next().find('span')
@@ -104,7 +128,6 @@ class POJ(Base):
                 elif title.string == 'Output':
                     raw_descs = []
                     for child in title.find_next():
-                        print(child)
                         raw_descs.append(str(child))
                     problem.output = self.parse_desc(raw_descs)
                 elif title.string == 'Sample Input':
@@ -133,7 +156,7 @@ class POJ(Base):
                  'output': output_data}]
             return problem
         except:
-            pass
+            traceback.print_exc()
         return None
 
     # 提交代码
