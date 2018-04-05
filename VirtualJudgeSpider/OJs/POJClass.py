@@ -74,11 +74,11 @@ class POJ(Base):
                 else:
                     match_groups = re.search(r'<img([\s\S]*)src=\"([\s\S]*(gif|png|jpeg|jpg|GIF))\"', raw_desc)
                     if match_groups:
-                        print(match_groups.groups())
-                        remote_path = str(match_groups.group(2))
+                        file_name, remote_path = deal_with_image_url(str(match_groups.group(2)),
+                                                                     'http://poj.org')
                         descList.append(
                             Config.Desc(type=Config.Desc.Type.IMG,
-                                        file_name=deal_with_image_url(remote_path, 'http://poj.org'),
+                                        file_name=file_name,
                                         origin=remote_path))
                     else:
                         descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))

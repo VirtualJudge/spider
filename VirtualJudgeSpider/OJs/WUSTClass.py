@@ -10,6 +10,7 @@ from VirtualJudgeSpider.OJs.BaseClass import Base
 import os
 from ..utils import deal_with_image_url
 
+
 class WUST(Base):
     def __init__(self):
         self.code_type = 'UTF-8'
@@ -93,10 +94,10 @@ class WUST(Base):
             if raw_desc.strip():
                 match_groups = re.search(r'<img[\s\S]*src=\"([\s\S]*?)\"', raw_desc)
                 if match_groups:
-                    remote_path = str(match_groups.group(1))
+                    file_name, remote_path = deal_with_image_url(str(match_groups.group(1)), 'http://acm.wust.edu.cn/')
                     descList.append(
                         Config.Desc(type=Config.Desc.Type.IMG,
-                                    file_name=deal_with_image_url(remote_path,'http://acm.wust.edu.cn/'),
+                                    file_name=file_name,
                                     origin=remote_path))
                 else:
                     match_groups = re.search(r'<a[\s\S]*href=\"([\s\S]*)\"[\s\S]*>([\s\S]*?)<', raw_desc)
