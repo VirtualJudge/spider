@@ -8,7 +8,7 @@ from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
 import os
-
+from ..utils import deal_with_image_url
 
 class WUST(Base):
     def __init__(self):
@@ -94,16 +94,9 @@ class WUST(Base):
                 match_groups = re.search(r'<img[\s\S]*src=\"([\s\S]*?)\"', raw_desc)
                 if match_groups:
                     remote_path = str(match_groups.group(1))
-
-                    if remote_path.startswith('/'):
-                        remote_path = 'http://acm.wust.edu.cn' + remote_path
-                    elif not remote_path.startswith('http://') or not remote_path.startswith('https://'):
-                        remote_path = 'http://acm.wust.edu.cn/' + remote_path
-
-                    file_name = str(remote_path.split('/')[-1])
                     descList.append(
                         Config.Desc(type=Config.Desc.Type.IMG,
-                                    file_name=file_name,
+                                    file_name=deal_with_image_url(remote_path,'http://acm.wust.edu.cn/'),
                                     origin=remote_path))
                 else:
                     match_groups = re.search(r'<a[\s\S]*href=\"([\s\S]*)\"[\s\S]*>([\s\S]*?)<', raw_desc)

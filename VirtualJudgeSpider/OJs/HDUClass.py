@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
-
+from ..utils import deal_with_image_url
 
 class HDU(Base):
     def __init__(self):
@@ -51,14 +51,9 @@ class HDU(Base):
                 match_groups = re.search(r'<img([\s\S]*)src=([\s\S]*(gif|png|jpeg|jpg|GIF))', raw_desc)
                 if match_groups:
                     remote_path = str(match_groups.group(2))
-                    if remote_path.startswith('/'):
-                        remote_path = 'http://acm.hdu.edu.cn' + remote_path
-                    elif not remote_path.startswith('http://') or not remote_path.startswith('https://'):
-                        remote_path = 'http://acm.hdu.edu.cn/' + remote_path
-                    file_name = str(remote_path.split('/')[-1])
                     descList.append(
                         Config.Desc(type=Config.Desc.Type.IMG,
-                                    file_name=file_name,
+                                    file_name=deal_with_image_url(remote_path, 'http://acm.hdu.edu.cn'),
                                     origin=remote_path))
                 else:
                     descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))

@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
+from ..utils import deal_with_image_url
 
 
 class POJ(Base):
@@ -65,7 +66,7 @@ class POJ(Base):
                     remote_path = str(match_groups.group(1))
                     if remote_path.startswith('/'):
                         remote_path = 'http://poj.org' + remote_path
-                    elif not remote_path.startswith('http://') or not remote_path.startswith('https://'):
+                    elif not remote_path.startswith('http://') and not remote_path.startswith('https://'):
                         remote_path = 'http://poj.org/' + remote_path
 
                     descList.append(Config.Desc(type=Config.Desc.Type.ANCHOR, content=match_groups.group(2),
@@ -75,15 +76,9 @@ class POJ(Base):
                     if match_groups:
                         print(match_groups.groups())
                         remote_path = str(match_groups.group(2))
-                        if remote_path.startswith('/'):
-                            remote_path = 'http://poj.org' + remote_path
-                        else:
-                            remote_path = 'http://poj.org/' + remote_path
-
-                        file_name = str(remote_path.split('/')[-1])
                         descList.append(
                             Config.Desc(type=Config.Desc.Type.IMG,
-                                        file_name=file_name,
+                                        file_name=deal_with_image_url(remote_path, 'http://poj.org'),
                                         origin=remote_path))
                     else:
                         descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
