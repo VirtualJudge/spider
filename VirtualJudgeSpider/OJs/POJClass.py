@@ -65,7 +65,7 @@ class POJ(Base):
                     remote_path = str(match_groups.group(1))
                     if remote_path.startswith('/'):
                         remote_path = 'http://poj.org' + remote_path
-                    else:
+                    elif not remote_path.startswith('http://') or not remote_path.startswith('https://'):
                         remote_path = 'http://poj.org/' + remote_path
 
                     descList.append(Config.Desc(type=Config.Desc.Type.ANCHOR, content=match_groups.group(2),

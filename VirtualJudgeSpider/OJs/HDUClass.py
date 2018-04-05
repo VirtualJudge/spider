@@ -53,10 +53,9 @@ class HDU(Base):
                     remote_path = str(match_groups.group(2))
                     if remote_path.startswith('/'):
                         remote_path = 'http://acm.hdu.edu.cn' + remote_path
-                    else:
+                    elif not remote_path.startswith('http://') or not remote_path.startswith('https://'):
                         remote_path = 'http://acm.hdu.edu.cn/' + remote_path
-
-                        file_name = str(remote_path.split('/')[-1])
+                    file_name = str(remote_path.split('/')[-1])
                     descList.append(
                         Config.Desc(type=Config.Desc.Type.IMG,
                                     file_name=file_name,

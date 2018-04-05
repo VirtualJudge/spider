@@ -94,9 +94,10 @@ class WUST(Base):
                 match_groups = re.search(r'<img[\s\S]*src=\"([\s\S]*?)\"', raw_desc)
                 if match_groups:
                     remote_path = str(match_groups.group(1))
+
                     if remote_path.startswith('/'):
                         remote_path = 'http://acm.wust.edu.cn' + remote_path
-                    else:
+                    elif not remote_path.startswith('http://') or not remote_path.startswith('https://'):
                         remote_path = 'http://acm.wust.edu.cn/' + remote_path
 
                     file_name = str(remote_path.split('/')[-1])
