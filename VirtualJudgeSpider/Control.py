@@ -3,7 +3,7 @@ from VirtualJudgeSpider.OJs.HDUClass import HDU
 from VirtualJudgeSpider.OJs.POJClass import POJ
 from VirtualJudgeSpider.OJs.WUSTClass import WUST
 
-supports = ['HDU', 'POJ', 'WUST', 'FZU']
+supports = ['HDU', 'POJ', 'WUST']
 
 
 class OJBuilder:
