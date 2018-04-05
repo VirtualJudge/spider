@@ -2,3 +2,4 @@ beautifulsoup4
 lxml
 wheel
 requests
+coverage
