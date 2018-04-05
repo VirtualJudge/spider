@@ -50,9 +50,9 @@ class Controller:
 
     # 获取题面
     @staticmethod
-    def get_problem(oj_name, pid, **kwargs):
+    def get_problem(oj_name, pid, account, **kwargs):
         oj = OJBuilder.build_oj(oj_name)
-        return oj.get_problem(pid=pid, **kwargs)
+        return oj.get_problem(pid=pid, account=account, **kwargs)
 
     # 提交代码
     @staticmethod

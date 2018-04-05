@@ -3,7 +3,7 @@ import re
 import bs4
 import requests
 from bs4 import BeautifulSoup
-
+import traceback
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
@@ -86,6 +86,33 @@ class WUST(Base):
         return ans.strip()
         # ---------------------------------------------------------------------------------------------------------
 
+    def parse_desc(self, raw_descs):
+        descList = Config.DescList()
+        for raw_desc in raw_descs:
+            if raw_desc.strip():
+                match_groups = re.search(r'<img[\s\S]*src=\"([\s\S]*)\"', raw_desc)
+                if match_groups:
+                    descList.append(Config.Desc(type=Config.Desc.Type.IMG, link=match_groups.group(1)))
+                else:
+                    match_groups = re.search(r'<a[\s\S]*href=\"([\s\S]*)\"[\s\S]*>([\s\S]*)<', raw_desc)
+                    if match_groups:
+                        descList.append(Config.Desc(type=Config.Desc.Type.ANCHOR, content=match_groups.group(2),
+                                                    link=match_groups.group(1)))
+                    else:
+                        descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
+        return descList.get()
+
+    def deal_with_tags(self, h2):
+        raw_descs = []
+        for tag in h2.find_next().descendants:
+            if tag.name == 'img':
+                raw_descs.append(str(tag))
+            elif tag.name == 'a':
+                raw_descs.append(str(tag))
+            elif type(tag) == bs4.element.NavigableString and tag.string != '\n' and tag.parent.name != 'a':
+                raw_descs.append(str(tag.string))
+        return raw_descs
+
     def get_problem(self, *args, **kwargs):
         url = 'http://acm.wust.edu.cn/problem.php?id=' + str(kwargs['pid']) + '&soj=0'
         problem = Problem()
@@ -98,23 +125,38 @@ class WUST(Base):
             problem.title = re.search(r': ([\s\S]*?)</h2>', website_data).group(1)
             problem.time_limit = re.search(r'(\d* Sec)', website_data).group(1)
             problem.memory_limit = re.search(r'(\d* MB)', website_data).group(1)
+
             problem.special_judge = re.search(r'class=red>Special Judge</span>', website_data) is not None
+
             soup = BeautifulSoup(website_data, 'lxml')
-            # case:problem.picture=self.parse_html("img", soup, website_data)
-            problem.description = self.parse_html("Description", soup, website_data)
-            problem.input = self.parse_html("Input", soup, website_data)
-            problem.output = self.parse_html("Output", soup, website_data)
+
+            for h2 in soup.find_all('h2'):
+                if re.match(r'<h2>Description', str(h2)):
+                    problem.description = self.parse_desc(self.deal_with_tags(h2))
+                elif re.match(r'<h2>Input', str(h2)):
+                    problem.input = self.parse_desc(self.deal_with_tags(h2))
+                elif re.match(r'<h2>Output', str(h2)):
+                    problem.output = self.parse_desc(self.deal_with_tags(h2))
+                elif re.match(r'<h2>Sample Input', str(h2)):
+                    pass
+                elif re.match(r'<h2>Sample Output', str(h2)):
+                    pass
+                elif re.match(r'<h2>HINT', str(h2)):
+                    problem.hint = self.parse_desc(self.deal_with_tags(h2))
+                elif re.match(r'<h2>Source', str(h2)):
+                    problem.source = self.parse_desc(self.deal_with_tags(h2))
+                elif re.match(r'<h2>Author', str(h2)):
+                    problem.author = self.parse_desc(self.deal_with_tags(h2))
+
             input_data = self.parse_html("Sample Input", soup, website_data)
             output_data = self.parse_html("Sample Output", soup, website_data)
-            problem.hint = self.parse_html("HINT", soup, website_data)
-            problem.author = self.parse_html("Author", soup, website_data)
-            problem.source = self.parse_html("Source", soup, website_data)
             problem.sample = [
                 {'input': input_data,
                  'output': output_data}]
+            return problem
         except:
+            traceback.print_exc()
             return None
-        return problem
 
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):

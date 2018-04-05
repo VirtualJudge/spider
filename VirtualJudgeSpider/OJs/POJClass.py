@@ -74,7 +74,6 @@ class POJ(Base):
             res = self.req.get(url=url)
             website_data = res.text
             soup = BeautifulSoup(website_data, 'lxml')
-
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
             problem.remote_oj = 'POJ'
@@ -99,7 +98,6 @@ class POJ(Base):
                     problem.description = self.parse_desc(raw_descs)
                 elif title.string == 'Input':
                     raw_descs = []
-
                     for child in title.find_next():
                         raw_descs.append(str(child))
                     problem.input = self.parse_desc(raw_descs)
