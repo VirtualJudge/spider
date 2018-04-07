@@ -2,8 +2,9 @@ from VirtualJudgeSpider.OJs.FZUClass import FZU
 from VirtualJudgeSpider.OJs.HDUClass import HDU
 from VirtualJudgeSpider.OJs.POJClass import POJ
 from VirtualJudgeSpider.OJs.WUSTClass import WUST
+from VirtualJudgeSpider.OJs.ZOJClass import ZOJ
 
-supports = ['HDU', 'POJ', 'WUST', 'FZU']
+supports = ['HDU', 'POJ', 'WUST', 'FZU', 'ZOJ']
 
 
 class OJBuilder:
@@ -17,6 +18,8 @@ class OJBuilder:
             return OJBuilder.build_wust()
         if name == 'FZU':
             return OJBuilder.build_fzu()
+        if name == 'ZOJ':
+            return OJBuilder.build_zoj()
 
     @staticmethod
     def build_hdu():
@@ -33,6 +36,10 @@ class OJBuilder:
     @staticmethod
     def build_fzu():
         return FZU()
+
+    @staticmethod
+    def build_zoj():
+        return ZOJ()
 
 
 class Controller:
