@@ -1,12 +1,15 @@
 import base64
+import os
 import re
 
 import requests
+import traceback
 from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
+from ..utils import deal_with_image_url
 
 
 class POJ(Base):
@@ -19,7 +22,7 @@ class POJ(Base):
         self.req.headers.update(self.headers)
 
     @staticmethod
-    def home_page_url(self):
+    def home_page_url():
         url = 'http://poj.org/'
         return url
 
@@ -60,10 +63,26 @@ class POJ(Base):
             if raw_desc.strip():
                 match_groups = re.search(r'<a[\s\S]*href=\"([\s\S]*)\"[\s\S]*>([\s\S]*)</a>', raw_desc)
                 if match_groups:
+                    remote_path = str(match_groups.group(1))
+                    if remote_path.startswith('/'):
+                        remote_path = 'http://poj.org' + remote_path
+                    elif not remote_path.startswith('http://') and not remote_path.startswith('https://'):
+                        remote_path = 'http://poj.org/' + remote_path
+
                     descList.append(Config.Desc(type=Config.Desc.Type.ANCHOR, content=match_groups.group(2),
-                                                link=match_groups.group(1)))
+                                                origin=remote_path))
                 else:
-                    descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
+                    match_groups = re.search(r'<img([\s\S]*)src=\"([\s\S]*(gif|png|jpeg|jpg|GIF))\"', raw_desc)
+                    if match_groups:
+                        file_name, remote_path = deal_with_image_url(str(match_groups.group(2)),
+                                                                     'http://poj.org')
+                        descList.append(
+                            Config.Desc(type=Config.Desc.Type.IMG,
+                                        file_name=file_name,
+                                        origin=remote_path))
+                    else:
+                        descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
+        print(descList.values)
         return descList.get()
 
     # 获取题目
@@ -74,7 +93,6 @@ class POJ(Base):
             res = self.req.get(url=url)
             website_data = res.text
             soup = BeautifulSoup(website_data, 'lxml')
-
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
             problem.remote_oj = 'POJ'
@@ -88,7 +106,6 @@ class POJ(Base):
             input_data = ''
             output_data = ''
             for title in titles:
-                print(title.string)
                 if title.string == 'Description':
                     raw_descs = []
                     for_list = title.find_next().find('span')
@@ -99,14 +116,12 @@ class POJ(Base):
                     problem.description = self.parse_desc(raw_descs)
                 elif title.string == 'Input':
                     raw_descs = []
-
                     for child in title.find_next():
                         raw_descs.append(str(child))
                     problem.input = self.parse_desc(raw_descs)
                 elif title.string == 'Output':
                     raw_descs = []
                     for child in title.find_next():
-                        print(child)
                         raw_descs.append(str(child))
                     problem.output = self.parse_desc(raw_descs)
                 elif title.string == 'Sample Input':
@@ -135,7 +150,7 @@ class POJ(Base):
                  'output': output_data}]
             return problem
         except:
-            pass
+            traceback.print_exc()
         return None
 
     # 提交代码

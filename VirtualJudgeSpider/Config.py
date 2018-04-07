@@ -54,10 +54,15 @@ class Desc(object):
         else:
             self.content = None
 
-        if kwargs.get('link'):
-            self.link = kwargs['link']
+        if kwargs.get('file_name'):
+            self.file_name = kwargs['file_name']
         else:
-            self.link = None
+            self.file_name = None
+
+        if kwargs.get('origin'):
+            self.origin = kwargs['origin']
+        else:
+            self.origin = None
 
     class Type(object):
         TEXT = 0

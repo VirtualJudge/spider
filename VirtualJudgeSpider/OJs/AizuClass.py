@@ -19,7 +19,7 @@ class Aizu(Base):
 
     # 主页链接
     @staticmethod
-    def home_page_url(self):
+    def home_page_url():
         url = 'https://onlinejudge.u-aizu.ac.jp/'
         return url
 

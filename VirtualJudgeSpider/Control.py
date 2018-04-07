@@ -4,7 +4,7 @@ from VirtualJudgeSpider.OJs.POJClass import POJ
 from VirtualJudgeSpider.OJs.WUSTClass import WUST
 from VirtualJudgeSpider.OJs.ZOJClass import ZOJ
 
-supports = ['HDU', 'POJ', 'WUST', 'FZU', 'ZOJ']
+supports = ['HDU', 'POJ', 'WUST', 'ZOJ']
 
 
 class OJBuilder:
@@ -20,6 +20,8 @@ class OJBuilder:
             return OJBuilder.build_fzu()
         if name == 'ZOJ':
             return OJBuilder.build_zoj()
+        else:
+            return None
 
     @staticmethod
     def build_hdu():
@@ -57,42 +59,56 @@ class Controller:
 
     # 获取题面
     @staticmethod
-    def get_problem(oj_name, pid, **kwargs):
+    def get_problem(oj_name, pid, account, **kwargs):
         oj = OJBuilder.build_oj(oj_name)
-        return oj.get_problem(pid=pid, **kwargs)
+        if not oj:
+            return None
+        return oj.get_problem(pid=pid, account=account, **kwargs)
 
     # 提交代码
     @staticmethod
     def submit_code(oj_name, account, code, language, pid, **kwargs):
         oj = OJBuilder.build_oj(oj_name)
+        if not oj:
+            return None
         return oj.submit_code(account=account, code=code, language=language, pid=pid, **kwargs)
 
     # 获取结果
     @staticmethod
     def get_result(oj_name, account, pid, **kwargs):
         oj = OJBuilder.build_oj(oj_name)
+        if not oj:
+            return None
         return oj.get_result(account=account, pid=pid, **kwargs)
 
     # 通过运行id获取结果
     @staticmethod
     def get_result_by_rid_and_pid(oj_name, rid, pid):
         oj = OJBuilder.build_oj(oj_name)
+        if not oj:
+            return None
         return oj.get_result_by_rid_and_pid(rid, pid)
 
     # 获取源OJ语言
     @staticmethod
     def find_language(oj_name, account, **kwargs):
         oj = OJBuilder.build_oj(oj_name)
+        if not oj:
+            return None
         return oj.find_language(account=account, **kwargs)
 
     # 判断是否是等待判题的返回结果，例如pending,Queuing,Compiling
     @staticmethod
     def is_waiting_for_judge(oj_name, verdict):
         oj = OJBuilder.build_oj(oj_name)
+        if not oj:
+            return None
         return oj.is_waiting_for_judge(verdict)
 
     # 判断源OJ的网络连接是否良好
     @staticmethod
     def check_status(oj_name):
         oj = OJBuilder.build_oj(oj_name)
+        if not oj:
+            return None
         return oj.check_status()

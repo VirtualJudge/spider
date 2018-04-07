@@ -1,13 +1,13 @@
 import re
 import traceback
-
+import os
 import requests
 from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
-
+from ..utils import deal_with_image_url
 
 class HDU(Base):
     def __init__(self):
@@ -15,7 +15,7 @@ class HDU(Base):
         self.req.headers.update(Config.custom_headers)
 
     @staticmethod
-    def home_page_url(self):
+    def home_page_url():
         url = 'http://acm.hdu.edu.cn/'
         return url
 
@@ -48,11 +48,14 @@ class HDU(Base):
         descList = Config.DescList()
         for raw_desc in raw_descs.split('<br>'):
             if raw_desc.strip(''):
-                match_groups = re.search(r'<img([\s\S]*)src=([\s\S]*(gif|png|jpeg|jpg))', raw_desc)
+                match_groups = re.search(r'<img([\s\S]*)src=([\s\S]*(gif|png|jpeg|jpg|GIF))', raw_desc)
                 if match_groups:
+                    file_name, remote_path = deal_with_image_url(str(match_groups.group(2)), 'http://acm.hdu.edu.cn/')
+
                     descList.append(
                         Config.Desc(type=Config.Desc.Type.IMG,
-                                    link=match_groups.group(2)))
+                                    file_name=file_name,
+                                    origin=remote_path))
                 else:
                     descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
         return descList.get()

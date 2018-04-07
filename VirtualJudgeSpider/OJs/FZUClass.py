@@ -15,7 +15,7 @@ class FZU(Base):
         self.req.headers.update(self.header)
 
     @staticmethod
-    def home_page_url(self):
+    def home_page_url():
         url = 'http://acm.fzu.edu.cn/'
         return url
 
