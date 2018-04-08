@@ -9,17 +9,17 @@ from bs4 import BeautifulSoup
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
-from ..utils import deal_with_image_url
+from VirtualJudgeSpider.Utils import deal_with_image_url
+from VirtualJudgeSpider.Utils import HttpUtil
 
 
 class POJ(Base):
     def __init__(self):
         self.code_type = 'utf-8'
-        self.headers = Config.custom_headers
-        self.headers['Referer'] = 'http://poj.org/'
-        self.headers['Content-Type'] = 'application/x-www-form-urlencoded'
-        self.req = requests.Session()
-        self.req.headers.update(self.headers)
+        self._headers = Config.custom_headers
+        self._headers['Referer'] = 'http://poj.org/'
+        self._headers['Content-Type'] = 'application/x-www-form-urlencoded'
+        self._req = HttpUtil(self._headers)
 
     @staticmethod
     def home_page_url():
@@ -27,18 +27,18 @@ class POJ(Base):
         return url
 
     # 登录页面
-    def login_webside(self, *args, **kwargs):
+    def login_webside(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
         login_page_url = 'http://poj.org/'
         login_link_url = 'http://poj.org/login'
-        post_data = {'user_id1': kwargs['account'].get_username(),
-                     'password1': kwargs['account'].get_password(),
+        post_data = {'user_id1': account.username,
+                     'password1': account.password,
                      'B1': 'login',
                      'url': '/'}
         try:
-            self.req.get(url=login_page_url)
-            res = self.req.post(url=login_link_url, data=post_data)
+            self._req.get(url=login_page_url)
+            res = self._req.post(url=login_link_url, data=post_data)
             if res.status_code == 200 and self.check_login_status():
                 return True
             return False
@@ -49,7 +49,7 @@ class POJ(Base):
     def check_login_status(self, *args, **kwargs):
         url = 'http://poj.org/'
         try:
-            res = self.req.get(url=url)
+            res = self._req.get(url=url)
             website_data = res.text
             if re.search(r'action=logout&', website_data):
                 return True
@@ -82,7 +82,6 @@ class POJ(Base):
                                         origin=remote_path))
                     else:
                         descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
-        print(descList.values)
         return descList.get()
 
     # 获取题目
@@ -90,7 +89,7 @@ class POJ(Base):
         url = 'http://poj.org/problem?id=' + str(kwargs['pid'])
         problem = Problem()
         try:
-            res = self.req.get(url=url)
+            res = self._req.get(url=url)
             website_data = res.text
             soup = BeautifulSoup(website_data, 'lxml')
             problem.remote_id = kwargs['pid']
@@ -167,7 +166,7 @@ class POJ(Base):
                          'source': base64.b64encode(str.encode(code)),
                          'submit': 'Submit',
                          'encoded': '1'}
-            res = self.req.post(url=url, data=post_data)
+            res = self._req.post(url=url, data=post_data)
             if res.status_code == 200:
                 return True
             return False
@@ -190,7 +189,7 @@ class POJ(Base):
     def get_result_by_url(self, url):
         result = Result()
         try:
-            res = self.req.get(url=url)
+            res = self._req.get(url=url)
             soup = BeautifulSoup(res.text, 'lxml')
             line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
             if line is not None:
@@ -210,17 +209,13 @@ class POJ(Base):
         url = 'http://poj.org/submit'
         language = {}
         try:
-            res = self.req.get(url=url)
+            res = self._req.get(url=url)
             soup = BeautifulSoup(res.text, 'lxml')
             options = soup.find('select', attrs={'name': 'language'}).find_all('option')
             for option in options:
                 language[option.get('value')] = option.string
         finally:
             return language
-
-    # 获取当前类名
-    def get_class_name(self):
-        return str('POJ')
 
     # 判断当前提交结果的运行状态
     def is_waiting_for_judge(self, verdict):
@@ -231,7 +226,7 @@ class POJ(Base):
     # 检查源OJ是否运行正常
     def check_status(self):
         url = "http://poj.org/"
-        res = self.req.get(url)
+        res = self._req.get(url)
         if re.search(r'color=blue>Welcome To PKU JudgeOnline</font>', res.text):
             return True
         return False

@@ -18,7 +18,7 @@ class hihoCoder(Base):
         return url
 
     # 登录页面
-    def login_webside(self, *args, **kwargs):
+    def login_webside(self, account, *args, **kwargs):
         if self.check_login_status(self, *args, **kwargs):
             return True
         if not kwargs.get('account'):
@@ -84,10 +84,6 @@ class hihoCoder(Base):
 
     # 获取源OJ支持的语言类型
     def find_language(self, *args, **kwargs):
-        pass
-
-    # 获取当前类名
-    def get_class_name(self):
         pass
 
     # 判断当前提交结果的运行状态

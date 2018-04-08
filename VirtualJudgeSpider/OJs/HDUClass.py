@@ -7,7 +7,8 @@ from bs4 import BeautifulSoup
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
-from ..utils import deal_with_image_url
+from ..Utils import deal_with_image_url
+
 
 class HDU(Base):
     def __init__(self):
@@ -29,12 +30,14 @@ class HDU(Base):
         except:
             return False
 
-    def login_webside(self, *args, **kwargs):
+    def login_webside(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
         login_link_url = 'http://acm.hdu.edu.cn/userloginex.php'
-        post_data = {'username': kwargs['account'].get_username(), 'userpass': kwargs['account'].get_password(),
-                     'login': 'Sign In'}
+        post_data = {'username': account.get_username(),
+                     'userpass': account.get_password(),
+                     'login': 'Sign In'
+                     }
         try:
             self.req.post(url=login_link_url, data=post_data,
                           params={'action': 'login'})
@@ -178,9 +181,6 @@ class HDU(Base):
         except:
             pass
         return result
-
-    def get_class_name(self):
-        return str('HDU')
 
     def is_waiting_for_judge(self, verdict):
         if verdict in ['Queuing', 'Compiling', 'Running']:

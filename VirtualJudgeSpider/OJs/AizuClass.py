@@ -24,11 +24,10 @@ class Aizu(Base):
         return url
 
     # 登录页面
-    def login_webside(self, *args, **kwargs):
+    def login_webside(self,account, *args, **kwargs):
         if self.check_login_status(self, *args, **kwargs):
             return True
         login_link_url = 'https://judgeapi.u-aizu.ac.jp/session'
-        account = kwargs['account']
         post_data = {
             'id': account.username,
             'password': account.password
@@ -108,9 +107,6 @@ class Aizu(Base):
                 'JavaScript': 'JavaScript', 'Scala': 'Scala', 'Haskell': 'Haskell', 'OCaml': 'OCaml', 'PHP': 'PHP',
                 'Kotlin': 'Kotlin'}
 
-    # 获取当前类名
-    def get_class_name(self):
-        return str('Aizu')
 
     # 判断当前提交结果的运行状态
     def is_waiting_for_judge(self, verdict):

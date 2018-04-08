@@ -1,5 +1,5 @@
+from enum import Enum
 import json
-from urllib import request
 
 custom_headers = {
     'Connection': 'Keep-Alive',
@@ -12,18 +12,22 @@ custom_headers = {
 
 class Account:
     def __init__(self, username, password):
-        self.username = username
-        self.password = password
-        self.status = False
+        self._username = username
+        self._password = password
 
     def get_username(self):
-        return self.username
+        return self._username
 
     def get_password(self):
-        return self.password
+        return self._password
 
-    def get_status(self):
-        return self.status
+    @property
+    def username(self):
+        return self._username
+
+    @property
+    def password(self):
+        return self._password
 
 
 '''
@@ -64,7 +68,7 @@ class Desc(object):
         else:
             self.origin = None
 
-    class Type(object):
+    class Type(Enum):
         TEXT = 0
         ANCHOR = 1
         PDF = 2
@@ -73,17 +77,17 @@ class Desc(object):
 
 class DescList(object):
     def __init__(self):
-        self.values = []
+        self._values = []
 
     def get(self):
-        return self.values
+        return self._values
 
     def append(self, desc):
         if type(desc) == Desc:
-            self.values.append(desc.__dict__)
+            self._values.append(desc.__dict__)
 
     def update(self, desc, index):
-        self.values[index] = desc
+        self._values[index] = desc
 
 
 class Problem:
@@ -91,7 +95,6 @@ class Problem:
         self.remote_id = None
         self.remote_url = None
         self.remote_oj = None
-
         self.title = None
         self.time_limit = None
         self.memory_limit = None
@@ -105,36 +108,10 @@ class Problem:
         self.source = None
 
     def get_dict(self):
-        return {'remote_id': self.remote_id,
-                'remote_oj': self.remote_oj,
-                'remote_url': self.remote_url,
-                'title': self.title,
-                'time_limit': self.time_limit,
-                'memory_limit': self.memory_limit,
-                'description': self.description,
-                'special_judge': self.special_judge,
-                'input': self.input,
-                'output': self.output,
-                'sample': self.sample,
-                'hint': self.hint,
-                'author': self.author,
-                'source': self.source}
+        return self.__dict__
 
     def show(self):
-        print('remote_id', self.remote_id)
-        print('remote_oj', self.remote_oj)
-        print('remote_url', self.remote_url)
-        print('title', self.title)
-        print('time_limit', self.time_limit)
-        print('memory_limit', self.memory_limit)
-        print('description', self.description)
-        print('special_judge', self.special_judge)
-        print('input', self.input)
-        print('output', self.output)
-        print('sample', self.sample)
-        print('hint', self.hint)
-        print('author', self.author)
-        print('source', self.source)
+        print(json.dumps(self.__dict__, indent=4))
 
 
 class Result:
@@ -145,13 +122,7 @@ class Result:
         self.execute_memory = None
 
     def get_dict(self):
-        return {'origin_run_id': self.origin_run_id,
-                'verdict': self.verdict,
-                'execute_time': self.execute_time,
-                'execute_memory': self.execute_memory}
+        return self.__dict__
 
     def show(self):
-        print('origin_run_id', self.origin_run_id)
-        print('verdict', self.verdict)
-        print('execute_time', self.execute_time)
-        print('execute_memory', self.execute_memory)
+        print(json.dumps(self.__dict__, indent=4))

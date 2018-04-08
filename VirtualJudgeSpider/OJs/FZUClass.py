@@ -31,13 +31,13 @@ class FZU(Base):
             pass
         return False
 
-    def login_webside(self, *args, **kwargs):
+    def login_webside(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
         try:
             login_page_url = 'http://acm.fzu.edu.cn/login.php'
             login_link_url = 'http://acm.fzu.edu.cn/login.php?act=1&dir='
-            post_data = {'uname': kwargs['account'].get_username(), 'upassword': kwargs['account'].get_password(),
+            post_data = {'uname': account.username, 'upassword': account.password,
                          'submit': 'Submit'}
             self.req.get(login_page_url)
             self.req.post(login_link_url, post_data)
@@ -152,9 +152,6 @@ class FZU(Base):
         except:
             pass
         return None
-
-    def get_class_name(self):
-        return str('FZU')
 
     def is_waiting_for_judge(self, verdict):
         if verdict in ['Judging...', 'Queuing...']:

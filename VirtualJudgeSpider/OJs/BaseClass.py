@@ -36,10 +36,6 @@ class Base:
     def find_language(self, *args, **kwargs):
         pass
 
-    # 获取当前类名
-    def get_class_name(self):
-        pass
-
     # 判断当前提交结果的运行状态
     def is_waiting_for_judge(self, verdict):
         pass

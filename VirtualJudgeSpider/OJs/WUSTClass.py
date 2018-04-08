@@ -1,22 +1,19 @@
 import re
+import traceback
 
 import bs4
-import requests
 from bs4 import BeautifulSoup
-import traceback
+
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
-import os
-from ..utils import deal_with_image_url
+from VirtualJudgeSpider.Utils import HttpUtil
+from VirtualJudgeSpider.Utils import deal_with_image_url
 
 
 class WUST(Base):
     def __init__(self):
-        self.code_type = 'UTF-8'
-        self.headers = Config.custom_headers
-        self.req = requests.Session()
-        self.req.headers.update(self.headers)
+        self._req = HttpUtil(Config.custom_headers, 'utf-8')
 
     @staticmethod
     def home_page_url():
@@ -24,26 +21,27 @@ class WUST(Base):
         return url
 
     def check_login_status(self):
-        url = 'http://acm.wust.edu.cn/index.php'
+        url = 'http://acm.wust.edu.cn/'
         try:
-            res = self.req.get(url)
+            res = self._req.get(url)
             website_data = res.text
             if re.search(r'<a href="logout.php">Logout</a>', website_data) is not None:
                 return True
         except:
             return False
 
-    def login_webside(self, *args, **kwargs):
+    def login_webside(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
         login_page_url = 'http://acm.wust.edu.cn/loginpage.php'
         login_link_url = 'http://acm.wust.edu.cn/login.php'
 
-        post_data = {'user_id': kwargs['account'].get_username(), 'password': kwargs['account'].get_password(),
+        post_data = {'user_id': account.username,
+                     'password': account.password,
                      'submit': 'Submit'}
         try:
-            self.req.get(login_page_url)
-            self.req.post(login_link_url, post_data)
+            self._req.get(login_page_url)
+            self._req.post(login_link_url, post_data)
             if self.check_login_status():
                 return True
             return False
@@ -129,8 +127,7 @@ class WUST(Base):
         url = 'http://acm.wust.edu.cn/problem.php?id=' + str(kwargs['pid']) + '&soj=0'
         problem = Problem()
         try:
-            res = self.req.get(url)
-            res.encoding = self.code_type
+            res = self._req.get(url)
             website_data = res.text
             problem.remote_id = kwargs['pid']
             problem.remote_url = url
@@ -180,14 +177,14 @@ class WUST(Base):
             pid = kwargs['pid']
             link_page_url = 'http://acm.wust.edu.cn/submitpage.php?id=' + str(pid) + '&soj=0'
             link_post_url = 'http://acm.wust.edu.cn/submit.php?'
-            self.req.headers.update({'Referer': link_page_url})
-            res = self.req.get(link_page_url)
+            #    self._req.headers.update({'Referer': link_page_url})
+            res = self._req.get(link_page_url)
             if res.status_code != 200:
                 return False
             soup = BeautifulSoup(res.text, 'lxml')
             submitkey = soup.find('input', attrs={'name': 'submitkey'})['value']
             post_data = {'id': str(pid), 'soj': '0', 'language': language, 'source': code, 'submitkey': str(submitkey)}
-            res = self.req.post(url=link_post_url, data=post_data)
+            res = self._req.post(url=link_post_url, data=post_data)
             if res.status_code != 200:
                 return False
             return True
@@ -200,7 +197,7 @@ class WUST(Base):
         url = 'http://acm.wust.edu.cn/submitpage.php?id=1000&soj=0'
         languages = {}
         try:
-            res = self.req.get(url)
+            res = self._req.get(url)
             soup = BeautifulSoup(res.text, 'lxml')
             options = soup.find('select', attrs={'name': 'language'}).find_all('option')
             for option in options:
@@ -222,7 +219,7 @@ class WUST(Base):
     def get_result_by_url(self, url):
         result = Result()
         try:
-            res = self.req.get(url)
+            res = self._req.get(url)
             soup = BeautifulSoup(res.text, 'lxml')
             line = soup.find('table', attrs={'id': 'result-tab'}).find('tr', attrs={'class': 'evenrow'}).find_all(
                 'td')
@@ -236,8 +233,6 @@ class WUST(Base):
             pass
         return None
 
-    def get_class_name(self):
-        return str('WUST')
 
     def is_waiting_for_judge(self, verdict):
         if verdict in ['Pending', 'Pending Rejudge', 'Compiling', 'Running & Judging']:
@@ -247,7 +242,7 @@ class WUST(Base):
     def check_status(self):
         url = 'http://acm.wust.edu.cn/'
         try:
-            res = self.req.get(url)
+            res = self._req.get(url)
             if re.search(r'<a href="index.php">WUST Online Judge</a>', res.text):
                 return True
         except:

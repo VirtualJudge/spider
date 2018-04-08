@@ -8,7 +8,7 @@ from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
 import bs4
-from ..utils import deal_with_image_url
+from ..Utils import deal_with_image_url
 
 
 class ZOJ(Base):
@@ -37,11 +37,11 @@ class ZOJ(Base):
         except:
             return False
 
-    def login_webside(self, *args, **kwargs):
+    def login_webside(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
         login_link_url = 'http://acm.zju.edu.cn/onlinejudge/login.do'
-        post_data = {'handle': kwargs['account'].get_username(), 'password': kwargs['account'].get_password()}
+        post_data = {'handle': account.username, 'password': account.password}
         try:
             self.req.post(url=login_link_url, data=post_data)
             if self.check_login_status():
