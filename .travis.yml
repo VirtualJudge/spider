@@ -5,4 +5,5 @@ install:
   - pip install -r requirements.txt
 # command to run tests
 script:
-  - python -m unittest
+  - python3 setup.py install
+  - python3 test/run_all_tests.py
