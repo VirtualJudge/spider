@@ -3,3 +3,4 @@ lxml
 wheel
 requests
 coverage
+Flask
