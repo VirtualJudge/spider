@@ -6,4 +6,8 @@ install:
 # command to run tests
 script:
   - python3 setup.py install
-  - python3 -m unittest test/test_config.py
+  - python3 -m unittest test.test_config.TestResult
+  - python3 -m unittest test.test_control.TestOJBuilder
+  - python3 -m unittest test.test_hdu.TestHDU
+  - python3 -m unittest test.test_poj.TestPOJ
+  - python3 -m unittest test.test_utils.TestUtils
