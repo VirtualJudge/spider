@@ -20,3 +20,5 @@ dist/
 VirtualJudgeSpider/OJs/__pycache__/
 
 .DS_Store
+test.py
+html/

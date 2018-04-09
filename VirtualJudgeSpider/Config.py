@@ -99,11 +99,13 @@ class Problem:
         self.remote_id = None
         self.remote_url = None
         self.remote_oj = None
+
         self.title = None
         self.time_limit = None
         self.memory_limit = None
-        self.description = None
         self.special_judge = None
+
+        self.description = None
         self.input = None
         self.output = None
         self.sample = None
@@ -119,7 +121,7 @@ class Problem:
         return self.__dict__
 
     def show(self):
-        print(json.dumps(self.__dict__, indent=4))
+        print(self.__dict__)
 
 
 class Result:

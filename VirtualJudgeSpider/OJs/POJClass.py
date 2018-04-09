@@ -1,11 +1,11 @@
 import base64
 import os
 import re
-
+import bs4
 import requests
 import traceback
 from bs4 import BeautifulSoup
-
+from bs4.element import Tag
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
@@ -101,6 +101,16 @@ class POJ(Base):
 
             problem.special_judge = re.search(r'red;">Special Judge</td>', website_data) is not None
 
+            problem.html = '<style>.pst {font-weight: bold;}</style>'
+
+
+            for tag in soup.find('div', attrs={'class': 'ptt'}).next_siblings:
+                if type(tag) == Tag and set(tag['class']).intersection({'ptx', 'pst', 'sio'}):
+                    problem.html += str(tag)
+            print(problem.html)
+
+            with open('1096.html','w') as f:
+                f.write(problem.html)
             titles = soup.find_all('p', attrs={'class': 'pst'})
             input_data = ''
             output_data = ''
