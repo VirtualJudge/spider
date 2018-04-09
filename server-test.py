@@ -11,7 +11,7 @@ def problem(remote_oj, remote_id):
     problem = Controller(remote_oj).get_problem(remote_id, account=Account('robot4test', 'robot4test'))
     if problem:
         return problem.html
-    return None
+    return ""
 
 
 @app.route("/supports")
