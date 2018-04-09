@@ -38,6 +38,7 @@ class WUSTParser(BaseParser):
                     else:
                         tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
                     problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+        problem.html = '<body>' + problem.html + '</body>'
         return problem
 
     def result_parse(self, website_data):

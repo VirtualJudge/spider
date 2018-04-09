@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>spider test</title>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+<div>
+    <form>
+        remote_oj:
+        <input id="remote_oj" type="text" name="remote_oj" value="POJ">
+        <br>
+        remote_id:
+        <input id="remote_id" type="text" name="remote_id" value="1000">
+        <br>
+        submit:
+        <input value="submit" onclick="updateFrame()" name="button" type="button"
+               id="button"/>
+    </form>
+</div>
+
+<div>
+    <script>
+        function reinitIframe() {
+            var iframe = document.getElementById("frame");
+            try {
+                var bHeight = iframe.contentWindow.document.body.scrollHeight;
+                var dHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+                var height = Math.min(bHeight, dHeight);
+                iframe.height = height;
+            } catch (ex) {
+            }
+        }
+
+        window.setInterval("reinitIframe()", 200);
+
+        function updateFrame() {
+            document.getElementById('frame').src = "/" + document.getElementById('remote_oj').value + '/' + document.getElementById('remote_id').value;
+        }
+    </script>
+    <iframe id="frame" width="100%" frameborder="0" scrolling="no">
+
+    </iframe>
+</div>
+
+
+</body>
+</html>
