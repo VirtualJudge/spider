@@ -1,14 +1,56 @@
 import re
 import traceback
 
-import bs4
 from bs4 import BeautifulSoup
+from bs4 import element
 
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
-from VirtualJudgeSpider.OJs.BaseClass import Base
-from VirtualJudgeSpider.Utils import HttpUtil
-from VirtualJudgeSpider.Utils import deal_with_image_url
+from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
+from VirtualJudgeSpider.Utils import HttpUtil, HtmlTag
+
+
+class WUSTParser(BaseParser):
+    def __init__(self):
+        self._static_prefix = 'http://acm.wust.edu.cn/'
+
+    def problem_parse(self, website_data, pid, url):
+        problem = Problem()
+        problem.remote_id = pid
+        problem.remote_url = url
+        problem.remote_oj = 'WUST'
+
+        problem.title = re.search(r': ([\s\S]*?)</h2>', website_data).group(1)
+        problem.time_limit = re.search(r'(\d* Sec)', website_data).group(1)
+        problem.memory_limit = re.search(r'(\d* MB)', website_data).group(1)
+        problem.special_judge = re.search(r'class=red>Special Judge</span>', website_data) is not None
+
+        soup = BeautifulSoup(website_data, 'lxml')
+
+        problem.html = ''
+        for tag in soup.find('div', attrs={'class': 'rich_text'}).children:
+            if type(tag) == element.Tag:
+                if tag.name in ['h2', 'div']:
+                    if not tag.get('class'):
+                        tag['class'] = ()
+                    if tag.name == 'h2':
+                        tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                    else:
+                        tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                    problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+        return problem
+
+    def result_parse(self, website_data):
+        result = Result()
+        soup = BeautifulSoup(website_data, 'lxml')
+        line = soup.find('table', attrs={'id': 'result-tab'}).find('tr', attrs={'class': 'evenrow'}).find_all('td')
+        if line:
+            result.origin_run_id = line[0].string
+            result.verdict = line[4].string
+            result.execute_time = line[6].string
+            result.execute_memory = line[5].string
+            return result
+        return result
 
 
 class WUST(Base):
@@ -48,122 +90,12 @@ class WUST(Base):
         except:
             return False
 
-    def find_texts(self, tag):
-        ans = ''
-        if type(tag) is bs4.element.NavigableString:
-            return tag
-        elif tag.children is not None and tag.name != 'style':
-            for child in tag.children:
-                ans = ans + self.find_texts(child)
-        return ans
-
-    def parse_html(self, model, soup, website_data):
-        # -------------------------------------------------------------------------------------------------------
-        ans = ''
-        if model == 'Sample Input':
-            model = soup.find('span', attrs={'id': 'sample_input'})
-            if model is not None:
-                for child in model.children:
-                    ans = ans + self.find_texts(child)
-            return ans.strip()
-
-        taken = "<h2>" + model + "</h2>"
-        match_group = re.search(re.compile(taken), website_data)
-        if match_group is None:
-            return ans
-        model = soup.find('h2', text=model).next_siblings
-        for tag in model:
-            if tag.name == 'div':
-                model = tag
-                break
-        # print(model)
-        try:
-            for child in model.children:
-                ans = ans + self.find_texts(child)
-                # print(model)
-        except Exception as e:
-            print(e)
-        return ans.strip()
-        # ---------------------------------------------------------------------------------------------------------
-
-    def parse_desc(self, raw_descs):
-        descList = Config.DescList()
-        for raw_desc in raw_descs:
-            if raw_desc.strip():
-                match_groups = re.search(r'<img[\s\S]*src=\"([\s\S]*?)\"', raw_desc)
-                if match_groups:
-                    file_name, remote_path = deal_with_image_url(str(match_groups.group(1)), 'http://acm.wust.edu.cn/')
-                    descList.append(
-                        Config.Desc(type=Config.Desc.Type.IMG,
-                                    file_name=file_name,
-                                    origin=remote_path))
-                else:
-                    match_groups = re.search(r'<a[\s\S]*href=\"([\s\S]*)\"[\s\S]*>([\s\S]*?)<', raw_desc)
-                    if match_groups:
-                        remote_path = str(match_groups.group(1))
-                        if remote_path.startswith('/'):
-                            remote_path = 'http://acm.wust.edu.cn' + remote_path
-                        else:
-                            remote_path = 'http://acm.wust.edu.cn/' + remote_path
-
-                        descList.append(Config.Desc(type=Config.Desc.Type.ANCHOR, content=match_groups.group(2),
-                                                    origin=remote_path))
-                    else:
-                        descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
-        return descList.get()
-
-    def deal_with_tags(self, h2):
-        raw_descs = []
-        for tag in h2.find_next().descendants:
-            if tag.name == 'img':
-                raw_descs.append(str(tag))
-            elif tag.name == 'a':
-                raw_descs.append(str(tag))
-            elif type(tag) == bs4.element.NavigableString and tag.string != '\n' and tag.parent.name != 'a':
-                raw_descs.append(str(tag.string))
-        return raw_descs
-
     def get_problem(self, *args, **kwargs):
-        url = 'http://acm.wust.edu.cn/problem.php?id=' + str(kwargs['pid']) + '&soj=0'
-        problem = Problem()
+        pid = str(kwargs['pid'])
+        url = 'http://acm.wust.edu.cn/problem.php?id=' + pid + '&soj=0'
         try:
             res = self._req.get(url)
-            website_data = res.text
-            problem.remote_id = kwargs['pid']
-            problem.remote_url = url
-            problem.remote_oj = 'WUST'
-            problem.title = re.search(r': ([\s\S]*?)</h2>', website_data).group(1)
-            problem.time_limit = re.search(r'(\d* Sec)', website_data).group(1)
-            problem.memory_limit = re.search(r'(\d* MB)', website_data).group(1)
-
-            problem.special_judge = re.search(r'class=red>Special Judge</span>', website_data) is not None
-
-            soup = BeautifulSoup(website_data, 'lxml')
-
-            for h2 in soup.find_all('h2'):
-                if re.match(r'<h2>Description', str(h2)):
-                    problem.description = self.parse_desc(self.deal_with_tags(h2))
-                elif re.match(r'<h2>Input', str(h2)):
-                    problem.input = self.parse_desc(self.deal_with_tags(h2))
-                elif re.match(r'<h2>Output', str(h2)):
-                    problem.output = self.parse_desc(self.deal_with_tags(h2))
-                elif re.match(r'<h2>Sample Input', str(h2)):
-                    pass
-                elif re.match(r'<h2>Sample Output', str(h2)):
-                    pass
-                elif re.match(r'<h2>HINT', str(h2)):
-                    problem.hint = self.parse_desc(self.deal_with_tags(h2))
-                elif re.match(r'<h2>Source', str(h2)):
-                    problem.source = self.parse_desc(self.deal_with_tags(h2))
-                elif re.match(r'<h2>Author', str(h2)):
-                    problem.author = self.parse_desc(self.deal_with_tags(h2))
-
-            input_data = self.parse_html("Sample Input", soup, website_data)
-            output_data = self.parse_html("Sample Output", soup, website_data)
-            problem.sample = [
-                {'input': input_data,
-                 'output': output_data}]
-            return problem
+            return WUSTParser().problem_parse(res.text, pid, url)
         except:
             traceback.print_exc()
             return None
@@ -217,22 +149,11 @@ class WUST(Base):
         return self.get_result_by_url(url=url)
 
     def get_result_by_url(self, url):
-        result = Result()
         try:
             res = self._req.get(url)
-            soup = BeautifulSoup(res.text, 'lxml')
-            line = soup.find('table', attrs={'id': 'result-tab'}).find('tr', attrs={'class': 'evenrow'}).find_all(
-                'td')
-            if line is not None:
-                result.origin_run_id = line[0].string
-                result.verdict = line[4].string
-                result.execute_time = line[6].string
-                result.execute_memory = line[5].string
-                return result
+            return WUSTParser().result_parse(res.text)
         except:
-            pass
-        return None
-
+            return None
 
     def is_waiting_for_judge(self, verdict):
         if verdict in ['Pending', 'Pending Rejudge', 'Compiling', 'Running & Judging']:

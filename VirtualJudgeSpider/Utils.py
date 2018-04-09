@@ -1,4 +1,6 @@
 import requests
+from enum import Enum
+from bs4 import element
 
 
 class HttpUtil(object):
@@ -35,3 +37,28 @@ def deal_with_image_url(remote_path, oj_prefix):
         remote_path = oj_prefix.rstrip('/') + '/' + remote_path.lstrip('/')
     file_name = str(str(remote_path).split('/')[-1])
     return file_name, remote_path
+
+
+class HtmlTag(object):
+    class TagDesc(Enum):
+        TITLE = 'vj-title'
+        CONTENT = 'vj-content'
+        IMAGE = 'vj-image'
+        FILE = 'vj-file'
+        ANCHOR = 'vj-anchor'
+
+    @staticmethod
+    def update_tag(tag, oj_prefix):
+        if type(tag) == element.Tag:
+            for child in tag.descendants:
+                if child.name == 'a' and child.get('href'):
+                    if not child.get('class'):
+                        child['class'] = ()
+                    child['class'] += (HtmlTag.TagDesc.ANCHOR.value,)
+                    child['href'] = HttpUtil.abs_url(child.get('href'), oj_prefix=oj_prefix)[-1]
+                if child.name == 'img' and child.get('src'):
+                    if not child.get('class'):
+                        child['class'] = ()
+                    child['class'] += (HtmlTag.TagDesc.IMAGE.value,)
+                    child['src'] = HttpUtil.abs_url(child.get('src'), oj_prefix=oj_prefix)[-1]
+        return tag

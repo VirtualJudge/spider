@@ -124,11 +124,6 @@ class Problem:
         print(self.__dict__)
 
 
-    class Html_Desc(Enum):
-        TITLE = 'vj-title'
-        CONTENT = 'vj-content'
-        IMAGE = 'vj-image'
-        FILE = 'vj-file'
 
 
 class Result:

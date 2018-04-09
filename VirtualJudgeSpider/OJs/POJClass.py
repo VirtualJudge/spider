@@ -7,11 +7,11 @@ from bs4.element import Tag
 
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
-from VirtualJudgeSpider.OJs.BaseClass import Base
-from VirtualJudgeSpider.Utils import HttpUtil
+from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
+from VirtualJudgeSpider.Utils import HttpUtil, HtmlTag
 
 
-class POJParser(object):
+class POJParser(BaseParser):
     def __init__(self):
         self._static_prefix = 'http://poj.org/'
 
@@ -33,14 +33,12 @@ class POJParser(object):
             for tag in soup.find('div', attrs={'class': 'ptt'}).next_siblings:
                 try:
                     if type(tag) == Tag and set(tag.get('class')).intersection({'ptx', 'pst', 'sio'}):
-                        if set(tag.get('class')).intersection({'ptx', 'sio'}):
-                            tag['class'] = tag.get('class').append(Problem.Html_Desc.CONTENT)
-                        for child in tag.descendants:
-                            if child.name == 'a' and child.get('href'):
-                                child['href'] = HttpUtil.abs_url(child.get('href'), oj_prefix=self._static_prefix)[-1]
-                            if child.name == 'img' and child.get('src'):
-                                child['src'] = HttpUtil.abs_url(child.get('src'), oj_prefix=self._static_prefix)[-1]
-                        problem.html += str(tag)
+                        if set(tag['class']).intersection({'pst', }):
+                            tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                        else:
+                            tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+
+                        problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
                 except:
                     pass
             return problem

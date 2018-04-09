@@ -1,4 +1,12 @@
-class Base:
+class BaseParser(object):
+    def problem_parse(self,website_data, pid, url):
+        pass
+
+    def result_parse(self, website_data):
+        pass
+
+
+class Base(object):
     # 主页链接
     @staticmethod
     def home_page_url():

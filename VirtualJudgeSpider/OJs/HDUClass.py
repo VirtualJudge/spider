@@ -1,19 +1,68 @@
 import re
 import traceback
-import os
-import requests
+
 from bs4 import BeautifulSoup
+from bs4 import element
 
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
-from VirtualJudgeSpider.OJs.BaseClass import Base
-from ..Utils import deal_with_image_url
+from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
+from ..Utils import HttpUtil, HtmlTag
+
+
+class HDUParser(BaseParser):
+    def __init__(self):
+        self._static_prefix = 'http://acm.hdu.edu.cn/'
+
+    def problem_parse(self, website_data, pid, url):
+        try:
+            problem = Problem()
+            soup = BeautifulSoup(website_data, 'lxml')
+
+            problem.remote_id = pid
+            problem.remote_url = url
+            problem.remote_oj = 'HDU'
+
+            problem.title = re.search(r'color:#1A5CC8\'>([\s\S]*?)</h1>', website_data).group(1)
+            problem.time_limit = re.search(r'(\d* MS)', website_data).group(1)
+            problem.memory_limit = re.search(r'/(\d* K)', website_data).group(1)
+            problem.special_judge = re.search(r'color=red>Special Judge</font>', website_data) is not None
+
+            problem.html = ''
+            for tag in soup.find('h1').parent.children:
+                if type(tag) == element.Tag and tag.get('class') and set(tag['class']).intersection({'panel_title',
+                                                                                                     'panel_content',
+                                                                                                     'panel_bottom'}):
+                    if set(tag['class']).intersection({'panel_title', }):
+                        tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                    else:
+                        tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                    problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+            return problem
+        except:
+            traceback.print_exc()
+            return None
+
+    def result_parse(self, website_data):
+        result = Result()
+        try:
+            soup = BeautifulSoup(website_data, 'lxml')
+            line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
+                'td')
+            if line:
+                result.origin_run_id = line[0].string
+                result.verdict = line[2].string
+                result.execute_time = line[4].string
+                result.execute_memory = line[5].string
+                return result
+        except:
+            pass
+        return None
 
 
 class HDU(Base):
     def __init__(self):
-        self.req = requests.Session()
-        self.req.headers.update(Config.custom_headers)
+        self._req = HttpUtil(custom_headers=Config.custom_headers)
 
     @staticmethod
     def home_page_url():
@@ -23,7 +72,7 @@ class HDU(Base):
     def check_login_status(self):
         url = 'http://acm.hdu.edu.cn/'
         try:
-            website_data = self.req.get(url)
+            website_data = self._req.get(url)
             if re.search(r'userloginex\.php\?action=logout', website_data.text) is not None:
                 return True
             return False
@@ -39,102 +88,34 @@ class HDU(Base):
                      'login': 'Sign In'
                      }
         try:
-            self.req.post(url=login_link_url, data=post_data,
-                          params={'action': 'login'})
+            self._req.post(url=login_link_url, data=post_data,
+                           params={'action': 'login'})
             if self.check_login_status():
                 return True
             return False
         except:
             return False
 
-    def parse_desc(self, raw_descs):
-        descList = Config.DescList()
-        for raw_desc in raw_descs.split('<br>'):
-            if raw_desc.strip(''):
-                match_groups = re.search(r'<img([\s\S]*)src=([\s\S]*(gif|png|jpeg|jpg|GIF))', raw_desc)
-                if match_groups:
-                    file_name, remote_path = deal_with_image_url(str(match_groups.group(2)), 'http://acm.hdu.edu.cn/')
-
-                    descList.append(
-                        Config.Desc(type=Config.Desc.Type.IMG,
-                                    file_name=file_name,
-                                    origin=remote_path))
-                else:
-                    descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
-        return descList.get()
-
     def get_problem(self, *args, **kwargs):
-        url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + str(kwargs['pid'])
-        problem = Problem()
+        pid = str(kwargs['pid'])
+        url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + pid
         try:
-            res = self.req.get(url)
-            website_data = res.text
-            problem.remote_id = str(kwargs['pid'])
-            problem.remote_url = url
-            problem.remote_oj = 'HDU'
-            problem.title = re.search(r'color:#1A5CC8\'>([\s\S]*?)</h1>', website_data).group(1)
-            problem.time_limit = re.search(r'(\d* MS)', website_data).group(1)
-            problem.memory_limit = re.search(r'/(\d* K)', website_data).group(1)
-
-            problem.special_judge = re.search(r'color=red>Special Judge</font>', website_data) is not None
-
-            # description
-            match_groups = re.search(r'>Problem Description</div>[\s\S]*?panel_content>([\s\S]*?)</div>',
-                                     website_data)
-            if match_groups:
-                problem.description = self.parse_desc(match_groups.group(1))
-            # input
-            match_groups = re.search(r'>Input</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data)
-            if match_groups:
-                problem.input = self.parse_desc(match_groups.group(1))
-
-            # output
-
-            match_groups = re.search(r'>Output</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data)
-            if match_groups:
-                problem.output = self.parse_desc(match_groups.group(1))
-
-            # input data
-            match_groups = re.search(r'>Sample Input</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data)
-            input_data = ''
-            if match_groups:
-                input_data = re.search(r'(<pre><div[\s\S]*?>)?([\s\S]*)', match_groups.group(1)).group(2)
-
-            # output data
-            output_data = ''
-            match_groups = re.search(r'>Sample Output</div>[\s\S]*?panel_content>([\s\S]*?)</div', website_data)
-            if match_groups:
-                output_data = re.search(r'(<pre><div[\s\S]*?>)?([\s\S]*)', match_groups.group(1)).group(2)
-                if re.search('<div', output_data):
-                    output_data = re.search(r'([\s\S]*?)<div', output_data).group(1)
-            problem.sample = [
-                {'input': input_data,
-                 'output': output_data}]
-
-            # author
-            match_groups = re.search(r'>Author</div>[\s\S]*?panel_content>([\s\S]*?)</div>', website_data)
-            if match_groups:
-                problem.author = match_groups.group(1)
-
-            # hint
-            match_groups = re.search(r'<i>Hint</i>[\s\S]*?/div>[\s]*([\s\S]+?)</div>', website_data)
-            if match_groups:
-                problem.hint = self.parse_desc(match_groups.group(1))
+            res = self._req.get(url)
+            return HDUParser().problem_parse(res.text, pid, url)
         except:
             traceback.print_exc()
             return None
-        return problem
 
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):
             return False
         try:
-            code = kwargs['code']
-            language = kwargs['language']
-            pid = kwargs['pid']
+            code = kwargs.get('code')
+            language = kwargs.get('language')
+            pid = kwargs.get('pid')
             url = 'http://acm.hdu.edu.cn/submit.php'
             post_data = {'check': '0', 'language': language, 'problemid': pid, 'usercode': code}
-            res = self.req.post(url=url, data=post_data, params={'action': 'submit'})
+            res = self._req.post(url=url, data=post_data, params={'action': 'submit'})
             if res.status_code == 200:
                 return True
             return False
@@ -147,7 +128,7 @@ class HDU(Base):
         url = 'http://acm.hdu.edu.cn/submit.php'
         languages = {}
         try:
-            website_data = self.req.get(url)
+            website_data = self._req.get(url)
             soup = BeautifulSoup(website_data.text, 'lxml')
             options = soup.find('select', attrs={'name': 'language'}).find_all('option')
             for option in options:
@@ -168,16 +149,8 @@ class HDU(Base):
     def get_result_by_url(self, url):
         result = Result()
         try:
-            data = self.req.get(url)
-            soup = BeautifulSoup(data.text, 'lxml')
-            line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
-                'td')
-            if line:
-                result.origin_run_id = line[0].string
-                result.verdict = line[2].string
-                result.execute_time = line[4].string
-                result.execute_memory = line[5].string
-                return result
+            res = self._req.get(url)
+            return HDUParser().result_parse(res.text)
         except:
             pass
         return result
@@ -190,7 +163,7 @@ class HDU(Base):
     def check_status(self):
         url = 'http://acm.hdu.edu.cn/'
         try:
-            website_data = self.req.get(url)
+            website_data = self._req.get(url)
             if re.search(r'<H1>Welcome to HDU Online Judge System</H1>', website_data.text):
                 return True
         except:
