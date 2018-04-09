@@ -27,6 +27,9 @@ class FZUParser(BaseParser):
         problem.special_judge = re.search(r'<font color="blue">Special Judge</font>', website_data) is not None
         problem.html = ''
         for tag in soup.find('div', attrs={'class': 'problem_content'}).children:
+            if tag.name == 'h2':
+                if tag.img:
+                    tag.img.decompose()
             problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
         problem.html = '<body>' + problem.html + '</body>'
         return problem

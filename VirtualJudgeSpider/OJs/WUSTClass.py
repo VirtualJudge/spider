@@ -34,6 +34,10 @@ class WUSTParser(BaseParser):
                     if not tag.get('class'):
                         tag['class'] = ()
                     if tag.name == 'h2':
+                        if tag.div:
+                            tag.div.decompose()
+                        if tag.img:
+                            tag.img.decompose()
                         tag['style'] = HtmlTag.TagStyle.TITLE.value
                         tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
                         problem.html += str(

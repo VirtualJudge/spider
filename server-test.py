@@ -33,7 +33,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
 def run():
-    port = 8000
+    port = 7777
     print('starting server, port', port)
 
     # Server settings
