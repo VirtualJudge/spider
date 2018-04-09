@@ -24,7 +24,7 @@ class Aizu(Base):
         return url
 
     # 登录页面
-    def login_webside(self,account, *args, **kwargs):
+    def login_webside(self, account, *args, **kwargs):
         if self.check_login_status(self, *args, **kwargs):
             return True
         login_link_url = 'https://judgeapi.u-aizu.ac.jp/session'
@@ -33,7 +33,7 @@ class Aizu(Base):
             'password': account.password
         }
         try:
-            res = self.req.post(url=login_link_url, data=json.dumps(post_data))
+            res = self.req.post(url=login_link_url, json=post_data)
             if res.status_code != 200:
                 return False
             if self.check_login_status(self, *args, **kwargs):
@@ -61,7 +61,6 @@ class Aizu(Base):
             url = 'https://judgeapi.u-aizu.ac.jp/resources/descriptions/en/' + str(pid)
             res = self.req.get(url)
             js = json.loads(res.text)
-            print(json.dumps(js, indent=4))
             problem.time_limit = str(js.time_limit) + ' sec'
             problem.memory_limit = str(js.memory_limit) + ' KB'
             problem.description = js.html
@@ -106,7 +105,6 @@ class Aizu(Base):
                 'Go': 'Go', 'Ruby': 'Ruby', 'Rust': 'Rust', 'Python': 'Python', 'Python3': 'Python3',
                 'JavaScript': 'JavaScript', 'Scala': 'Scala', 'Haskell': 'Haskell', 'OCaml': 'OCaml', 'PHP': 'PHP',
                 'Kotlin': 'Kotlin'}
-
 
     # 判断当前提交结果的运行状态
     def is_waiting_for_judge(self, verdict):
