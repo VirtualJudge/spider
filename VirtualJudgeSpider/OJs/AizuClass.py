@@ -63,7 +63,7 @@ class Aizu(Base):
             js = json.loads(res.text)
             problem.time_limit = str(js.time_limit) + ' sec'
             problem.memory_limit = str(js.memory_limit) + ' KB'
-            problem.description = js.html
+            problem.html = js.html
             return problem
         except:
             traceback.print_exc()

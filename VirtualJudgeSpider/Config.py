@@ -124,6 +124,13 @@ class Problem:
         print(self.__dict__)
 
 
+    class Html_Desc(Enum):
+        TITLE = 'vj-title'
+        CONTENT = 'vj-content'
+        IMAGE = 'vj-image'
+        FILE = 'vj-file'
+
+
 class Result:
     def __init__(self):
         self.origin_run_id = None

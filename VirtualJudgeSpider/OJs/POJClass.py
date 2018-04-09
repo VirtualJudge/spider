@@ -1,16 +1,67 @@
 import base64
-import os
 import re
-import bs4
-import requests
 import traceback
+
 from bs4 import BeautifulSoup
 from bs4.element import Tag
+
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base
-from VirtualJudgeSpider.Utils import deal_with_image_url
 from VirtualJudgeSpider.Utils import HttpUtil
+
+
+class POJParser(object):
+    def __init__(self):
+        self._static_prefix = 'http://poj.org/'
+
+    def problem_parse(self, website_data, pid, url):
+        try:
+            problem = Problem()
+            soup = BeautifulSoup(website_data, 'lxml')
+
+            problem.remote_id = pid
+            problem.remote_url = url
+            problem.remote_oj = 'POJ'
+
+            problem.title = re.search(r'ptt" lang="en-US">([\s\S]*?)</div>', website_data).group(1)
+            problem.time_limit = re.search(r'(\d*MS)', website_data).group(1)
+            problem.memory_limit = re.search(r'Memory Limit:</b> ([\s\S]*?)</td>', website_data).group(1)
+            problem.special_judge = re.search(r'red;">Special Judge</td>', website_data) is not None
+
+            problem.html = ''
+            for tag in soup.find('div', attrs={'class': 'ptt'}).next_siblings:
+                try:
+                    if type(tag) == Tag and set(tag.get('class')).intersection({'ptx', 'pst', 'sio'}):
+                        if set(tag.get('class')).intersection({'ptx', 'sio'}):
+                            tag['class'] = tag.get('class').append(Problem.Html_Desc.CONTENT)
+                        for child in tag.descendants:
+                            if child.name == 'a' and child.get('href'):
+                                child['href'] = HttpUtil.abs_url(child.get('href'), oj_prefix=self._static_prefix)[-1]
+                            if child.name == 'img' and child.get('src'):
+                                child['src'] = HttpUtil.abs_url(child.get('src'), oj_prefix=self._static_prefix)[-1]
+                        problem.html += str(tag)
+                except:
+                    pass
+            return problem
+        except:
+            traceback.print_exc()
+            return None
+
+    def result_parse(self, website_data):
+        result = Result()
+        try:
+            soup = BeautifulSoup(website_data, 'lxml')
+            line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
+            if line is not None:
+                result.origin_run_id = line[0].string
+                result.verdict = line[3].string
+                result.execute_time = line[5].string
+                result.execute_memory = line[4].string
+                return result
+        except:
+            pass
+        return None
 
 
 class POJ(Base):
@@ -19,7 +70,8 @@ class POJ(Base):
         self._headers = Config.custom_headers
         self._headers['Referer'] = 'http://poj.org/'
         self._headers['Content-Type'] = 'application/x-www-form-urlencoded'
-        self._req = HttpUtil(self._headers)
+
+        self._req = HttpUtil(self._headers, self.code_type)
 
     @staticmethod
     def home_page_url():
@@ -74,8 +126,8 @@ class POJ(Base):
                 else:
                     match_groups = re.search(r'<img([\s\S]*)src=\"([\s\S]*(gif|png|jpeg|jpg|GIF))\"', raw_desc)
                     if match_groups:
-                        file_name, remote_path = deal_with_image_url(str(match_groups.group(2)),
-                                                                     'http://poj.org')
+                        file_name, remote_path = HttpUtil.abs_url(str(match_groups.group(2)),
+                                                                  'http://poj.org')
                         descList.append(
                             Config.Desc(type=Config.Desc.Type.IMG,
                                         file_name=file_name,
@@ -86,81 +138,15 @@ class POJ(Base):
 
     # 获取题目
     def get_problem(self, *args, **kwargs):
-        url = 'http://poj.org/problem?id=' + str(kwargs['pid'])
-        problem = Problem()
+        pid = str(kwargs['pid'])
+        url = 'http://poj.org/problem?id=' + pid
         try:
             res = self._req.get(url=url)
             website_data = res.text
-            soup = BeautifulSoup(website_data, 'lxml')
-            problem.remote_id = kwargs['pid']
-            problem.remote_url = url
-            problem.remote_oj = 'POJ'
-            problem.title = re.search(r'ptt" lang="en-US">([\s\S]*?)</div>', website_data).group(1)
-            problem.time_limit = re.search(r'(\d*MS)', website_data).group(1)
-            problem.memory_limit = re.search(r'Memory Limit:</b> ([\s\S]*?)</td>', website_data).group(1)
-
-            problem.special_judge = re.search(r'red;">Special Judge</td>', website_data) is not None
-
-            problem.html = '<style>.pst {font-weight: bold;}</style>'
-
-
-            for tag in soup.find('div', attrs={'class': 'ptt'}).next_siblings:
-                if type(tag) == Tag and set(tag['class']).intersection({'ptx', 'pst', 'sio'}):
-                    problem.html += str(tag)
-            print(problem.html)
-
-            with open('1096.html','w') as f:
-                f.write(problem.html)
-            titles = soup.find_all('p', attrs={'class': 'pst'})
-            input_data = ''
-            output_data = ''
-            for title in titles:
-                if title.string == 'Description':
-                    raw_descs = []
-                    for_list = title.find_next().find('span')
-                    if not for_list:
-                        for_list = title.find_next()
-                    for child in for_list:
-                        raw_descs.append(str(child))
-                    problem.description = self.parse_desc(raw_descs)
-                elif title.string == 'Input':
-                    raw_descs = []
-                    for child in title.find_next():
-                        raw_descs.append(str(child))
-                    problem.input = self.parse_desc(raw_descs)
-                elif title.string == 'Output':
-                    raw_descs = []
-                    for child in title.find_next():
-                        raw_descs.append(str(child))
-                    problem.output = self.parse_desc(raw_descs)
-                elif title.string == 'Sample Input':
-                    raw_descs = []
-                    for child in title.find_next():
-                        raw_descs.append(str(child))
-                    input_data = raw_descs
-                elif title.string == 'Sample Output':
-                    raw_descs = []
-                    for child in title.find_next():
-                        raw_descs.append(str(child))
-                    output_data = raw_descs
-                elif title.string == 'Hint':
-                    raw_descs = []
-                    for child in title.find_next():
-                        raw_descs.append(str(child))
-                    problem.hint = self.parse_desc(raw_descs)
-                elif title.string == 'Source':
-                    raw_descs = []
-                    for child in title.find_next():
-                        raw_descs.append(str(child))
-                    problem.source = self.parse_desc(raw_descs)
-
-            problem.sample = [
-                {'input': input_data,
-                 'output': output_data}]
-            return problem
+            return POJParser().problem_parse(website_data, pid, url)
         except:
             traceback.print_exc()
-        return None
+            return None
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
@@ -197,17 +183,9 @@ class POJ(Base):
 
     # 根据源OJ的url获取结果
     def get_result_by_url(self, url):
-        result = Result()
         try:
             res = self._req.get(url=url)
-            soup = BeautifulSoup(res.text, 'lxml')
-            line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
-            if line is not None:
-                result.origin_run_id = line[0].string
-                result.verdict = line[3].string
-                result.execute_time = line[5].string
-                result.execute_memory = line[4].string
-                return result
+            return POJParser().result_parse(res.text)
         except:
             pass
         return None
@@ -229,7 +207,7 @@ class POJ(Base):
 
     # 判断当前提交结果的运行状态
     def is_waiting_for_judge(self, verdict):
-        if verdict == 'Queuing' or verdict == 'Compiling':
+        if verdict in ['Queuing', 'Compiling']:
             return True
         return False
 

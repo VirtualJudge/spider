@@ -22,6 +22,13 @@ class HttpUtil(object):
             self._response.encoding = self._code_type
         return self._response
 
+    @staticmethod
+    def abs_url(remote_path, oj_prefix):
+        if not remote_path.startswith('http://') and not remote_path.startswith('https://'):
+            remote_path = oj_prefix.rstrip('/') + '/' + remote_path.lstrip('/')
+        file_name = str(str(remote_path).split('/')[-1])
+        return file_name, remote_path
+
 
 def deal_with_image_url(remote_path, oj_prefix):
     if not remote_path.startswith('http://') and not remote_path.startswith('https://'):
