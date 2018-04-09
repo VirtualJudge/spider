@@ -4,16 +4,16 @@ supports = ['Aizu', 'HDU', 'FZU', 'POJ', 'WUST', 'ZOJ']
 class OJBuilder:
     @staticmethod
     def build_oj(name, *args, **kwargs):
-        for oj_name in supports:
-            if str(name).upper() == str(oj_name).upper():
-                try:
-                    module_meta = __import__('VirtualJudgeSpider.OJs.%sClass' % (oj_name,), globals(), locals(),
-                                             [oj_name])
-                    class_meta = getattr(module_meta, oj_name)
-                    oj = class_meta(*args, **kwargs)
-                    return oj
-                except ModuleNotFoundError:
-                    return None
+        oj_name = Controller.get_real_remote_oj(str(name))
+        if oj_name:
+            try:
+                module_meta = __import__('VirtualJudgeSpider.OJs.%sClass' % (oj_name,), globals(), locals(),
+                                         [oj_name])
+                class_meta = getattr(module_meta, oj_name)
+                oj = class_meta(*args, **kwargs)
+                return oj
+            except ModuleNotFoundError:
+                return None
         return None
 
 
@@ -21,6 +21,12 @@ class Controller:
     def __init__(self, oj_name):
         self._oj = OJBuilder.build_oj(oj_name)
 
+    @staticmethod
+    def get_real_remote_oj(name):
+        for oj_name in supports:
+            if str(name).upper() == str(oj_name).upper():
+                    return oj_name
+        return None
     # 获取支持的OJ列表
     @staticmethod
     def get_supports():
@@ -29,7 +35,7 @@ class Controller:
     # 判断当前是否支持
     @staticmethod
     def is_support(oj_name):
-        if oj_name in supports:
+        if Controller.get_real_remote_oj(oj_name):
             return True
         return False
 
