@@ -12,7 +12,10 @@
     </p>
     <form>
         remote_oj:
-        <input id="remote_oj" type="text" name="remote_oj" value="POJ">
+        <select id="remote_oj">
+
+        </select>
+
         <br>
         remote_id:
         <input id="remote_id" type="text" name="remote_id" value="1000">
@@ -25,6 +28,21 @@
 
 <div>
     <script>
+        function loadRemoteOJ() {
+            $.get('/supports', function (result) {
+                var re_json = JSON.parse(result);
+                $("#remote_oj").html("");
+                re_json['supports'].forEach(function (oj_name) {
+                    $("#remote_oj").append("<option value='" + oj_name + "'>" + oj_name + "</option>");
+                });
+                $("#remote_oj").val("WUST");
+            });
+        }
+
+        $(document).ready(function () {
+            loadRemoteOJ();
+        });
+
         function reinitIframe() {
             var iframe = document.getElementById("frame");
             try {

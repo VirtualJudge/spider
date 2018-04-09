@@ -1,12 +1,7 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from os import path
-from urllib.parse import urlparse
-from VirtualJudgeSpider.Control import Controller
+from flask import Flask, render_template
+import json
 from VirtualJudgeSpider.Config import Account
-
-from flask import Flask, render_template, Blueprint
 from VirtualJudgeSpider.Control import Controller
-from VirtualJudgeSpider.Config import Account
 
 app = Flask(__name__, template_folder='.')
 
@@ -17,6 +12,13 @@ def problem(remote_oj, remote_id):
     if problem:
         return problem.html
     return None
+
+
+@app.route("/supports")
+def supports():
+    return json.dumps({
+        'supports': Controller.get_supports()
+    })
 
 
 @app.route("/")
