@@ -6,4 +6,4 @@ install:
 # command to run tests
 script:
   - python3 setup.py install
-  - python3 test/run_all_tests.py
+  - python3 -m unittest test/test_config.py
