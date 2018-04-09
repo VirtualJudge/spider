@@ -5,7 +5,44 @@ from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
-from VirtualJudgeSpider.OJs.BaseClass import Base
+from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
+from VirtualJudgeSpider.Utils import HtmlTag
+
+
+class FZUParser(BaseParser):
+    def __init__(self):
+        self._static_prefix = 'http://acm.fzu.edu.cn/'
+
+    def problem_parse(self, website_data, pid, url):
+        problem = Problem()
+        soup = BeautifulSoup(website_data, 'lxml')
+
+        problem.remote_id = pid
+        problem.remote_url = url
+        problem.remote_oj = 'FZU'
+
+        problem.title = re.search(r'<b> Problem [\d]* ([\s\S]*?)</b>', website_data).group(1)
+        problem.time_limit = re.search(r'(\d* mSec)', website_data).group(1)
+        problem.memory_limit = re.search(r'(\d* KB)', website_data).group(1)
+        problem.special_judge = re.search(r'<font color="blue">Special Judge</font>', website_data) is not None
+        problem.html = ''
+        for tag in soup.find('div', attrs={'class': 'problem_content'}).children:
+            problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+        problem.html = '<body>' + problem.html + '</body>'
+        return problem
+
+    def result_parse(self, website_data):
+        result = Result()
+        soup = BeautifulSoup(website_data, 'lxml')
+        line = soup.find('table').find('tr', attrs={'onmouseover': 'hl(this);'}).find_all(
+            'td')
+        if line is not None:
+            result.origin_run_id = line[0].string
+            result.verdict = line[2].string
+            result.execute_time = line[5].string
+            result.execute_memory = line[6].string
+            return result
+        return None
 
 
 class FZU(Base):
@@ -48,48 +85,19 @@ class FZU(Base):
             return False
 
     def get_problem(self, *args, **kwargs):
-        url = 'http://acm.fzu.edu.cn/problem.php?pid=' + str(kwargs['pid'])
-        problem = Problem()
+        if not self.login_webside(*args,**kwargs):
+            return None
+        pid = str(kwargs['pid'])
+        url = 'http://acm.fzu.edu.cn/problem.php?pid=' + pid
         try:
             res = self.req.get(url)
             if res.status_code != 200:
                 return None
-            website_data = res.text
-            soup = BeautifulSoup(website_data, 'lxml')
-            problem.remote_id = kwargs['pid']
-            problem.remote_url = url
-            problem.remote_oj = 'FZU'
-            problem.title = re.search(r'<b> Problem [\d]* ([\s\S]*?)</b>', website_data).group(1)
-            problem.time_limit = re.search(r'(\d* mSec)', website_data).group(1)
-            problem.memory_limit = re.search(r'(\d* KB)', website_data).group(1)
-            problem.special_judge = re.search(r'<font color="blue">Special Judge</font>', website_data) is not None
-            pro_desc = soup.find_all(attrs={"class": 'pro_desc'})
-            problem.description = pro_desc[0].get_text()
-            if len(pro_desc) >= 2:
-                problem.input = pro_desc[1].get_text()
-            if len(pro_desc) >= 3:
-                problem.output = pro_desc[2].get_text()
-            data = soup.find_all(attrs={"class": 'data'})
-            input_data = ''
-            output_data = ''
-            if len(data) > 1:
-                input_data = data[0].get_text()
-                output_data = data[1].get_text()
-            problem.sample = [
-                {'input': input_data,
-                 'output': output_data}]
-
-            h2s = soup.find_all('h2')
-            for h2 in h2s[-2:]:
-                if h2.get_text().strip() == 'Hint':
-                    problem.hint = h2.next_sibling
-
-                if h2.get_text().strip() == 'Source':
-                    problem.source = h2.next_sibling
-
+            return FZUParser().problem_parse(res.text, pid, url)
         except:
+            import traceback
+            traceback.print_exc()
             return None
-        return problem
 
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):
@@ -139,19 +147,9 @@ class FZU(Base):
         result = Result()
         try:
             res = self.req.get(url)
-            website_data = res.text
-            soup = BeautifulSoup(website_data, 'lxml')
-            line = soup.find('table').find('tr', attrs={'onmouseover': 'hl(this);'}).find_all(
-                'td')
-            if line is not None:
-                result.origin_run_id = line[0].string
-                result.verdict = line[2].string
-                result.execute_time = line[5].string
-                result.execute_memory = line[6].string
-                return result
+            return FZUParser().result_parse(res.text)
         except:
-            pass
-        return None
+            return None
 
     def is_waiting_for_judge(self, verdict):
         if verdict in ['Judging...', 'Queuing...']:

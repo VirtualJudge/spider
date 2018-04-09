@@ -10,12 +10,12 @@ VirtualJudge - Judge Spider
  - WUST
  - POJ
  - FZU
-
+ - Aizu
+ 
 ### working
  - ZOJ
  - Codeforces
  - hihoCoder
- - Aizu
  
 ### pending
  - URAL

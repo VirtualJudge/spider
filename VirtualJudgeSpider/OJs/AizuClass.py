@@ -3,19 +3,73 @@ import ssl
 import traceback
 
 import requests
+from bs4 import BeautifulSoup
+from bs4 import element
 
-from VirtualJudgeSpider.Config import Problem
-from VirtualJudgeSpider.OJs.BaseClass import Base
+from VirtualJudgeSpider.Config import Problem, Result
+from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
+from VirtualJudgeSpider.Utils import HtmlTag
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
+class AizuParser(BaseParser):
+
+    def __init__(self):
+        self._static_prefix = 'http://judge.u-aizu.ac.jp/onlinejudge/'
+        self._judge_static_string = ['Compile Error', 'Wrong Answer', 'Time Limit Exceed',
+                                     'Memory Limit Exceed', 'Accepted', 'Waiting',
+                                     'Output Limit Exceed', 'Runtime Error', 'Presentation Error', 'Running']
+
+    def problem_parse(self, website_data, pid, url):
+        problem = Problem()
+        site_data = json.loads(website_data)
+
+        soup = BeautifulSoup(site_data.get('html'), 'lxml')
+
+        problem.remote_id = pid
+        problem.remote_oj = 'Aizu'
+        problem.remote_url = url
+
+        problem.title = str(soup.find('h1').string)
+        problem.time_limit = str(site_data.get('time_limit')) + ' sec'
+        problem.memory_limit = str(site_data.get('memory_limit')) + ' KB'
+        problem.special_judge = False
+
+        problem.html = ''
+        for tag in soup.body:
+            if type(tag) == element.Tag and tag.name in ['p', 'h2', 'pre']:
+                if tag.name == 'h2':
+                    tag['style'] = HtmlTag.TagStyle.TITLE.value
+
+                    tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                else:
+                    tag['style'] = HtmlTag.TagStyle.CONTENT.value
+                    tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+        return problem
+
+    def result_parse(self, website_data):
+        result = Result()
+        try:
+            site_data = json.loads(website_data)
+            submission_record = site_data['submissionRecord']
+            result.origin_run_id = str(submission_record['judgeId'])
+            result.verdict = self._judge_static_string[int(submission_record['status'])]
+            result.execute_time = str(format(float(submission_record['cpuTime']) / float(100), '.2f')) + ' s'
+            result.execute_memory = str(submission_record['memory']) + ' KB'
+            return result
+        except:
+            return None
+
+
 class Aizu(Base):
+
     def __init__(self):
         self.headers = {'Content-Type': 'application/json'}
 
-        self.req = requests.session()
-        self.req.headers.update(self.headers)
+        self._req = requests.session()
+        self._req.headers.update(self.headers)
 
     # 主页链接
     @staticmethod
@@ -33,7 +87,7 @@ class Aizu(Base):
             'password': account.password
         }
         try:
-            res = self.req.post(url=login_link_url, json=post_data)
+            res = self._req.post(url=login_link_url, json=post_data)
             if res.status_code != 200:
                 return False
             if self.check_login_status(self, *args, **kwargs):
@@ -46,7 +100,7 @@ class Aizu(Base):
     def check_login_status(self, *args, **kwargs):
         url = 'https://judgeapi.u-aizu.ac.jp/self'
         try:
-            res = self.req.get(url)
+            res = self._req.get(url)
             if res.status_code == 200:
                 return True
             return False
@@ -55,16 +109,11 @@ class Aizu(Base):
 
     # 获取题目
     def get_problem(self, *args, **kwargs):
-        problem = Problem()
         try:
             pid = kwargs['pid']
             url = 'https://judgeapi.u-aizu.ac.jp/resources/descriptions/en/' + str(pid)
-            res = self.req.get(url)
-            js = json.loads(res.text)
-            problem.time_limit = str(js.time_limit) + ' sec'
-            problem.memory_limit = str(js.memory_limit) + ' KB'
-            problem.html = js.html
-            return problem
+            res = self._req.get(url)
+            return AizuParser().problem_parse(res.text, pid, url)
         except:
             traceback.print_exc()
         return None
@@ -76,7 +125,7 @@ class Aizu(Base):
             problemId = kwargs['pid']
             language = kwargs['language']
             sourceCode = kwargs['code']
-            res = self.req.post(url, json.dumps(
+            res = self._req.post(url, json.dumps(
                 {'problemId': str(problemId), 'language': str(language), 'sourceCode': str(sourceCode)}))
             if res.status_code == 200:
                 return True
@@ -86,18 +135,29 @@ class Aizu(Base):
 
     # 获取当然运行结果
     def get_result(self, *args, **kwargs):
-
+        account = kwargs.get('account')
+        pid = str(kwargs.get('pid'))
+        url = 'https://judgeapi.u-aizu.ac.jp/submission_records/users/' + str(account.username) + '/problems/' + pid
+        res = self._req.get(url)
+        if res.status_code != 200:
+            return None
+        recent_list = json.loads(res.text)
+        url = 'https://judgeapi.u-aizu.ac.jp/verdicts/' + str(recent_list[0].get('judgeId'))
+        return self.get_result_by_url(url)
         pass
 
     # 根据源OJ的运行id获取结构
     def get_result_by_rid_and_pid(self, rid, pid):
-
+        url = 'https://judgeapi.u-aizu.ac.jp/verdicts/' + str(rid)
+        return self.get_result_by_url(url)
         pass
 
     # 根据源OJ的url获取结果
     def get_result_by_url(self, url):
-
-        pass
+        res = self._req.get(url)
+        if res.status_code != 200:
+            return None
+        return AizuParser().result_parse(res.text)
 
     # 获取源OJ支持的语言类型
     def find_language(self, *args, **kwargs):
@@ -116,7 +176,7 @@ class Aizu(Base):
     def check_status(self):
         url = 'https://judgeapi.u-aizu.ac.jp/categories'
         try:
-            res = self.req.get(url)
+            res = self._req.get(url)
             if res.status_code == 200:
                 return True
             return False

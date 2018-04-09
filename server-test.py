@@ -22,10 +22,12 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 remote_oj = param_list[0]
                 remote_id = param_list[1]
-                print(remote_oj, remote_id)
                 account = Account('robot4test', 'robot4test')
                 problem = Controller(remote_oj).get_problem(remote_id, account)
-                self.wfile.write(bytes(problem.html, encoding='utf-8'))
+                if problem:
+                    self.wfile.write(bytes(problem.html, encoding='utf-8'))
+                else:
+                    self.send_response(404)
             else:
                 self.send_response(404)
 
@@ -35,7 +37,7 @@ def run():
     print('starting server, port', port)
 
     # Server settings
-    server_address = ('', port)
+    server_address = ('0.0.0.0', port)
     httpd = HTTPServer(server_address, MyHTTPRequestHandler)
     print('running server: http://localhost:8000 ...')
     httpd.serve_forever()

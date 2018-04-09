@@ -1,16 +1,20 @@
-supports = ['HDU', 'POJ', 'WUST', 'ZOJ']
+supports = ['Aizu', 'HDU', 'FZU', 'POJ', 'WUST', 'ZOJ']
 
 
 class OJBuilder:
     @staticmethod
     def build_oj(name, *args, **kwargs):
-        try:
-            module_meta = __import__('VirtualJudgeSpider.OJs.%sClass' % (name,), globals(), locals(), [name])
-            class_meta = getattr(module_meta, name)
-            oj = class_meta(*args, **kwargs)
-            return oj
-        except ModuleNotFoundError:
-            return None
+        for oj_name in supports:
+            if str(name).upper() == str(oj_name).upper():
+                try:
+                    module_meta = __import__('VirtualJudgeSpider.OJs.%sClass' % (oj_name,), globals(), locals(),
+                                             [oj_name])
+                    class_meta = getattr(module_meta, oj_name)
+                    oj = class_meta(*args, **kwargs)
+                    return oj
+                except ModuleNotFoundError:
+                    return None
+        return None
 
 
 class Controller:

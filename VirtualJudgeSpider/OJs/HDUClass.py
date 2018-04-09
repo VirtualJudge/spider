@@ -35,8 +35,10 @@ class HDUParser(BaseParser):
                                                                                                      'panel_bottom'}):
                     if set(tag['class']).intersection({'panel_title', }):
                         tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                        tag['style'] = HtmlTag.TagStyle.TITLE.value
                     else:
                         tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                        tag['style'] = HtmlTag.TagStyle.CONTENT.value
                     problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
             return problem
         except:

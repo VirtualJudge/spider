@@ -47,18 +47,31 @@ class HtmlTag(object):
         FILE = 'vj-file'
         ANCHOR = 'vj-anchor'
 
+    class TagStyle(Enum):
+        TITLE = 'font-family: Helvetica,"PingFang SC","Hiragino Sans GB' \
+                '","Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 18px;font-weight: bold;'
+        CONTENT = 'font-family: Helvetica,"PingFang SC","Hiragino Sans GB' \
+                  '","Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 14px;'
+
     @staticmethod
-    def update_tag(tag, oj_prefix):
-        if type(tag) == element.Tag:
-            for child in tag.descendants:
-                if child.name == 'a' and child.get('href'):
-                    if not child.get('class'):
-                        child['class'] = ()
-                    child['class'] += (HtmlTag.TagDesc.ANCHOR.value,)
-                    child['href'] = HttpUtil.abs_url(child.get('href'), oj_prefix=oj_prefix)[-1]
-                if child.name == 'img' and child.get('src'):
-                    if not child.get('class'):
-                        child['class'] = ()
-                    child['class'] += (HtmlTag.TagDesc.IMAGE.value,)
-                    child['src'] = HttpUtil.abs_url(child.get('src'), oj_prefix=oj_prefix)[-1]
-        return tag
+    def update_tag(tag, oj_prefix, update_style=None):
+        try:
+            if type(tag) == element.Tag:
+                for child in tag.descendants:
+                    if type(child) == element.Tag and update_style:
+                        child['style'] = update_style
+                    if child.name == 'a' and child.get('href'):
+                        if not child.get('class'):
+                            child['class'] = ()
+                        child['class'] += (HtmlTag.TagDesc.ANCHOR.value,)
+                        child['href'] = HttpUtil.abs_url(child.get('href'), oj_prefix=oj_prefix)[-1]
+                    if child.name == 'img' and child.get('src'):
+                        if not child.get('class'):
+                            child['class'] = ()
+                        child['class'] += (HtmlTag.TagDesc.IMAGE.value,)
+                        child['src'] = HttpUtil.abs_url(child.get('src'), oj_prefix=oj_prefix)[-1]
+            return tag
+        except:
+            import traceback
+            traceback.print_exc()
+            return None

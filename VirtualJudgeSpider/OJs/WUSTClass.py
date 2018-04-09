@@ -34,10 +34,16 @@ class WUSTParser(BaseParser):
                     if not tag.get('class'):
                         tag['class'] = ()
                     if tag.name == 'h2':
+                        tag['style'] = HtmlTag.TagStyle.TITLE.value
                         tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                        problem.html += str(
+                            HtmlTag.update_tag(tag, self._static_prefix, update_style=HtmlTag.TagStyle.TITLE.value))
+
                     else:
+                        tag['style'] = HtmlTag.TagStyle.CONTENT.value
                         tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
-                    problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+                        problem.html += str(
+                            HtmlTag.update_tag(tag, self._static_prefix, update_style=HtmlTag.TagStyle.CONTENT.value))
         problem.html = '<body>' + problem.html + '</body>'
         return problem
 

@@ -34,12 +34,16 @@ class POJParser(BaseParser):
                 try:
                     if type(tag) == Tag and set(tag.get('class')).intersection({'ptx', 'pst', 'sio'}):
                         if set(tag['class']).intersection({'pst', }):
+                            tag['style'] = HtmlTag.TagStyle.TITLE.value
+
                             tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
                         else:
+                            tag['style'] = HtmlTag.TagStyle.CONTENT.value
                             tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
-
                         problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
                 except:
+                    import traceback
+                    traceback.print_exc()
                     pass
             return problem
         except:
