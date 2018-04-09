@@ -13,6 +13,24 @@ from ..Utils import HttpUtil, HtmlTag
 class HDUParser(BaseParser):
     def __init__(self):
         self._static_prefix = 'http://acm.hdu.edu.cn/'
+        self._script = """<script type="text/x-mathjax-config">
+     MathJax.Hub.Config({
+      showProcessingMessages: false,
+      messageStyle: "none",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+          inlineMath:  [ ["$", "$"] ],
+          displayMath: [ ["$$","$$"] ],
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre','code','a']
+      },
+      "HTML-CSS": {
+          availableFonts: ["STIX","TeX"],
+          showMathMenu: false
+      }
+     });
+    </script>
+    <script src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
 
     def problem_parse(self, website_data, pid, url):
         try:
@@ -40,6 +58,7 @@ class HDUParser(BaseParser):
                         tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
                         tag['style'] = HtmlTag.TagStyle.CONTENT.value
                     problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+            problem.html += self._script
             return problem
         except:
             traceback.print_exc()

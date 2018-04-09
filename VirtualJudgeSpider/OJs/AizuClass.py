@@ -20,6 +20,24 @@ class AizuParser(BaseParser):
         self._judge_static_string = ['Compile Error', 'Wrong Answer', 'Time Limit Exceed',
                                      'Memory Limit Exceed', 'Accepted', 'Waiting',
                                      'Output Limit Exceed', 'Runtime Error', 'Presentation Error', 'Running']
+        self._script = """<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+    showProcessingMessages: false,
+    messageStyle: "none",
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+        inlineMath:  [ ["$", "$"] ],
+        displayMath: [ ["$$","$$"] ],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre','code','a']
+    },
+    "HTML-CSS": {
+        availableFonts: ["STIX","TeX"],
+        showMathMenu: false
+    }
+   });
+  </script>
+  <script src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
 
     def problem_parse(self, website_data, pid, url):
         problem = Problem()
@@ -37,16 +55,19 @@ class AizuParser(BaseParser):
         problem.special_judge = False
 
         problem.html = ''
+
         for tag in soup.body:
-            if type(tag) == element.Tag and tag.name in ['p', 'h2', 'pre']:
+            if type(tag) == element.Tag and tag.name in ['p', 'h2', 'pre','center']:
+                if not tag.get('class'):
+                    tag['class'] = ()
                 if tag.name == 'h2':
                     tag['style'] = HtmlTag.TagStyle.TITLE.value
-
                     tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
                 else:
                     tag['style'] = HtmlTag.TagStyle.CONTENT.value
                     tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
                 problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+        problem.html += self._script
         return problem
 
     def result_parse(self, website_data):

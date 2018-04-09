@@ -105,13 +105,13 @@ class Problem:
         self.memory_limit = None
         self.special_judge = None
 
-        self.description = None
-        self.input = None
-        self.output = None
-        self.sample = None
-        self.hint = None
-        self.author = None
-        self.source = None
+        # self.description = None
+        # self.input = None
+        # self.output = None
+        # self.sample = None
+        # self.hint = None
+        # self.author = None
+        # self.source = None
 
         # 有html之后可以将description,input,output,sample,hint,author,source设为None
         # 这个属性是上面属性的html代码，直接在网页中用iframe展示
