@@ -13,4 +13,5 @@ class TestResult(unittest.TestCase):
         self.assertDictEqual(result.__dict__, {'execute_memory': '128 MB',
                                                'execute_time': '1000 MS',
                                                'origin_run_id': '1',
+                                               'status': None,
                                                'verdict': 'Accepted'})
