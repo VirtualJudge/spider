@@ -15,12 +15,6 @@ class Account:
         self._username = username
         self._password = password
 
-    def get_username(self):
-        return self._username
-
-    def get_password(self):
-        return self._password
-
     @property
     def username(self):
         return self._username
@@ -30,75 +24,19 @@ class Account:
         return self._password
 
 
-'''
-:param title
-:param origin_id
-:param time_limit
-:param memory_limit
-:param description
-:param input
-:param output
-:param sample
-:param hint
-:param author
-:param source
-:param origin_url
-'''
+class Problem(object):
+    class Status(Enum):
+        STATUS_CRAWLING_SUCCESS = 0
+        STATUS_NETWORK_ERROR = 1
+        STATUS_PROBLEM_NOT_EXIST = 2
+        STATUS_PARSE_ERROR = 3
 
-
-class Desc(object):
-    def __init__(self, **kwargs):
-        if kwargs.get('type'):
-            self.type = kwargs['type']
-        else:
-            self.type = Desc.Type.TEXT
-
-        if kwargs.get('content'):
-            self.content = kwargs['content']
-        else:
-            self.content = None
-
-        if kwargs.get('file_name'):
-            self.file_name = kwargs['file_name']
-        else:
-            self.file_name = None
-
-        if kwargs.get('origin'):
-            self.origin = kwargs['origin']
-        else:
-            self.origin = None
-
-    class Type(Enum):
-        TEXT = 0
-        ANCHOR = 1
-        PDF = 2
-        IMG = 3
-
-
-class DescList(object):
-    def __init__(self):
-        self._values = []
-
-    @property
-    def values(self):
-        return self._values
-
-    def get(self):
-        return self._values
-
-    def append(self, desc):
-        if type(desc) == Desc:
-            self._values.append(desc.__dict__)
-
-    def update(self, desc, index):
-        self._values[index] = desc
-
-
-class Problem:
     def __init__(self):
         self.remote_id = None
-        self.remote_url = None
+        self.status = None
         self.remote_oj = None
+
+        self.remote_url = None
 
         self.title = None
         self.time_limit = None

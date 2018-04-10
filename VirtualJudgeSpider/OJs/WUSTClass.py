@@ -14,42 +14,53 @@ class WUSTParser(BaseParser):
     def __init__(self):
         self._static_prefix = 'http://acm.wust.edu.cn/'
 
-    def problem_parse(self, website_data, pid, url):
+    def problem_parse(self, status_code, website_data, pid, url):
         problem = Problem()
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'WUST'
 
-        problem.title = re.search(r': ([\s\S]*?)</h2>', website_data).group(1)
-        problem.time_limit = re.search(r'(\d* Sec)', website_data).group(1)
-        problem.memory_limit = re.search(r'(\d* MB)', website_data).group(1)
-        problem.special_judge = re.search(r'class=red>Special Judge</span>', website_data) is not None
+        if status_code != 200:
+            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            return problem
+        if not website_data:
+            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            return problem
+        try:
+            problem.title = re.search(r': ([\s\S]*?)</h2>', website_data).group(1)
+            problem.time_limit = re.search(r'(\d* Sec)', website_data).group(1)
+            problem.memory_limit = re.search(r'(\d* MB)', website_data).group(1)
+            problem.special_judge = re.search(r'class=red>Special Judge</span>', website_data) is not None
 
-        soup = BeautifulSoup(website_data, 'lxml')
+            soup = BeautifulSoup(website_data, 'lxml')
 
-        problem.html = ''
-        for tag in soup.find('div', attrs={'class': 'rich_text'}).children:
-            if type(tag) == element.Tag:
-                if tag.name in ['h2', 'div']:
-                    if not tag.get('class'):
-                        tag['class'] = ()
-                    if tag.name == 'h2':
-                        if tag.div:
-                            tag.div.decompose()
-                        if tag.img:
-                            tag.img.decompose()
-                        tag['style'] = HtmlTag.TagStyle.TITLE.value
-                        tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
-                        problem.html += str(
-                            HtmlTag.update_tag(tag, self._static_prefix, update_style=HtmlTag.TagStyle.TITLE.value))
+            problem.html = ''
+            for tag in soup.find('div', attrs={'class': 'rich_text'}).children:
+                if type(tag) == element.Tag:
+                    if tag.name in ['h2', 'div']:
+                        if not tag.get('class'):
+                            tag['class'] = ()
+                        if tag.name == 'h2':
+                            if tag.div:
+                                tag.div.decompose()
+                            if tag.img:
+                                tag.img.decompose()
+                            tag['style'] = HtmlTag.TagStyle.TITLE.value
+                            tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                            problem.html += str(
+                                HtmlTag.update_tag(tag, self._static_prefix, update_style=HtmlTag.TagStyle.TITLE.value))
 
-                    else:
-                        tag['style'] = HtmlTag.TagStyle.CONTENT.value
-                        tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
-                        problem.html += str(
-                            HtmlTag.update_tag(tag, self._static_prefix, update_style=HtmlTag.TagStyle.CONTENT.value))
-        problem.html = '<body>' + problem.html + '</body>'
-        return problem
+                        else:
+                            tag['style'] = HtmlTag.TagStyle.CONTENT.value
+                            tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                            problem.html += str(
+                                HtmlTag.update_tag(tag, self._static_prefix, update_style=HtmlTag.TagStyle.CONTENT.value))
+            problem.html = '<body>' + problem.html + '</body>'
+            problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+            return problem
+        except:
+            problem.status = Problem.Status.STATUS_PARSE_ERROR
+            return problem
 
     def result_parse(self, website_data):
         result = Result()
@@ -106,7 +117,7 @@ class WUST(Base):
         url = 'http://acm.wust.edu.cn/problem.php?id=' + pid + '&soj=0'
         try:
             res = self._req.get(url)
-            return WUSTParser().problem_parse(res.text, pid, url)
+            return WUSTParser().problem_parse(res.status_code, res.text, pid, url)
         except:
             traceback.print_exc()
             return None

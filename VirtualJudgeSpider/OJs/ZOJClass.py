@@ -21,37 +21,48 @@ class ZOJParaer(BaseParser):
 }
 </style>"""
 
-    def problem_parse(self, website_data, pid, url):
+    def problem_parse(self, status_code, website_data, pid, url):
         problem = Problem()
+
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'ZOJ'
 
-        soup = BeautifulSoup(website_data, 'lxml')
+        if status_code != 200:
+            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            return problem
+        if re.search('No such problem',website_data):
+            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            return problem
 
-        problem.title = soup.find('span', attrs={'class': 'bigProblemTitle'})
-        problem.time_limit = re.search(r'(\d* Second)', website_data).group(1)
-        problem.memory_limit = re.search(r'(\d* KB)', website_data).group(1)
-        problem.special_judge = re.search(r'<font color="blue">Special Judge</font>',
-                                          website_data) is not None
-
-        problem.html = ''
-        problem.html += self._script
-        raw_html = soup.find('div', attrs={'id': 'content_body'})
-        for tag in raw_html.children:
-            if type(tag) == element.NavigableString:
-                problem.html += str(tag)
-            if type(tag) == element.Tag and tag.name not in ['center', 'hr']:
-                if tag.name == 'a' and tag.get('href') == '/onlinejudge/faq.do#sample':
-                    continue
-                if tag.name == 'h2':
-                    tag['style'] = HtmlTag.TagStyle.TITLE.value
-                elif tag.name == 'p' and tag.b and tag.b.string in ['Input', 'Output', 'Sample Input', 'Sample Output']:
-                    tag.b['style'] = HtmlTag.TagStyle.TITLE.value
-                else:
-                    tag['style'] = HtmlTag.TagStyle.CONTENT.value
-                problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
-        return problem
+        try:
+            soup = BeautifulSoup(website_data, 'lxml')
+            problem.title = soup.find('span', attrs={'class': 'bigProblemTitle'})
+            problem.time_limit = re.search(r'(\d* Second)', website_data).group(1)
+            problem.memory_limit = re.search(r'(\d* KB)', website_data).group(1)
+            problem.special_judge = re.search(r'<font color="blue">Special Judge</font>',
+                                              website_data) is not None
+            problem.html = ''
+            problem.html += self._script
+            raw_html = soup.find('div', attrs={'id': 'content_body'})
+            for tag in raw_html.children:
+                if type(tag) == element.NavigableString:
+                    problem.html += str(tag)
+                if type(tag) == element.Tag and tag.name not in ['center', 'hr']:
+                    if tag.name == 'a' and tag.get('href') == '/onlinejudge/faq.do#sample':
+                        continue
+                    if tag.name == 'h2':
+                        tag['style'] = HtmlTag.TagStyle.TITLE.value
+                    elif tag.name == 'p' and tag.b and tag.b.string in ['Input', 'Output', 'Sample Input', 'Sample Output']:
+                        tag.b['style'] = HtmlTag.TagStyle.TITLE.value
+                    else:
+                        tag['style'] = HtmlTag.TagStyle.CONTENT.value
+                    problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+            problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        except:
+            problem.status = Problem.Status.STATUS_PARSE_ERROR
+        finally:
+            return problem
 
     def result_parse(self, website_data):
         result = Result()
@@ -109,12 +120,8 @@ class ZOJ(Base):
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
         url = 'http://acm.zju.edu.cn/onlinejudge/showProblem.do?problemCode=' + pid
-        try:
-            res = self.req.get(url)
-            return ZOJParaer().problem_parse(res.text, pid, url)
-        except:
-            traceback.print_exc()
-            return None
+        res = self.req.get(url)
+        return ZOJParaer().problem_parse(res.status_code, res.text, pid, url)
 
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):

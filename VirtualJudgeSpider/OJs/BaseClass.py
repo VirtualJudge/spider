@@ -1,5 +1,5 @@
 class BaseParser(object):
-    def problem_parse(self,website_data, pid, url):
+    def problem_parse(self,status_code,website_data, pid, url):
         pass
 
     def result_parse(self, website_data):

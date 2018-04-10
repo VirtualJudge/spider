@@ -39,36 +39,47 @@ class AizuParser(BaseParser):
   </script>
   <script src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
 
-    def problem_parse(self, website_data, pid, url):
+    def problem_parse(self, status_code, website_data, pid, url):
         problem = Problem()
-        site_data = json.loads(website_data)
-
-        soup = BeautifulSoup(site_data.get('html'), 'lxml')
 
         problem.remote_id = pid
         problem.remote_oj = 'Aizu'
         problem.remote_url = url
 
-        problem.title = str(soup.find('h1').string)
-        problem.time_limit = str(site_data.get('time_limit')) + ' sec'
-        problem.memory_limit = str(site_data.get('memory_limit')) + ' KB'
-        problem.special_judge = False
+        if status_code == 401:
+            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            return problem
+        if status_code != 200:
+            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            return problem
+        try:
+            site_data = json.loads(website_data)
+            soup = BeautifulSoup(site_data.get('html'), 'lxml')
+            problem.title = str(soup.find('h1').get_text())
+            problem.time_limit = str(site_data.get('time_limit')) + ' sec'
+            problem.memory_limit = str(site_data.get('memory_limit')) + ' KB'
+            problem.special_judge = False
 
-        problem.html = ''
+            problem.html = ''
 
-        for tag in soup.body:
-            if type(tag) == element.Tag and tag.name in ['p', 'h2', 'pre','center']:
-                if not tag.get('class'):
-                    tag['class'] = ()
-                if tag.name == 'h2':
-                    tag['style'] = HtmlTag.TagStyle.TITLE.value
-                    tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
-                else:
-                    tag['style'] = HtmlTag.TagStyle.CONTENT.value
-                    tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
-                problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
-        problem.html += self._script
-        return problem
+            for tag in soup.body:
+                if type(tag) == element.Tag and tag.name in ['p', 'h2', 'pre', 'center']:
+                    if not tag.get('class'):
+                        tag['class'] = ()
+                    if tag.name == 'h2':
+                        tag['style'] = HtmlTag.TagStyle.TITLE.value
+                        tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                    else:
+                        tag['style'] = HtmlTag.TagStyle.CONTENT.value
+                        tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                    problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+            problem.html += self._script
+
+            problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        except:
+            problem.status = Problem.Status.STATUS_PARSE_ERROR
+        finally:
+            return problem
 
     def result_parse(self, website_data):
         result = Result()
@@ -130,14 +141,10 @@ class Aizu(Base):
 
     # 获取题目
     def get_problem(self, *args, **kwargs):
-        try:
-            pid = kwargs['pid']
-            url = 'https://judgeapi.u-aizu.ac.jp/resources/descriptions/en/' + str(pid)
-            res = self._req.get(url)
-            return AizuParser().problem_parse(res.text, pid, url)
-        except:
-            traceback.print_exc()
-        return None
+        pid = kwargs['pid']
+        url = 'https://judgeapi.u-aizu.ac.jp/resources/descriptions/en/' + str(pid)
+        res = self._req.get(url)
+        return AizuParser().problem_parse(res.status_code, res.text, pid, url)
 
     # 提交代码
     def submit_code(self, *args, **kwargs):

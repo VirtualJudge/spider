@@ -32,15 +32,21 @@ class HDUParser(BaseParser):
     </script>
     <script src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
 
-    def problem_parse(self, website_data, pid, url):
+    def problem_parse(self, status_code, website_data, pid, url):
+        problem = Problem()
+
+        problem.remote_id = pid
+        problem.remote_url = url
+        problem.remote_oj = 'HDU'
+
+        if status_code != 200:
+            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            return problem
+        if re.search('No such problem', website_data):
+            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            return problem
         try:
-            problem = Problem()
             soup = BeautifulSoup(website_data, 'lxml')
-
-            problem.remote_id = pid
-            problem.remote_url = url
-            problem.remote_oj = 'HDU'
-
             problem.title = re.search(r'color:#1A5CC8\'>([\s\S]*?)</h1>', website_data).group(1)
             problem.time_limit = re.search(r'(\d* MS)', website_data).group(1)
             problem.memory_limit = re.search(r'/(\d* K)', website_data).group(1)
@@ -59,10 +65,11 @@ class HDUParser(BaseParser):
                         tag['style'] = HtmlTag.TagStyle.CONTENT.value
                     problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
             problem.html += self._script
-            return problem
+            problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
         except:
-            traceback.print_exc()
-            return None
+            problem.status = Problem.Status.STATUS_PARSE_ERROR
+        finally:
+            return problem
 
     def result_parse(self, website_data):
         result = Result()
@@ -120,12 +127,8 @@ class HDU(Base):
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
         url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + pid
-        try:
-            res = self._req.get(url)
-            return HDUParser().problem_parse(res.text, pid, url)
-        except:
-            traceback.print_exc()
-            return None
+        res = self._req.get(url)
+        return HDUParser().problem_parse(res.status_code, res.text, pid, url)
 
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):

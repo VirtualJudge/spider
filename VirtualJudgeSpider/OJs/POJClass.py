@@ -15,40 +15,42 @@ class POJParser(BaseParser):
     def __init__(self):
         self._static_prefix = 'http://poj.org/'
 
-    def problem_parse(self, website_data, pid, url):
+    def problem_parse(self, status_code, website_data, pid, url):
+        problem = Problem()
+        soup = BeautifulSoup(website_data, 'lxml')
+
+        problem.remote_id = pid
+        problem.remote_url = url
+        problem.remote_oj = 'POJ'
+
+        if status_code != 200:
+            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            return problem
+        if re.search('Can not find problem',website_data):
+            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            return problem
+
         try:
-            problem = Problem()
-            soup = BeautifulSoup(website_data, 'lxml')
-
-            problem.remote_id = pid
-            problem.remote_url = url
-            problem.remote_oj = 'POJ'
-
             problem.title = re.search(r'ptt" lang="en-US">([\s\S]*?)</div>', website_data).group(1)
             problem.time_limit = re.search(r'(\d*MS)', website_data).group(1)
             problem.memory_limit = re.search(r'Memory Limit:</b> ([\s\S]*?)</td>', website_data).group(1)
             problem.special_judge = re.search(r'red;">Special Judge</td>', website_data) is not None
-
             problem.html = ''
             for tag in soup.find('div', attrs={'class': 'ptt'}).next_siblings:
-                try:
-                    if type(tag) == Tag and set(tag.get('class')).intersection({'ptx', 'pst', 'sio'}):
-                        if set(tag['class']).intersection({'pst', }):
-                            tag['style'] = HtmlTag.TagStyle.TITLE.value
+                if type(tag) == Tag and set(tag.get('class')).intersection({'ptx', 'pst', 'sio'}):
+                    if set(tag['class']).intersection({'pst', }):
+                        tag['style'] = HtmlTag.TagStyle.TITLE.value
 
-                            tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
-                        else:
-                            tag['style'] = HtmlTag.TagStyle.CONTENT.value
-                            tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
-                        problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
-                except:
-                    import traceback
-                    traceback.print_exc()
-                    pass
-            return problem
+                        tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                    else:
+                        tag['style'] = HtmlTag.TagStyle.CONTENT.value
+                        tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                    problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+            problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
         except:
-            traceback.print_exc()
-            return None
+            problem.status = Problem.Status.STATUS_PARSE_ERROR
+        finally:
+            return problem
 
     def result_parse(self, website_data):
         result = Result()
@@ -111,44 +113,12 @@ class POJ(Base):
         except:
             return False
 
-    def parse_desc(self, raw_descs):
-        descList = Config.DescList()
-        for raw_desc in raw_descs:
-            if raw_desc.strip():
-                match_groups = re.search(r'<a[\s\S]*href=\"([\s\S]*)\"[\s\S]*>([\s\S]*)</a>', raw_desc)
-                if match_groups:
-                    remote_path = str(match_groups.group(1))
-                    if remote_path.startswith('/'):
-                        remote_path = 'http://poj.org' + remote_path
-                    elif not remote_path.startswith('http://') and not remote_path.startswith('https://'):
-                        remote_path = 'http://poj.org/' + remote_path
-
-                    descList.append(Config.Desc(type=Config.Desc.Type.ANCHOR, content=match_groups.group(2),
-                                                origin=remote_path))
-                else:
-                    match_groups = re.search(r'<img([\s\S]*)src=\"([\s\S]*(gif|png|jpeg|jpg|GIF))\"', raw_desc)
-                    if match_groups:
-                        file_name, remote_path = HttpUtil.abs_url(str(match_groups.group(2)),
-                                                                  'http://poj.org')
-                        descList.append(
-                            Config.Desc(type=Config.Desc.Type.IMG,
-                                        file_name=file_name,
-                                        origin=remote_path))
-                    else:
-                        descList.append(Config.Desc(type=Config.Desc.Type.TEXT, content=raw_desc))
-        return descList.get()
-
     # 获取题目
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
         url = 'http://poj.org/problem?id=' + pid
-        try:
-            res = self._req.get(url=url)
-            website_data = res.text
-            return POJParser().problem_parse(website_data, pid, url)
-        except:
-            traceback.print_exc()
-            return None
+        res = self._req.get(url=url)
+        return POJParser().problem_parse(res.status_code, res.text, pid, url)
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
