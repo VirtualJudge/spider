@@ -2,7 +2,7 @@ from distutils.core import setup
 import setuptools
 
 setup(name='VirtualJudgeSpider',
-      version='0.7.0',
+      version='0.7.1',
       description='Virtual Judge Spider',
       author='dian xu',
       author_email='xudian.cn@gmail.com',
