@@ -26,11 +26,14 @@ class Account:
 
 class Problem(object):
     class Status(Enum):
-        STATUS_CRAWLING_SUCCESS = 0
-        STATUS_NETWORK_ERROR = 1
-        STATUS_PROBLEM_NOT_EXIST = 2
-        STATUS_PARSE_ERROR = 3
-        STATUS_OJ_NOT_EXIST = 4
+        STATUS_PENDING = 0
+        STATUS_RUNING = 1
+        STATUS_CRAWLING_SUCCESS = 2
+        STATUS_NETWORK_ERROR = 3
+        STATUS_PROBLEM_NOT_EXIST = 4
+        STATUS_NO_ACCOUNT = 5
+        STATUS_OJ_NOT_EXIST = 6
+        STATUS_PARSE_ERROR = 7
 
     def __init__(self):
         self.remote_id = None
