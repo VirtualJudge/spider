@@ -25,7 +25,7 @@ class ZOJParaer(BaseParser):
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'ZOJ'
-
+        print(response)
         if not response:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
             return problem
@@ -41,7 +41,7 @@ class ZOJParaer(BaseParser):
 
         try:
             soup = BeautifulSoup(website_data, 'lxml')
-            problem.title = soup.find('span', attrs={'class': 'bigProblemTitle'})
+            problem.title = str(soup.find('span', attrs={'class': 'bigProblemTitle'}).get_text())
             problem.time_limit = re.search(r'(\d* Second)', website_data).group(1)
             problem.memory_limit = re.search(r'(\d* KB)', website_data).group(1)
             problem.special_judge = re.search(r'<font color="blue">Special Judge</font>',

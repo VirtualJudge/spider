@@ -19,7 +19,7 @@ class WUSTParser(BaseParser):
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'WUST'
-
+        print(response)
         if not response:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
             return problem
@@ -122,12 +122,8 @@ class WUST(Base):
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
         url = 'http://acm.wust.edu.cn/problem.php?id=' + pid + '&soj=0'
-        try:
-            res = self._req.get(url)
-            return WUSTParser().problem_parse(res, pid, url)
-        except:
-            traceback.print_exc()
-            return None
+        res = self._req.get(url)
+        return WUSTParser().problem_parse(res, pid, url)
 
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):
