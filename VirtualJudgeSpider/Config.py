@@ -27,7 +27,7 @@ class Account:
 class Problem(object):
     class Status(Enum):
         STATUS_PENDING = 0
-        STATUS_RUNING = 1
+        STATUS_RUNNING = 1
         STATUS_CRAWLING_SUCCESS = 2
         STATUS_NETWORK_ERROR = 3
         STATUS_PROBLEM_NOT_EXIST = 4
@@ -39,9 +39,7 @@ class Problem(object):
         self.remote_id = None
         self.status = None
         self.remote_oj = None
-
         self.remote_url = None
-
         self.title = None
         self.time_limit = None
         self.memory_limit = None
@@ -54,12 +52,23 @@ class Problem(object):
         print(self.__dict__)
 
 
-class Result:
+class Result(object):
+    class Status(Enum):
+        STATUS_PENDING = 1
+        STATUS_RUNNING = 2
+        STATUS_RESULT_GET = 3
+        STATUS_NETWORK_ERROR = 4
+        STATUS_RESULT_NOT_EXIST = 5
+        STATUS_NO_ACCOUNT = 6
+        STATUS_OJ_NOT_EXIST = 7
+        STATUS_PARSE_ERROR = 8
+
     def __init__(self):
         self.origin_run_id = None
         self.verdict = None
         self.execute_time = None
         self.execute_memory = None
+        self.status = None
 
     def get_dict(self):
         return self.__dict__

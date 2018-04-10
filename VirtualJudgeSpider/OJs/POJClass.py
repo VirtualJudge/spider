@@ -56,9 +56,14 @@ class POJParser(BaseParser):
         finally:
             return problem
 
-    def result_parse(self, website_data):
+    def result_parse(self, response):
         result = Result()
+        if response or response.status_code != 200:
+            result.status = Result.Status.STATUS_NETWORK_ERROR
+            return result
+
         try:
+            website_data = response.text
             soup = BeautifulSoup(website_data, 'lxml')
             line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
             if line is not None:
@@ -66,10 +71,13 @@ class POJParser(BaseParser):
                 result.verdict = line[3].string
                 result.execute_time = line[5].string
                 result.execute_memory = line[4].string
-                return result
+                result.status = Result.Status.STATUS_RESULT_GET
+            else:
+                result.status = Result.Status.STATUS_RESULT_NOT_EXIST
         except:
-            pass
-        return None
+            result.status = Result.Status.STATUS_PARSE_ERROR
+        finally:
+            return result
 
 
 class POJ(Base):
@@ -159,12 +167,8 @@ class POJ(Base):
 
     # 根据源OJ的url获取结果
     def get_result_by_url(self, url):
-        try:
-            res = self._req.get(url=url)
-            return POJParser().result_parse(res.text)
-        except:
-            pass
-        return None
+        res = self._req.get(url=url)
+        return POJParser().result_parse(res)
 
     # 获取源OJ支持的语言类型
     def find_language(self, *args, **kwargs):

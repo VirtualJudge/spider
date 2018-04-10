@@ -9,6 +9,7 @@ from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
 from VirtualJudgeSpider.Utils import HttpUtil, HtmlTag
 import traceback
 
+
 class WUSTParser(BaseParser):
     def __init__(self):
         self._static_prefix = 'http://acm.wust.edu.cn/'
@@ -67,17 +68,28 @@ class WUSTParser(BaseParser):
             problem.status = Problem.Status.STATUS_PARSE_ERROR
             return problem
 
-    def result_parse(self, website_data):
+    def result_parse(self, response):
         result = Result()
-        soup = BeautifulSoup(website_data, 'lxml')
-        line = soup.find('table', attrs={'id': 'result-tab'}).find('tr', attrs={'class': 'evenrow'}).find_all('td')
-        if line:
-            result.origin_run_id = line[0].string
-            result.verdict = line[4].string
-            result.execute_time = line[6].string
-            result.execute_memory = line[5].string
+        if response or response.status_code != 200:
+            result.status = Result.Status.STATUS_NETWORK_ERROR
             return result
-        return result
+        try:
+            website_data = response.text
+            soup = BeautifulSoup(website_data, 'lxml')
+            line = soup.find('table', attrs={'id': 'result-tab'}).find('tr', attrs={'class': 'evenrow'}).find_all('td')
+            if line:
+                result.origin_run_id = line[0].string
+                result.verdict = line[4].string
+                result.execute_time = line[6].string
+                result.execute_memory = line[5].string
+                result.status = Result.Status.STATUS_RESULT_GET
+            else:
+                result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+        except:
+            result.status = Result.Status.STATUS_PARSE_ERROR
+        finally:
+            return result
+
 
 
 class WUST(Base):
@@ -172,11 +184,8 @@ class WUST(Base):
         return self.get_result_by_url(url=url)
 
     def get_result_by_url(self, url):
-        try:
-            res = self._req.get(url)
-            return WUSTParser().result_parse(res.text)
-        except:
-            return None
+        res = self._req.get(url)
+        return WUSTParser().result_parse(res)
 
     def is_waiting_for_judge(self, verdict):
         if verdict in ['Pending', 'Pending Rejudge', 'Compiling', 'Running & Judging']:

@@ -84,18 +84,26 @@ class AizuParser(BaseParser):
         finally:
             return problem
 
-    def result_parse(self, website_data):
+    def result_parse(self, response):
         result = Result()
+
+        if response or response.status_code != 200:
+            result.status = Result.Status.STATUS_NETWORK_ERROR
+            return result
+
         try:
+            website_data = response.text
             site_data = json.loads(website_data)
             submission_record = site_data['submissionRecord']
             result.origin_run_id = str(submission_record['judgeId'])
             result.verdict = self._judge_static_string[int(submission_record['status'])]
             result.execute_time = str(format(float(submission_record['cpuTime']) / float(100), '.2f')) + ' s'
             result.execute_memory = str(submission_record['memory']) + ' KB'
-            return result
+            result.status = Result.Status.STATUS_RESULT_GET
         except:
-            return None
+            result.status = Result.Status.STATUS_PARSE_ERROR
+        finally:
+            return result
 
 
 class Aizu(Base):
@@ -185,9 +193,7 @@ class Aizu(Base):
     # 根据源OJ的url获取结果
     def get_result_by_url(self, url):
         res = self._req.get(url)
-        if res.status_code != 200:
-            return None
-        return AizuParser().result_parse(res.text)
+        return AizuParser().result_parse(res)
 
     # 获取源OJ支持的语言类型
     def find_language(self, *args, **kwargs):

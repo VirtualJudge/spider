@@ -76,9 +76,14 @@ class HDUParser(BaseParser):
         finally:
             return problem
 
-    def result_parse(self, website_data):
+    def result_parse(self, response):
         result = Result()
+
+        if response is None or response.status_code != 200:
+            result.status = Result.Status.STATUS_NETWORK_ERROR
+            return result
         try:
+            website_data = response.text
             soup = BeautifulSoup(website_data, 'lxml')
             line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
                 'td')
@@ -87,10 +92,13 @@ class HDUParser(BaseParser):
                 result.verdict = line[2].string
                 result.execute_time = line[4].string
                 result.execute_memory = line[5].string
-                return result
+                result.status = Result.Status.STATUS_RESULT_GET
+            else:
+                result.status = Result.Status.STATUS_RESULT_NOT_EXIST
         except:
-            pass
-        return None
+            result.status = Result.Status.STATUS_PARSE_ERROR
+        finally:
+            return result
 
 
 class HDU(Base):
@@ -176,13 +184,8 @@ class HDU(Base):
         return self.get_result_by_url(url=url)
 
     def get_result_by_url(self, url):
-        result = Result()
-        try:
-            res = self._req.get(url)
-            return HDUParser().result_parse(res.text)
-        except:
-            pass
-        return result
+        res = self._req.get(url)
+        return HDUParser().result_parse(res)
 
     def is_waiting_for_judge(self, verdict):
         if verdict in ['Queuing', 'Compiling', 'Running']:
