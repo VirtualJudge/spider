@@ -71,7 +71,7 @@ class ZOJParaer(BaseParser):
     def result_parse(self, response):
         result = Result()
 
-        if response or response.status_code != 200:
+        if response is None or response.status_code != 200:
             result.status = Result.Status.STATUS_NETWORK_ERROR
             return result
         try:
@@ -154,7 +154,7 @@ class ZOJ(Base):
     def find_language(self, *args, **kwargs):
         if self.login_webside(*args, **kwargs) is False:
             return None
-        url = 'http://acm.zju.edu.cn/onlinejudge/showProblem.do?problemCode=1001'
+        url = 'http://acm.zju.edu.cn/onlinejudge/submit.do?problemId=1'
         languages = {}
         try:
             res = self._req.get(url)

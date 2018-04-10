@@ -1,5 +1,6 @@
 import json
 import ssl
+import traceback
 
 from bs4 import BeautifulSoup
 from bs4 import element
@@ -7,7 +8,6 @@ from bs4 import element
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
 from VirtualJudgeSpider.Utils import HtmlTag, HttpUtil
-import types
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -87,7 +87,7 @@ class AizuParser(BaseParser):
     def result_parse(self, response):
         result = Result()
 
-        if response or response.status_code != 200:
+        if response is None or response.status_code != 200:
             result.status = Result.Status.STATUS_NETWORK_ERROR
             return result
 
@@ -158,17 +158,22 @@ class Aizu(Base):
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
+        if not self.login_webside(*args, **kwargs):
+            return False
         url = 'https://judgeapi.u-aizu.ac.jp/submissions'
+
         try:
-            problemId = kwargs['pid']
+            account = kwargs['account']
+            pid = kwargs['pid']
             language = kwargs['language']
-            sourceCode = kwargs['code']
-            res = self._req.post(url, json=
-            {'problemId': str(problemId), 'language': str(language), 'sourceCode': str(sourceCode)})
+            source_code = kwargs['code']
+            res = self._req.post(url, json={'problemId': str(pid), 'language': str(language),
+                                            'sourceCode': str(source_code)})
             if res.status_code == 200:
                 return True
             return False
         except:
+            traceback.print_exc()
             return False
 
     # 获取当然运行结果
@@ -176,19 +181,20 @@ class Aizu(Base):
         account = kwargs.get('account')
         pid = str(kwargs.get('pid'))
         url = 'https://judgeapi.u-aizu.ac.jp/submission_records/users/' + str(account.username) + '/problems/' + pid
+        import time
+        time.sleep(3)
         res = self._req.get(url)
         if res.status_code != 200:
             return None
+
         recent_list = json.loads(res.text)
         url = 'https://judgeapi.u-aizu.ac.jp/verdicts/' + str(recent_list[0].get('judgeId'))
         return self.get_result_by_url(url)
-        pass
 
     # 根据源OJ的运行id获取结构
     def get_result_by_rid_and_pid(self, rid, pid):
         url = 'https://judgeapi.u-aizu.ac.jp/verdicts/' + str(rid)
         return self.get_result_by_url(url)
-        pass
 
     # 根据源OJ的url获取结果
     def get_result_by_url(self, url):

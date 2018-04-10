@@ -124,8 +124,8 @@ class HDU(Base):
         if self.check_login_status():
             return True
         login_link_url = 'http://acm.hdu.edu.cn/userloginex.php'
-        post_data = {'username': account.get_username(),
-                     'userpass': account.get_password(),
+        post_data = {'username': account.username,
+                     'userpass': account.password,
                      'login': 'Sign In'
                      }
         try:

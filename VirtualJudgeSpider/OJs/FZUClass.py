@@ -7,6 +7,8 @@ from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
 from VirtualJudgeSpider.Utils import HtmlTag, HttpUtil
 
+import traceback
+
 
 class FZUParser(BaseParser):
     def __init__(self):
@@ -52,15 +54,14 @@ class FZUParser(BaseParser):
 
     def result_parse(self, response):
         result = Result()
-        if response or response.status_code != 200:
+        if response is None or response.status_code != 200:
             result.status = Result.Status.STATUS_NETWORK_ERROR
             return result
 
         try:
             website_data = response.text
             soup = BeautifulSoup(website_data, 'lxml')
-            line = soup.find('table').find('tr', attrs={'onmouseover': 'hl(this);'}).find_all(
-                'td')
+            line = soup.find('tr', attrs={'onmouseover': 'hl(this);'}).find_all('td')
             if line is not None:
                 result.origin_run_id = line[0].string
                 result.verdict = line[2].string
@@ -73,6 +74,31 @@ class FZUParser(BaseParser):
             result.status = Result.Status.STATUS_PARSE_ERROR
         finally:
             return result
+
+    def result_parse_by_rid(self, response, rid):
+        result = Result()
+        if response is None or response.status_code != 200:
+            result.status = Result.Status.STATUS_NETWORK_ERROR
+            return result, False
+
+        try:
+            website_data = response.text
+            soup = BeautifulSoup(website_data, 'lxml')
+            lines = soup.find_all('tr', attrs={'onmouseover': 'hl(this);'})
+            for line in lines:
+                tag_tds = line.find_all('td')
+                if len(tag_tds) == 9 and int(tag_tds[0].get_text()) == int(rid):
+                    result.origin_run_id = tag_tds[0].string
+                    result.verdict = tag_tds[2].string
+                    result.execute_time = tag_tds[5].string
+                    result.execute_memory = tag_tds[6].string
+                    result.status = Result.Status.STATUS_RESULT_GET
+                    return result, True
+            result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+            return result, False
+        except:
+            result.status = Result.Status.STATUS_PARSE_ERROR
+            return result, False
 
 
 class FZU(Base):
@@ -125,11 +151,12 @@ class FZU(Base):
             code = kwargs['code']
             language = kwargs['language']
             pid = kwargs['pid']
-            username = kwargs['account'].get_username()
+            username = kwargs['account'].username
             url = 'http://acm.fzu.edu.cn/submit.php?act=5'
             Config.custom_headers['Referer'] = 'http://acm.fzu.edu.cn/submit.php?pid=' + str(pid)
 
             post_data = {'usr': username, 'lang': str(language), 'pid': pid, 'code': code, 'submit': 'Submit'}
+
             res = self._req.post(url, post_data)
             if res.status_code == 200:
                 return True
@@ -159,10 +186,19 @@ class FZU(Base):
         return self.get_result_by_url(url=url)
 
     def get_result_by_rid_and_pid(self, rid, pid):
-        url = 'http://acm.hdu.edu.cn/status.php?first=' + rid + '&pid=&user=&lang=0&status=0'
-        return self.get_result_by_url(url=url)
+        url = 'http://acm.fzu.edu.cn/log.php?pid=' + pid + '&page=1'
+        page = 2
+        res = self._req.get(url)
+        (result, exist_rid) = FZUParser().result_parse_by_rid(res, rid)
+        while not exist_rid and result.status == Result.Status.STATUS_RESULT_NOT_EXIST and page < 10:
+            url = 'http://acm.fzu.edu.cn/log.php?pid=' + pid + '&page=' + str(page)
+            page += 1
+            res = self._req.get(url)
+            (result, exist_rid) = FZUParser().result_parse_by_rid(res, rid)
+        return result
 
     def get_result_by_url(self, url):
+        print(url)
         res = self._req.get(url)
         return FZUParser().result_parse(res)
 

@@ -6,19 +6,19 @@ import logging
 
 
 class HttpUtil(object):
-    def __init__(self, custom_headers=None, code_type=None, timeout=(3.05, 3)):
+    def __init__(self, custom_headers=None, code_type=None):
         self._headers = custom_headers
         self._request = requests.session()
         self._code_type = code_type
-        self._timeout = timeout
+
         self._response = None
         if self._headers:
             self._request.headers.update(self._headers)
 
     def get(self, url, **kwargs):
         try:
-            self._response = self._request.get(url, timeout=self._timeout, **kwargs)
-            logging.info('GET:[' + str(self._response.status_code) + ']:' + str(url) + '\n')
+            logging.info('GET:' + str(url) + '\n')
+            self._response = self._request.get(url, **kwargs)
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
@@ -28,12 +28,13 @@ class HttpUtil(object):
 
     def post(self, url, data=None, json=None, **kwargs):
         try:
-            self._response = self._request.post(url, data, json, timeout=self._timeout, **kwargs)
-            logging.info('POST:[' + str(self._response.status_code) + ']:' + str(url) + '\n')
+            logging.info('POST:' + str(url) + '\n')
+            self._response = self._request.post(url, data, json, **kwargs)
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
         except:
+            traceback.print_exc()
             logging.error('POST:[ERROR]:' + str(url) + '\n')
             return None
 

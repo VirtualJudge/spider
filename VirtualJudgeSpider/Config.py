@@ -48,9 +48,6 @@ class Problem(object):
         # 这个属性是html代码，直接在网页中用iframe展示
         self.html = None
 
-    def show(self):
-        print(self.__dict__)
-
 
 class Result(object):
     class Status(Enum):
@@ -70,8 +67,9 @@ class Result(object):
         self.execute_memory = None
         self.status = None
 
-    def get_dict(self):
-        return self.__dict__
 
-    def show(self):
-        print(json.dumps(self.__dict__, indent=4))
+class SimpleStatus(Enum):
+    STATUS_SUCCESS = 0
+    STATUS_READ_ERROR = 1
+    STATUS_NETWORK_ERROR = 2
+    STATUS_UNKNOW_ERROR = 3

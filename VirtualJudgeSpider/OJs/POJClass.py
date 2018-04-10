@@ -8,6 +8,7 @@ from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
 from VirtualJudgeSpider.Utils import HttpUtil, HtmlTag
+import traceback
 
 
 class POJParser(BaseParser):
@@ -58,7 +59,7 @@ class POJParser(BaseParser):
 
     def result_parse(self, response):
         result = Result()
-        if response or response.status_code != 200:
+        if response is None or response.status_code != 200:
             result.status = Result.Status.STATUS_NETWORK_ERROR
             return result
 
@@ -111,6 +112,7 @@ class POJ(Base):
                 return True
             return False
         except:
+            traceback.print_exc()
             return False
 
     # 检查登录状态
@@ -123,6 +125,7 @@ class POJ(Base):
                 return True
             return False
         except:
+            traceback.print_exc()
             return False
 
     # 获取题目
@@ -143,7 +146,7 @@ class POJ(Base):
             url = 'http://poj.org/submit'
             post_data = {'problem_id': pid,
                          'language': language,
-                         'source': base64.b64encode(str.encode(code)),
+                         'source': base64.b64encode(code),
                          'submit': 'Submit',
                          'encoded': '1'}
             res = self._req.post(url=url, data=post_data)
@@ -151,6 +154,7 @@ class POJ(Base):
                 return True
             return False
         except:
+            traceback.print_exc()
             return False
 
     # 获取当然运行结果
@@ -162,7 +166,7 @@ class POJ(Base):
 
     # 根据源OJ的运行id获取结构
     def get_result_by_rid_and_pid(self, rid, pid):
-        url = 'http://poj.org/status?problem_id=&result=&language=&top=' + rid
+        url = 'http://poj.org/status?problem_id=&result=&language=&top=' + str(int(rid) + 1)
         return self.get_result_by_url(url=url)
 
     # 根据源OJ的url获取结果
@@ -187,7 +191,7 @@ class POJ(Base):
 
     # 判断当前提交结果的运行状态
     def is_waiting_for_judge(self, verdict):
-        if verdict in ['Queuing', 'Compiling']:
+        if verdict in ['Queuing', 'Compiling', 'Waiting', 'Running & Judging']:
             return True
         return False
 

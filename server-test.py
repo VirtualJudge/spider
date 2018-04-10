@@ -1,10 +1,48 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import json
 from VirtualJudgeSpider.Config import Account
 from VirtualJudgeSpider.Control import Controller
-from VirtualJudgeSpider.Config import Problem
+from VirtualJudgeSpider.Config import Problem, Result
+import traceback
+import time
 
 app = Flask(__name__, template_folder='.')
+
+
+@app.route("/submit", methods=['POST'])
+def submit():
+    try:
+        source_code = request.files['source_code']
+        if request.form.get('remote_oj') and request.form.get('language') and request.form.get(
+                'remote_id') and source_code:
+            remote_oj = request.form['remote_oj']
+            remote_id = request.form['remote_id']
+            language = request.form['language']
+
+            ans = False
+            tries = 3
+            while ans is False and tries > 0:
+                tries -= 1
+                ans = Controller(str(remote_oj)).submit_code(pid=remote_id, account=Account('robot4test', 'robot4test'),
+                                                             code=source_code.read(), language=language)
+            if ans is False:
+                return "SUBMIT FAILED"
+            result = Controller(remote_oj).get_result(account=Account('robot4test', 'robot4test'), pid=remote_id)
+            tries = 5
+            while result.status == Result.Status.STATUS_RESULT_GET and tries > 0:
+                time.sleep(2)
+                if Controller(remote_oj).is_waiting_for_judge(result.verdict):
+                    result = Controller(remote_oj).get_result_by_rid_and_pid(rid=result.origin_run_id,
+                                                                             pid=remote_id)
+                else:
+                    break
+                tries -= 1
+            if result.status == Result.Status.STATUS_RESULT_GET:
+                return str(result.__dict__)
+            return result.status.name
+    except:
+        traceback.print_exc()
+    return "Error"
 
 
 @app.route("/raw/<string:remote_oj>/<string:remote_id>")
@@ -15,6 +53,13 @@ def get_raw(remote_oj, remote_id):
         return '<xmp>' + str(
             json.dumps(problem.__dict__, sort_keys=True, indent=4)) + '</xmp>'
     return 'No Such OJ'
+
+
+@app.route("/languages/<string:remote_oj>")
+def language(remote_oj):
+    return json.dumps({
+        'languages': Controller(remote_oj).find_language(account=Account('robot4test', 'robot4test'))
+    })
 
 
 @app.route("/<string:remote_oj>/<string:remote_id>")
@@ -38,4 +83,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(debug=False, port=7777, host='0.0.0.0')
+    app.run(debug=True, port=7777, host='0.0.0.0')

@@ -7,27 +7,61 @@
 </head>
 <body>
 <div>
-    <p style="font-family:Times New Roman,Georgia,Serif; font-size: 20px;font-weight: bold">
-
-    </p>
-    <form>
+    <form id="uploadForm" method="post" action="/submit" enctype="multipart/form-data">
         remote_oj:
-        <select id="remote_oj">
+        <select id="remote_oj" name="remote_oj" onchange="loadRemoteLang()">
 
         </select>
+        <select id="language" name="language">
 
+        </select>
         <br>
         remote_id:
-        <input id="remote_id" type="text" name="remote_id" value="1000">
+        <input id="remote_id" type="text" name="remote_id" value="1111">
         <br>
-        submit:
-        <input value="submit" onclick="updateFrame()" name="button" type="button"
+        source_code:
+        <input id="source_code" type="file" name="source_code">
+        <br>
+        <input value="提交代码" name="submit" type="button" onclick="upload()"
+               id="submit"/>
+        <input value="刷新页面" onclick="updateFrame()" name="button" type="button"
                id="button"/>
     </form>
+    <p id="serverResponse"></p>
+
 </div>
 
 <div>
     <script>
+        function upload() {
+            var form = new FormData(document.getElementById("uploadForm"));
+            $("#serverResponse").html('Code Submitting...');
+            $.ajax({
+                url: "/submit",
+                type: "post",
+                data: form,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    $("#serverResponse").html(data)
+                },
+                error: function (e) {
+                    $("#serverResponse").html(e)
+                }
+            });
+        }
+
+        function loadRemoteLang() {
+            $.get('/languages/' + document.getElementById('remote_oj').value, function (result) {
+                var re_json = JSON.parse(result);
+                $("#language").html("");
+                for (var key in re_json['languages']) {
+                    $("#language").append("<option value='" + key + "'>" + re_json['languages'][key] + "</option>");
+                    $("#language").val(key);
+                }
+            })
+        }
+
         function loadRemoteOJ() {
             $.get('/supports', function (result) {
                 var re_json = JSON.parse(result);
@@ -36,11 +70,14 @@
                     $("#remote_oj").append("<option value='" + oj_name + "'>" + oj_name + "</option>");
                 });
                 $("#remote_oj").val("WUST");
+                loadRemoteLang()
             });
+
         }
 
         $(document).ready(function () {
             loadRemoteOJ();
+
         });
 
         function reinitIframe() {

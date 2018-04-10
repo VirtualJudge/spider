@@ -70,7 +70,8 @@ class WUSTParser(BaseParser):
 
     def result_parse(self, response):
         result = Result()
-        if response or response.status_code != 200:
+        print(response)
+        if response is None or response.status_code != 200:
             result.status = Result.Status.STATUS_NETWORK_ERROR
             return result
         try:
@@ -91,10 +92,10 @@ class WUSTParser(BaseParser):
             return result
 
 
-
 class WUST(Base):
     def __init__(self):
-        self._req = HttpUtil(Config.custom_headers, 'utf-8')
+        self._headers = Config.custom_headers
+        self._req = HttpUtil(self._headers, 'utf-8')
 
     @staticmethod
     def home_page_url():
@@ -143,15 +144,15 @@ class WUST(Base):
             language = kwargs['language']
             pid = kwargs['pid']
             link_page_url = 'http://acm.wust.edu.cn/submitpage.php?id=' + str(pid) + '&soj=0'
-            link_post_url = 'http://acm.wust.edu.cn/submit.php?'
-            #    self._req.headers.update({'Referer': link_page_url})
+            link_post_url = 'http://acm.wust.edu.cn/submit.php'
             res = self._req.get(link_page_url)
             if res.status_code != 200:
                 return False
             soup = BeautifulSoup(res.text, 'lxml')
             submitkey = soup.find('input', attrs={'name': 'submitkey'})['value']
             post_data = {'id': str(pid), 'soj': '0', 'language': language, 'source': code, 'submitkey': str(submitkey)}
-            res = self._req.post(url=link_post_url, data=post_data)
+            self._headers['Referer'] = link_page_url
+            res = self._req.post(url=link_post_url, data=post_data, headers=self._headers)
             if res.status_code != 200:
                 return False
             return True
@@ -180,11 +181,13 @@ class WUST(Base):
         return self.get_result_by_url(url=url)
 
     def get_result_by_rid_and_pid(self, rid, pid):
-        url = 'http://acm.hdu.edu.cn/status.php?first=' + rid + '&pid=&user=&lang=0&status=0'
+        url = 'http://acm.wust.edu.cn/status.php?top=' + rid
         return self.get_result_by_url(url=url)
 
     def get_result_by_url(self, url):
+        print(url)
         res = self._req.get(url)
+
         return WUSTParser().result_parse(res)
 
     def is_waiting_for_judge(self, verdict):
