@@ -1,6 +1,5 @@
 import base64
 import re
-import traceback
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -15,20 +14,25 @@ class POJParser(BaseParser):
     def __init__(self):
         self._static_prefix = 'http://poj.org/'
 
-    def problem_parse(self, status_code, website_data, pid, url):
+    def problem_parse(self, response, pid, url):
         problem = Problem()
-        soup = BeautifulSoup(website_data, 'lxml')
 
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'POJ'
 
+        if not response:
+            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            return problem
+        website_data = response.text
+        status_code = response.status_code
         if status_code != 200:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
             return problem
-        if re.search('Can not find problem',website_data):
+        if re.search('Can not find problem', website_data):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
             return problem
+        soup = BeautifulSoup(website_data, 'lxml')
 
         try:
             problem.title = re.search(r'ptt" lang="en-US">([\s\S]*?)</div>', website_data).group(1)
@@ -75,7 +79,7 @@ class POJ(Base):
         self._headers['Referer'] = 'http://poj.org/'
         self._headers['Content-Type'] = 'application/x-www-form-urlencoded'
 
-        self._req = HttpUtil(self._headers, self.code_type)
+        self._req = HttpUtil(custom_headers=self._headers, code_type=self.code_type)
 
     @staticmethod
     def home_page_url():
@@ -118,7 +122,7 @@ class POJ(Base):
         pid = str(kwargs['pid'])
         url = 'http://poj.org/problem?id=' + pid
         res = self._req.get(url=url)
-        return POJParser().problem_parse(res.status_code, res.text, pid, url)
+        return POJParser().problem_parse(res, pid, url)
 
     # 提交代码
     def submit_code(self, *args, **kwargs):

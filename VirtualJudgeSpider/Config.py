@@ -30,6 +30,7 @@ class Problem(object):
         STATUS_NETWORK_ERROR = 1
         STATUS_PROBLEM_NOT_EXIST = 2
         STATUS_PARSE_ERROR = 3
+        STATUS_OJ_NOT_EXIST = 4
 
     def __init__(self):
         self.remote_id = None
@@ -45,9 +46,6 @@ class Problem(object):
 
         # 这个属性是html代码，直接在网页中用iframe展示
         self.html = None
-
-    def get_dict(self):
-        return self.__dict__
 
     def show(self):
         print(self.__dict__)

@@ -1,14 +1,12 @@
 import json
 import ssl
-import traceback
 
-import requests
 from bs4 import BeautifulSoup
 from bs4 import element
 
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
-from VirtualJudgeSpider.Utils import HtmlTag
+from VirtualJudgeSpider.Utils import HtmlTag, HttpUtil
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -39,12 +37,18 @@ class AizuParser(BaseParser):
   </script>
   <script src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
 
-    def problem_parse(self, status_code, website_data, pid, url):
+    def problem_parse(self, response, pid, url):
         problem = Problem()
 
         problem.remote_id = pid
         problem.remote_oj = 'Aizu'
         problem.remote_url = url
+
+        if not response:
+            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            return problem
+        website_data = response.text
+        status_code = response.status_code
 
         if status_code == 401:
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
@@ -98,10 +102,9 @@ class AizuParser(BaseParser):
 class Aizu(Base):
 
     def __init__(self):
-        self.headers = {'Content-Type': 'application/json'}
+        self._headers = {'Content-Type': 'application/json'}
 
-        self._req = requests.session()
-        self._req.headers.update(self.headers)
+        self._req = HttpUtil(custom_headers=self._headers)
 
     # 主页链接
     @staticmethod
@@ -144,7 +147,7 @@ class Aizu(Base):
         pid = kwargs['pid']
         url = 'https://judgeapi.u-aizu.ac.jp/resources/descriptions/en/' + str(pid)
         res = self._req.get(url)
-        return AizuParser().problem_parse(res.status_code, res.text, pid, url)
+        return AizuParser().problem_parse(res, pid, url)
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
@@ -153,8 +156,8 @@ class Aizu(Base):
             problemId = kwargs['pid']
             language = kwargs['language']
             sourceCode = kwargs['code']
-            res = self._req.post(url, json.dumps(
-                {'problemId': str(problemId), 'language': str(language), 'sourceCode': str(sourceCode)}))
+            res = self._req.post(url, json=
+                {'problemId': str(problemId), 'language': str(language), 'sourceCode': str(sourceCode)})
             if res.status_code == 200:
                 return True
             return False

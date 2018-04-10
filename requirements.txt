@@ -4,3 +4,4 @@ wheel
 requests
 coverage
 Flask
+requests[socks]

@@ -4,22 +4,29 @@ from bs4 import element
 
 
 class HttpUtil(object):
-    def __init__(self, custom_headers=None, code_type=None):
+    def __init__(self, custom_headers=None, code_type=None, time_out=(3.05, 3)):
         self._headers = custom_headers
         self._request = requests.session()
         self._code_type = code_type
+        self._time_out = time_out
         self._response = None
         if self._headers:
             self._request.headers.update(self._headers)
 
     def get(self, url, **kwargs):
-        self._response = self._request.get(url, **kwargs)
+        try:
+            self._response = self._request.get(url, time_out=self._time_out, **kwargs)
+        except:
+            return None
         if self._code_type and self._response:
             self._response.encoding = self._code_type
         return self._response
 
     def post(self, url, data=None, json=None, **kwargs):
-        self._response = self._request.post(url, data, json, **kwargs)
+        try:
+            self._response = self._request.post(url, data, json, time_out=self._time_out, **kwargs)
+        except:
+            return None
         if self._code_type and self._response:
             self._response.encoding = self._code_type
         return self._response

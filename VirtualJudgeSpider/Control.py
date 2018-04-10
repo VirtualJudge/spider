@@ -1,32 +1,36 @@
+from VirtualJudgeSpider.Config import Problem
+
 supports = ['Aizu', 'HDU', 'FZU', 'POJ', 'WUST', 'ZOJ']
 
 
-class OJBuilder:
+class OJBuilder(object):
     @staticmethod
     def build_oj(name, *args, **kwargs):
-        oj_name = Controller.get_real_remote_oj(str(name))
-        if oj_name:
+        if name:
             try:
-                module_meta = __import__('VirtualJudgeSpider.OJs.%sClass' % (oj_name,), globals(), locals(),
-                                         [oj_name])
-                class_meta = getattr(module_meta, oj_name)
+                module_meta = __import__('VirtualJudgeSpider.OJs.%sClass' % (name,), globals(), locals(),
+                                         [name])
+                class_meta = getattr(module_meta, name)
                 oj = class_meta(*args, **kwargs)
                 return oj
             except ModuleNotFoundError:
-                return None
+                pass
         return None
 
 
-class Controller:
+class Controller(object):
     def __init__(self, oj_name):
-        self._oj = OJBuilder.build_oj(oj_name)
+        remote_oj = Controller.get_real_remote_oj(oj_name)
+        self._oj = OJBuilder.build_oj(remote_oj)
+        self._origin_name = oj_name
 
     @staticmethod
     def get_real_remote_oj(name):
         for oj_name in supports:
             if str(name).upper() == str(oj_name).upper():
-                    return oj_name
+                return oj_name
         return None
+
     # 获取支持的OJ列表
     @staticmethod
     def get_supports():
@@ -47,7 +51,11 @@ class Controller:
     # 获取题面
     def get_problem(self, pid, account, **kwargs):
         if not self._oj:
-            return None
+            problem = Problem()
+            problem.remote_oj = self._origin_name
+            problem.remote_id = pid
+            problem.status = Problem.Status.STATUS_OJ_NOT_EXIST
+            return problem
         return self._oj.get_problem(pid=pid, account=account, **kwargs)
 
     # 提交代码

@@ -1,24 +1,29 @@
 import re
 
-import requests
 from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
-from VirtualJudgeSpider.Utils import HtmlTag
+from VirtualJudgeSpider.Utils import HtmlTag, HttpUtil
 
 
 class FZUParser(BaseParser):
     def __init__(self):
         self._static_prefix = 'http://acm.fzu.edu.cn/'
 
-    def problem_parse(self, status_code, website_data, pid, url):
+    def problem_parse(self, response, pid, url):
         problem = Problem()
 
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'FZU'
+
+        if not response:
+            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            return problem
+        website_data = response.text
+        status_code = response.status_code
 
         if status_code != 200:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
@@ -61,9 +66,7 @@ class FZUParser(BaseParser):
 
 class FZU(Base):
     def __init__(self):
-        self.req = requests.session()
-        self.header = Config.custom_headers
-        self.req.headers.update(self.header)
+        self._req = HttpUtil(custom_headers=Config.custom_headers)
 
     @staticmethod
     def home_page_url():
@@ -73,7 +76,7 @@ class FZU(Base):
     def check_login_status(self):
         url = 'http://acm.fzu.edu.cn/'
         try:
-            res = self.req.get(url)
+            res = self._req.get(url)
             if res.status_code == 200:
                 website_data = res.text
                 if re.search(r'<a href="user.php', website_data):
@@ -90,8 +93,8 @@ class FZU(Base):
             login_link_url = 'http://acm.fzu.edu.cn/login.php?act=1&dir='
             post_data = {'uname': account.username, 'upassword': account.password,
                          'submit': 'Submit'}
-            self.req.get(login_page_url)
-            self.req.post(login_link_url, post_data)
+            self._req.get(login_page_url)
+            self._req.post(login_link_url, post_data)
             if self.check_login_status():
                 return True
             return False
@@ -101,8 +104,8 @@ class FZU(Base):
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
         url = 'http://acm.fzu.edu.cn/problem.php?pid=' + pid
-        res = self.req.get(url)
-        return FZUParser().problem_parse(res.status_code, res.text, pid, url)
+        res = self._req.get(url)
+        return FZUParser().problem_parse(res, pid, url)
 
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):
@@ -116,7 +119,7 @@ class FZU(Base):
             Config.custom_headers['Referer'] = 'http://acm.fzu.edu.cn/submit.php?pid=' + str(pid)
 
             post_data = {'usr': username, 'lang': str(language), 'pid': pid, 'code': code, 'submit': 'Submit'}
-            res = self.req.post(url, post_data)
+            res = self._req.post(url, post_data)
             if res.status_code == 200:
                 return True
             return False
@@ -129,7 +132,7 @@ class FZU(Base):
         url = 'http://acm.fzu.edu.cn/submit.php?'
         languages = {}
         try:
-            res = self.req.get(url)
+            res = self._req.get(url)
             website_data = res.text
             soup = BeautifulSoup(website_data, 'lxml')
             options = soup.find('select', attrs={'name': 'lang'}).find_all('option')
@@ -149,9 +152,8 @@ class FZU(Base):
         return self.get_result_by_url(url=url)
 
     def get_result_by_url(self, url):
-        result = Result()
         try:
-            res = self.req.get(url)
+            res = self._req.get(url)
             return FZUParser().result_parse(res.text)
         except:
             return None
@@ -164,7 +166,7 @@ class FZU(Base):
     def check_status(self):
         url = 'http://acm.fzu.edu.cn/index.php'
         try:
-            res = self.req.get(url)
+            res = self._req.get(url)
             if res.status_code != 200:
                 return False
             website_data = res.text

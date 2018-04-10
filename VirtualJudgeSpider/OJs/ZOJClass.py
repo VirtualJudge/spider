@@ -1,14 +1,12 @@
 import re
-import traceback
 
-import requests
 from bs4 import BeautifulSoup
 from bs4 import element
 
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
-from VirtualJudgeSpider.Utils import HtmlTag
+from VirtualJudgeSpider.Utils import HtmlTag, HttpUtil
 
 
 class ZOJParaer(BaseParser):
@@ -21,17 +19,23 @@ class ZOJParaer(BaseParser):
 }
 </style>"""
 
-    def problem_parse(self, status_code, website_data, pid, url):
+    def problem_parse(self, response, pid, url):
         problem = Problem()
 
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'ZOJ'
 
+        if not response:
+            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            return problem
+        website_data = response.text
+        status_code = response.status_code
+
         if status_code != 200:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
             return problem
-        if re.search('No such problem',website_data):
+        if re.search('No such problem', website_data):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
             return problem
 
@@ -53,7 +57,8 @@ class ZOJParaer(BaseParser):
                         continue
                     if tag.name == 'h2':
                         tag['style'] = HtmlTag.TagStyle.TITLE.value
-                    elif tag.name == 'p' and tag.b and tag.b.string in ['Input', 'Output', 'Sample Input', 'Sample Output']:
+                    elif tag.name == 'p' and tag.b and tag.b.string in ['Input', 'Output', 'Sample Input',
+                                                                        'Sample Output']:
                         tag.b['style'] = HtmlTag.TagStyle.TITLE.value
                     else:
                         tag['style'] = HtmlTag.TagStyle.CONTENT.value
@@ -80,14 +85,7 @@ class ZOJParaer(BaseParser):
 
 class ZOJ(Base):
     def __init__(self):
-        self.req = requests.session()
-        self.req.headers.update(Config.custom_headers)
-        self.Tag = ""
-        self.problem_dir = {"description": "", "Input": "", "Output": "", "Sample Input": "",
-                            "Sample Output": "", "Author:": "", "Source:": "", "Hint": ""}
-        self.raw_desc = {"description": [], "Input": [], "Output": [], "Sample Input": [],
-                         "Sample Output": [], "Author:": [], "Source:": [], "Hint": []}
-        self.List = ["description", "Input", "Output", "Sample Input", "Sample Output", "Author:", "Source:", "Hint"]
+        self._req = HttpUtil(custom_headers=Config.custom_headers)
 
     @staticmethod
     def home_page_url():
@@ -97,8 +95,8 @@ class ZOJ(Base):
     def check_login_status(self):
         url = 'http://acm.zju.edu.cn/onlinejudge/'
         try:
-            website_data = self.req.get(url)
-            if re.search(r'/onlinejudge/logout.do">Logout', website_data.text) is not None:
+            res = self._req.get(url)
+            if re.search(r'/onlinejudge/logout.do">Logout', res.text) is not None:
                 return True
             return False
         except:
@@ -110,7 +108,7 @@ class ZOJ(Base):
         login_link_url = 'http://acm.zju.edu.cn/onlinejudge/login.do'
         post_data = {'handle': account.username, 'password': account.password}
         try:
-            self.req.post(url=login_link_url, data=post_data)
+            self._req.post(url=login_link_url, data=post_data)
             if self.check_login_status():
                 return True
             return False
@@ -120,8 +118,8 @@ class ZOJ(Base):
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
         url = 'http://acm.zju.edu.cn/onlinejudge/showProblem.do?problemCode=' + pid
-        res = self.req.get(url)
-        return ZOJParaer().problem_parse(res.status_code, res.text, pid, url)
+        res = self._req.get(url)
+        return ZOJParaer().problem_parse(res, pid, url)
 
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):
@@ -131,12 +129,12 @@ class ZOJ(Base):
             language = kwargs['language']
             pid = kwargs['pid']
             problem_url = 'http://acm.zju.edu.cn/onlinejudge/showProblem.do?problemCode=' + str(pid)
-            res = self.req.get(problem_url)
+            res = self._req.get(problem_url)
             website_data = res.text
             problem_id = re.search('problemId=(\d*)"><font color="blue">Submit</font>', website_data).group(1)
             url = 'http://acm.zju.edu.cn/onlinejudge/submit.do?problemId=' + str(problem_id)
             post_data = {'languageId': str(language), 'problemId': str(pid), 'source': code}
-            res = self.req.post(url=url, data=post_data)
+            res = self._req.post(url=url, data=post_data)
             if res.status_code == 200:
                 return True
             return False
@@ -149,8 +147,8 @@ class ZOJ(Base):
         url = 'http://acm.zju.edu.cn/onlinejudge/showProblem.do?problemCode=1001'
         languages = {}
         try:
-            website_data = self.req.get(url)
-            soup = BeautifulSoup(website_data.text, 'lxml')
+            res = self._req.get(url)
+            soup = BeautifulSoup(res.text, 'lxml')
             options = soup.find('select', attrs={'name': 'languageId'}).find_all('option')
             for option in options:
                 languages[option.get('value')] = option.string
@@ -171,7 +169,7 @@ class ZOJ(Base):
 
     def get_result_by_url(self, url):
         try:
-            res = self.req.get(url)
+            res = self._req.get(url)
             return ZOJParaer().result_parse(res.text)
         except:
             return None
@@ -184,7 +182,7 @@ class ZOJ(Base):
     def check_status(self):
         url = 'http://acm.zju.edu.cn/onlinejudge/'
         try:
-            website_data = self.req.get(url)
+            website_data = self._req.get(url)
             if re.search(r'<div class="welcome_msg">Welcome to ZOJ</div>', website_data.text):
                 return True
         except:

@@ -14,11 +14,17 @@ class WUSTParser(BaseParser):
     def __init__(self):
         self._static_prefix = 'http://acm.wust.edu.cn/'
 
-    def problem_parse(self, status_code, website_data, pid, url):
+    def problem_parse(self, response, pid, url):
         problem = Problem()
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'WUST'
+
+        if not response:
+            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            return problem
+        website_data = response.text
+        status_code = response.status_code
 
         if status_code != 200:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
@@ -54,7 +60,8 @@ class WUSTParser(BaseParser):
                             tag['style'] = HtmlTag.TagStyle.CONTENT.value
                             tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
                             problem.html += str(
-                                HtmlTag.update_tag(tag, self._static_prefix, update_style=HtmlTag.TagStyle.CONTENT.value))
+                                HtmlTag.update_tag(tag, self._static_prefix,
+                                                   update_style=HtmlTag.TagStyle.CONTENT.value))
             problem.html = '<body>' + problem.html + '</body>'
             problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
             return problem
@@ -117,7 +124,7 @@ class WUST(Base):
         url = 'http://acm.wust.edu.cn/problem.php?id=' + pid + '&soj=0'
         try:
             res = self._req.get(url)
-            return WUSTParser().problem_parse(res.status_code, res.text, pid, url)
+            return WUSTParser().problem_parse(res, pid, url)
         except:
             traceback.print_exc()
             return None

@@ -1,5 +1,4 @@
 import re
-import traceback
 
 from bs4 import BeautifulSoup
 from bs4 import element
@@ -32,12 +31,18 @@ class HDUParser(BaseParser):
     </script>
     <script src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
 
-    def problem_parse(self, status_code, website_data, pid, url):
+    def problem_parse(self, response, pid, url):
         problem = Problem()
 
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'HDU'
+
+        if not response:
+            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            return problem
+        website_data = response.text
+        status_code = response.status_code
 
         if status_code != 200:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
@@ -128,7 +133,7 @@ class HDU(Base):
         pid = str(kwargs['pid'])
         url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + pid
         res = self._req.get(url)
-        return HDUParser().problem_parse(res.status_code, res.text, pid, url)
+        return HDUParser().problem_parse(res, pid, url)
 
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):
