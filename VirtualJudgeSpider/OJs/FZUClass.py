@@ -19,7 +19,7 @@ class FZUParser(BaseParser):
         problem.remote_url = url
         problem.remote_oj = 'FZU'
 
-        if not response:
+        if response is None:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
             return problem
         website_data = response.text

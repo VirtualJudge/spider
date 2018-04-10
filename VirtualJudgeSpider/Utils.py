@@ -2,6 +2,8 @@ import requests
 from enum import Enum
 from bs4 import element
 import traceback
+import logging
+
 
 class HttpUtil(object):
     def __init__(self, custom_headers=None, code_type=None, timeout=(3.05, 3)):
@@ -14,24 +16,25 @@ class HttpUtil(object):
             self._request.headers.update(self._headers)
 
     def get(self, url, **kwargs):
-        print(url)
         try:
             self._response = self._request.get(url, timeout=self._timeout, **kwargs)
+            logging.info('GET:[' + str(self._response.status_code) + ']:' + str(url) + '\n')
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
         except:
-            traceback.print_exc()
+            logging.error('GET:[ERROR]:' + str(url) + '\n')
             return None
 
     def post(self, url, data=None, json=None, **kwargs):
         try:
             self._response = self._request.post(url, data, json, timeout=self._timeout, **kwargs)
+            logging.info('POST:[' + str(self._response.status_code) + ']:' + str(url) + '\n')
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
         except:
-            traceback.print_exc()
+            logging.error('POST:[ERROR]:' + str(url) + '\n')
             return None
 
     @staticmethod

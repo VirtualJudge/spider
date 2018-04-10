@@ -25,7 +25,6 @@ class ZOJParaer(BaseParser):
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'ZOJ'
-        print(response)
         if not response:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
             return problem

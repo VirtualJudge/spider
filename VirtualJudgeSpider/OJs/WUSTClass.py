@@ -1,5 +1,4 @@
 import re
-import traceback
 
 from bs4 import BeautifulSoup
 from bs4 import element
@@ -8,7 +7,7 @@ from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
 from VirtualJudgeSpider.Utils import HttpUtil, HtmlTag
-
+import traceback
 
 class WUSTParser(BaseParser):
     def __init__(self):
@@ -19,17 +18,15 @@ class WUSTParser(BaseParser):
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'WUST'
-        print(response)
-        if not response:
+        if response is None:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
             return problem
         website_data = response.text
         status_code = response.status_code
-
         if status_code != 200:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
             return problem
-        if not website_data:
+        if re.search('Problem is not Available', website_data):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
             return problem
         try:
@@ -66,6 +63,7 @@ class WUSTParser(BaseParser):
             problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
             return problem
         except:
+            traceback.print_exc()
             problem.status = Problem.Status.STATUS_PARSE_ERROR
             return problem
 

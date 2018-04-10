@@ -7,6 +7,7 @@ from bs4 import element
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
 from VirtualJudgeSpider.Utils import HtmlTag, HttpUtil
+import types
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -43,17 +44,15 @@ class AizuParser(BaseParser):
         problem.remote_id = pid
         problem.remote_oj = 'Aizu'
         problem.remote_url = url
-
-        if not response:
+        if response is None:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
             return problem
         website_data = response.text
         status_code = response.status_code
-
-        if status_code == 401:
+        if status_code in [401, 404]:
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
             return problem
-        if status_code != 200:
+        elif status_code != 200:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
             return problem
         try:
@@ -157,7 +156,7 @@ class Aizu(Base):
             language = kwargs['language']
             sourceCode = kwargs['code']
             res = self._req.post(url, json=
-                {'problemId': str(problemId), 'language': str(language), 'sourceCode': str(sourceCode)})
+            {'problemId': str(problemId), 'language': str(language), 'sourceCode': str(sourceCode)})
             if res.status_code == 200:
                 return True
             return False
