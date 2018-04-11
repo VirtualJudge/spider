@@ -182,7 +182,7 @@ class ZOJ(Base):
         return ZOJParaer().result_parse(res)
 
     def is_waiting_for_judge(self, verdict):
-        if verdict in ['Queuing']:
+        if verdict in ['Queuing', 'Compiling']:
             return True
         return False
 

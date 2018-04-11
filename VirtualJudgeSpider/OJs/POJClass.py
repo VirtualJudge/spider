@@ -146,7 +146,7 @@ class POJ(Base):
             url = 'http://poj.org/submit'
             post_data = {'problem_id': pid,
                          'language': language,
-                         'source': base64.b64encode(code),
+                         'source': base64.b64encode(bytes(code,encoding='utf-8')),
                          'submit': 'Submit',
                          'encoded': '1'}
             res = self._req.post(url=url, data=post_data)
