@@ -36,21 +36,30 @@ class HttpUtil(object):
 
     @staticmethod
     def abs_url(remote_path, oj_prefix):
+        """
+
+        :param remote_path: 原本的文件路径，可能是相对路径也可能是http或https开始的路径
+        :param oj_prefix: oj的static文件前缀
+        :return: 文件名，原本的补全之后的路径
+        """
         if not remote_path.startswith('http://') and not remote_path.startswith('https://'):
             remote_path = oj_prefix.rstrip('/') + '/' + remote_path.lstrip('/')
         file_name = str(str(remote_path).split('/')[-1])
         return file_name, remote_path
 
 
-def deal_with_image_url(remote_path, oj_prefix):
-    if not remote_path.startswith('http://') and not remote_path.startswith('https://'):
-        remote_path = oj_prefix.rstrip('/') + '/' + remote_path.lstrip('/')
-    file_name = str(str(remote_path).split('/')[-1])
-    return file_name, remote_path
-
-
 class HtmlTag(object):
     class TagDesc(Enum):
+        """
+        给html的tag加上相应的class
+
+        TITLE = 'vj-title'
+        CONTENT = 'vj-content'
+        IMAGE = 'vj-image'
+        FILE = 'vj-file'
+        ANCHOR = 'vj-anchor'
+
+        """
         TITLE = 'vj-title'
         CONTENT = 'vj-content'
         IMAGE = 'vj-image'
@@ -58,6 +67,9 @@ class HtmlTag(object):
         ANCHOR = 'vj-anchor'
 
     class TagStyle(Enum):
+        """
+        TITLE 和 CONTENT 需要加额外的 Style 保证网页风格一致
+        """
         TITLE = 'font-family: Helvetica,"PingFang SC","Hiragino Sans GB' \
                 '","Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 18px;font-weight: bold;'
         CONTENT = 'font-family: Helvetica,"PingFang SC","Hiragino Sans GB' \
@@ -65,6 +77,13 @@ class HtmlTag(object):
 
     @staticmethod
     def update_tag(tag, oj_prefix, update_style=None):
+        """
+
+        :param tag: 一个顶级tag，从这个tag递归遍历所有子tag，寻找需要修改url的节点
+        :param oj_prefix: 原oj的静态文件前缀
+        :param update_style: 不为空的话，递归修改内联style
+        :return: 成功返回原tag，失败返回None
+        """
         try:
             if type(tag) == element.Tag:
                 for child in tag.descendants:

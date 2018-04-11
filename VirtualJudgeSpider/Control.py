@@ -26,6 +26,11 @@ class Controller(object):
 
     @staticmethod
     def get_real_remote_oj(name):
+        """
+
+        :param name: oj名称，可能与数据库里面保存的名称不一致，需要通过这个函数找到数据库名称
+        :return: 数据库名称，或者不存在
+        """
         for oj_name in supports:
             if str(name).upper() == str(oj_name).upper():
                 return oj_name

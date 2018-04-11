@@ -25,7 +25,21 @@ class Account:
 
 
 class Problem(object):
+    """
+    从原网站抓取的题目对象
+    """
+
     class Status(Enum):
+        """
+        STATUS_PENDING = 0
+        STATUS_RUNNING = 1
+        STATUS_CRAWLING_SUCCESS = 2
+        STATUS_NETWORK_ERROR = 3
+        STATUS_PROBLEM_NOT_EXIST = 4
+        STATUS_NO_ACCOUNT = 5
+        STATUS_OJ_NOT_EXIST = 6
+        STATUS_PARSE_ERROR = 7
+        """
         STATUS_PENDING = 0
         STATUS_RUNNING = 1
         STATUS_CRAWLING_SUCCESS = 2
@@ -50,7 +64,21 @@ class Problem(object):
 
 
 class Result(object):
+    """
+    从原网站抓取的返回结果对象
+    """
+
     class Status(Enum):
+        """
+        STATUS_PENDING = 0
+        STATUS_RUNNING = 1
+        STATUS_CRAWLING_SUCCESS = 2
+        STATUS_NETWORK_ERROR = 3
+        STATUS_PROBLEM_NOT_EXIST = 4
+        STATUS_NO_ACCOUNT = 5
+        STATUS_OJ_NOT_EXIST = 6
+        STATUS_PARSE_ERROR = 7
+        """
         STATUS_PENDING = 1
         STATUS_RUNNING = 2
         STATUS_RESULT_GET = 3
@@ -67,9 +95,3 @@ class Result(object):
         self.execute_memory = None
         self.status = None
 
-
-class SimpleStatus(Enum):
-    STATUS_SUCCESS = 0
-    STATUS_READ_ERROR = 1
-    STATUS_NETWORK_ERROR = 2
-    STATUS_UNKNOW_ERROR = 3
