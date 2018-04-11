@@ -17,25 +17,21 @@ class HttpUtil(object):
 
     def get(self, url, **kwargs):
         try:
-            logging.info('GET:' + str(url) + '\n')
             self._response = self._request.get(url, **kwargs)
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
         except:
-            logging.error('GET:[ERROR]:' + str(url) + '\n')
             return None
 
     def post(self, url, data=None, json=None, **kwargs):
         try:
-            logging.info('POST:' + str(url) + '\n')
             self._response = self._request.post(url, data, json, **kwargs)
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
         except:
             traceback.print_exc()
-            logging.error('POST:[ERROR]:' + str(url) + '\n')
             return None
 
     @staticmethod
