@@ -36,7 +36,7 @@ class AizuParser(BaseParser):
     }
    });
   </script>
-  <script src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
+  <script src="https://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
 
     def problem_parse(self, response, pid, url):
         problem = Problem()
