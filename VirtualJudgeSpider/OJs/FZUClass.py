@@ -7,8 +7,6 @@ from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
 from VirtualJudgeSpider.Utils import HtmlTag, HttpUtil
 
-import traceback
-
 
 class FZUParser(BaseParser):
     def __init__(self):
@@ -182,7 +180,8 @@ class FZU(Base):
     def get_result(self, *args, **kwargs):
         account = kwargs.get('account')
         pid = kwargs.get('pid')
-        url = 'http://acm.fzu.edu.cn/log.php?pid=' + pid + '&user=' + account.username + '&language=99&state=99&submit=Go'
+        url = 'http://acm.fzu.edu.cn/log.php?pid=' + pid + \
+              '&user=' + account.username + '&language=99&state=99&submit=Go'
         return self.get_result_by_url(url=url)
 
     def get_result_by_rid_and_pid(self, rid, pid):

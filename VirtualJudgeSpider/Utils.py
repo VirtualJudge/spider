@@ -1,8 +1,8 @@
-import requests
 from enum import Enum
+
+import requests
 from bs4 import element
-import traceback
-import logging
+from requests import RequestException
 
 
 class HttpUtil(object):
@@ -21,7 +21,7 @@ class HttpUtil(object):
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
-        except:
+        except RequestException:
             return None
 
     def post(self, url, data=None, json=None, **kwargs):
@@ -30,8 +30,7 @@ class HttpUtil(object):
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
-        except:
-            traceback.print_exc()
+        except RequestException:
             return None
 
     @staticmethod
@@ -84,23 +83,18 @@ class HtmlTag(object):
         :param update_style: 不为空的话，递归修改内联style
         :return: 成功返回原tag，失败返回None
         """
-        try:
-            if type(tag) == element.Tag:
-                for child in tag.descendants:
-                    if type(child) == element.Tag and update_style:
-                        child['style'] = update_style
-                    if child.name == 'a' and child.get('href'):
-                        if not child.get('class'):
-                            child['class'] = ()
-                        child['class'] += (HtmlTag.TagDesc.ANCHOR.value,)
-                        child['href'] = HttpUtil.abs_url(child.get('href'), oj_prefix=oj_prefix)[-1]
-                    if child.name == 'img' and child.get('src'):
-                        if not child.get('class'):
-                            child['class'] = ()
-                        child['class'] += (HtmlTag.TagDesc.IMAGE.value,)
-                        child['src'] = HttpUtil.abs_url(child.get('src'), oj_prefix=oj_prefix)[-1]
-            return tag
-        except:
-            import traceback
-            traceback.print_exc()
-            return None
+        if type(tag) == element.Tag:
+            for child in tag.descendants:
+                if type(child) == element.Tag and update_style:
+                    child['style'] = update_style
+                if child.name == 'a' and child.get('href'):
+                    if not child.get('class'):
+                        child['class'] = ()
+                    child['class'] += (HtmlTag.TagDesc.ANCHOR.value,)
+                    child['href'] = HttpUtil.abs_url(child.get('href'), oj_prefix=oj_prefix)[-1]
+                if child.name == 'img' and child.get('src'):
+                    if not child.get('class'):
+                        child['class'] = ()
+                    child['class'] += (HtmlTag.TagDesc.IMAGE.value,)
+                    child['src'] = HttpUtil.abs_url(child.get('src'), oj_prefix=oj_prefix)[-1]
+        return tag

@@ -11,4 +11,3 @@ class TestHDU(unittest.TestCase):
     def test_classname(self):
         hdu = HDU()
         self.assertEqual(hdu.__class__.__name__, 'HDU')
-

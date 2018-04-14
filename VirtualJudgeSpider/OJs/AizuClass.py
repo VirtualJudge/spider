@@ -1,6 +1,5 @@
 import json
 import ssl
-import traceback
 
 from bs4 import BeautifulSoup
 from bs4 import element
@@ -162,19 +161,14 @@ class Aizu(Base):
             return False
         url = 'https://judgeapi.u-aizu.ac.jp/submissions'
 
-        try:
-            account = kwargs['account']
-            pid = kwargs['pid']
-            language = kwargs['language']
-            source_code = kwargs['code']
-            res = self._req.post(url, json={'problemId': str(pid), 'language': str(language),
-                                            'sourceCode': str(source_code)})
-            if res.status_code == 200:
-                return True
-            return False
-        except:
-            traceback.print_exc()
-            return False
+        pid = kwargs['pid']
+        language = kwargs['language']
+        source_code = kwargs['code']
+        res = self._req.post(url, json={'problemId': str(pid), 'language': str(language),
+                                        'sourceCode': str(source_code)})
+        if res and res.status_code == 200:
+            return True
+        return False
 
     # 获取当然运行结果
     def get_result(self, *args, **kwargs):

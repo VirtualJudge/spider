@@ -1,5 +1,4 @@
 from enum import Enum
-import json
 
 custom_headers = {
     'Connection': 'Keep-Alive',
@@ -94,4 +93,3 @@ class Result(object):
         self.execute_time = None
         self.execute_memory = None
         self.status = None
-

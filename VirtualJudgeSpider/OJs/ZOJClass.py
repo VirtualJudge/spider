@@ -14,7 +14,7 @@ class ZOJParaer(BaseParser):
         self._static_prefix = 'http://acm.zju.edu.cn/onlinejudge/'
         self._script = """<style>
 * {
-    font-family: Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif; 
+    font-family: Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
     font-size: 14px;
 }
 </style>"""
@@ -168,8 +168,9 @@ class ZOJ(Base):
     def get_result(self, *args, **kwargs):
         account = kwargs.get('account')
         pid = kwargs.get('pid')
-        url = 'http://acm.zju.edu.cn/onlinejudge/showRuns.do?contestId=1&search=true&firstId=-1&lastId=-1&problemCode=' + str(
-            pid) + '&handle=' + account.username + '&idStart=&idEnd='
+        url = 'http://acm.zju.edu.cn/onlinejudge/showRuns.do' \
+              '?contestId=1&search=true&firstId=-1&lastId=-1&problemCode=' + \
+              str(pid) + '&handle=' + account.username + '&idStart=&idEnd='
         return self.get_result_by_url(url=url)
 
     def get_result_by_rid_and_pid(self, rid, pid):

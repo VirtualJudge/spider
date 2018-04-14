@@ -8,7 +8,6 @@ from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
 from VirtualJudgeSpider.Utils import HttpUtil, HtmlTag
-import traceback
 
 
 class POJParser(BaseParser):
@@ -36,6 +35,7 @@ class POJParser(BaseParser):
         soup = BeautifulSoup(website_data, 'lxml')
 
         try:
+
             problem.title = re.search(r'ptt" lang="en-US">([\s\S]*?)</div>', website_data).group(1)
             problem.time_limit = re.search(r'(\d*MS)', website_data).group(1)
             problem.memory_limit = re.search(r'Memory Limit:</b> ([\s\S]*?)</td>', website_data).group(1)
@@ -62,23 +62,17 @@ class POJParser(BaseParser):
         if response is None or response.status_code != 200:
             result.status = Result.Status.STATUS_NETWORK_ERROR
             return result
-
-        try:
-            website_data = response.text
-            soup = BeautifulSoup(website_data, 'lxml')
-            line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
-            if line is not None:
-                result.origin_run_id = line[0].string
-                result.verdict = line[3].string
-                result.execute_time = line[5].string
-                result.execute_memory = line[4].string
-                result.status = Result.Status.STATUS_RESULT_GET
-            else:
-                result.status = Result.Status.STATUS_RESULT_NOT_EXIST
-        except:
-            result.status = Result.Status.STATUS_PARSE_ERROR
-        finally:
-            return result
+        soup = BeautifulSoup(response.text, 'lxml')
+        line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
+        if line is not None:
+            result.origin_run_id = line[0].string
+            result.verdict = line[3].string
+            result.execute_time = line[5].string
+            result.execute_memory = line[4].string
+            result.status = Result.Status.STATUS_RESULT_GET
+        else:
+            result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+        return result
 
 
 class POJ(Base):
@@ -105,28 +99,19 @@ class POJ(Base):
                      'password1': account.password,
                      'B1': 'login',
                      'url': '/'}
-        try:
-            self._req.get(url=login_page_url)
-            res = self._req.post(url=login_link_url, data=post_data)
-            if res.status_code == 200 and self.check_login_status():
-                return True
-            return False
-        except:
-            traceback.print_exc()
-            return False
+        self._req.get(url=login_page_url)
+        res = self._req.post(url=login_link_url, data=post_data)
+        if res.status_code == 200 and self.check_login_status():
+            return True
+        return False
 
     # 检查登录状态
     def check_login_status(self, *args, **kwargs):
         url = 'http://poj.org/'
-        try:
-            res = self._req.get(url=url)
-            website_data = res.text
-            if re.search(r'action=logout&', website_data):
-                return True
-            return False
-        except:
-            traceback.print_exc()
-            return False
+        res = self._req.get(url=url)
+        if res and re.search(r'action=logout&', res.text):
+            return True
+        return False
 
     # 获取题目
     def get_problem(self, *args, **kwargs):
@@ -139,23 +124,19 @@ class POJ(Base):
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):
             return False
-        try:
-            code = kwargs['code']
-            language = kwargs['language']
-            pid = kwargs['pid']
-            url = 'http://poj.org/submit'
-            post_data = {'problem_id': pid,
-                         'language': language,
-                         'source': base64.b64encode(bytes(code,encoding='utf-8')),
-                         'submit': 'Submit',
-                         'encoded': '1'}
-            res = self._req.post(url=url, data=post_data)
-            if res.status_code == 200:
-                return True
-            return False
-        except:
-            traceback.print_exc()
-            return False
+        code = kwargs['code']
+        language = kwargs['language']
+        pid = kwargs['pid']
+        url = 'http://poj.org/submit'
+        post_data = {'problem_id': pid,
+                     'language': language,
+                     'source': base64.b64encode(bytes(code, encoding='utf-8')),
+                     'submit': 'Submit',
+                     'encoded': '1'}
+        res = self._req.post(url=url, data=post_data)
+        if res and res.status_code == 200:
+            return True
+        return False
 
     # 获取当然运行结果
     def get_result(self, *args, **kwargs):
@@ -180,14 +161,13 @@ class POJ(Base):
             return None
         url = 'http://poj.org/submit'
         language = {}
-        try:
-            res = self._req.get(url=url)
+        res = self._req.get(url=url)
+        if res:
             soup = BeautifulSoup(res.text, 'lxml')
             options = soup.find('select', attrs={'name': 'language'}).find_all('option')
             for option in options:
                 language[option.get('value')] = option.string
-        finally:
-            return language
+        return language
 
     # 判断当前提交结果的运行状态
     def is_waiting_for_judge(self, verdict):

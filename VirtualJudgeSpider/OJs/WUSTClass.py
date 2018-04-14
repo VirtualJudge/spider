@@ -1,4 +1,5 @@
 import re
+import traceback
 
 from bs4 import BeautifulSoup
 from bs4 import element
@@ -7,7 +8,6 @@ from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
 from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
 from VirtualJudgeSpider.Utils import HttpUtil, HtmlTag
-import traceback
 
 
 class WUSTParser(BaseParser):
@@ -176,7 +176,8 @@ class WUST(Base):
     def get_result(self, *args, **kwargs):
         account = kwargs.get('account')
         pid = kwargs.get('pid')
-        url = 'http://acm.wust.edu.cn/status.php?soj=-1&problem_id=' + pid + '&user_id=' + account.username + '&language=-1&jresult=-1'
+        url = 'http://acm.wust.edu.cn/status.php?soj=-1&problem_id=' + \
+              pid + '&user_id=' + account.username + '&language=-1&jresult=-1'
 
         return self.get_result_by_url(url=url)
 
