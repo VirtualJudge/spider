@@ -1,6 +1,7 @@
 # VirtualJudgeSpider
 VirtualJudge - Judge Spider  
-[![Build Status](https://travis-ci.org/VirtualJudge/VirtualJudgeSpider.svg?branch=master)](https://travis-ci.org/VirtualJudge/VirtualJudgeSpider) [![Coverage Status](https://coveralls.io/repos/github/VirtualJudge/VirtualJudgeSpider/badge.svg?branch=master)](https://coveralls.io/github/VirtualJudge/VirtualJudgeSpider?branch=master)
+[![Build Status](https://travis-ci.org/VirtualJudge/VirtualJudgeSpider.svg?branch=master)](https://travis-ci.org/VirtualJudge/VirtualJudgeSpider) 
+[![Coverage Status](https://coveralls.io/repos/github/VirtualJudge/VirtualJudgeSpider/badge.svg?branch=master)](https://coveralls.io/github/VirtualJudge/VirtualJudgeSpider?branch=master)
 ***
 ### build script
 `python3 setup.py bdist_wheel`
@@ -11,9 +12,9 @@ VirtualJudge - Judge Spider
  - POJ
  - FZU
  - Aizu
+ - ZOJ
  
 ### working
- - ZOJ
  - Codeforces
  - hihoCoder
  
