@@ -182,3 +182,15 @@ class POJ(Base):
         if re.search(r'color=blue>Welcome To PKU JudgeOnline</font>', res.text):
             return True
         return False
+
+    @staticmethod
+    def is_accepted(verdict):
+        return verdict == 'Accepted'
+
+    @staticmethod
+    def is_running(verdict):
+        return verdict in ['Queuing', 'Compiling', 'Waiting', 'Running & Judging']
+
+    @staticmethod
+    def is_compile_error(verdict):
+        return verdict == 'Compile Error'

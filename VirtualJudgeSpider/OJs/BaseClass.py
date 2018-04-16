@@ -51,3 +51,18 @@ class Base(object):
     # 检查源OJ是否运行正常
     def check_status(self):
         pass
+
+    #  判断结果是否正确
+    @staticmethod
+    def is_accepted(verdict):
+        pass
+
+    # 判断是否编译错误
+    @staticmethod
+    def is_compile_error(verdict):
+        pass
+
+    # 判断是否运行中
+    @staticmethod
+    def is_running(verdict):
+        pass

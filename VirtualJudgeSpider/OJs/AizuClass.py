@@ -218,3 +218,30 @@ class Aizu(Base):
             return False
         except:
             return False
+
+    @staticmethod
+    def is_accepted(verdict):
+        return verdict == 4
+
+    @staticmethod
+    def is_running(verdict):
+        return verdict in [5, 9]
+
+    @staticmethod
+    def is_compile_error(verdict):
+        return verdict == 0
+
+
+"""
+# values of submission status
+STATE_COMPILEERROR = 0
+STATE_WRONGANSWER = 1
+STATE_TIMELIMIT = 2
+STATE_MEMORYLIMIT = 3
+STATE_ACCEPTED = 4
+STATE_WAITING = 5
+STATE_OUTPUTLIMIT = 6
+STATE_RUNTIMEERROR = 7
+STATE_PRESENTATIONERROR = 8
+STATE_RUNNING = 9
+"""

@@ -204,3 +204,15 @@ class WUST(Base):
                 return True
         except:
             return False
+
+    @staticmethod
+    def is_accepted(verdict):
+        return verdict == 'Accepted'
+
+    @staticmethod
+    def is_running(verdict):
+        return verdict in ['Pending', 'Pending Rejudge', 'Compiling', 'Running & Judging']
+
+    @staticmethod
+    def is_compile_error(verdict):
+        return verdict == 'Compile Error'

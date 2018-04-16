@@ -195,3 +195,15 @@ class ZOJ(Base):
                 return True
         except:
             return False
+
+    @staticmethod
+    def is_accepted(verdict):
+        return verdict == 'Accepted'
+
+    @staticmethod
+    def is_running(verdict):
+        return verdict in ['Queuing', 'Compiling']
+
+    @staticmethod
+    def is_compile_error(verdict):
+        return verdict == 'Compilation Error'

@@ -101,7 +101,8 @@ class FZUParser(BaseParser):
 
 class FZU(Base):
     def __init__(self):
-        self._req = HttpUtil(custom_headers=Config.custom_headers)
+        self._code_type = 'utf-8'
+        self._req = HttpUtil(custom_headers=Config.custom_headers, code_type=self._code_type)
 
     @staticmethod
     def home_page_url():
@@ -140,6 +141,7 @@ class FZU(Base):
         pid = str(kwargs['pid'])
         url = 'http://acm.fzu.edu.cn/problem.php?pid=' + pid
         res = self._req.get(url)
+        print(res.encoding)
         return FZUParser().problem_parse(res, pid, url)
 
     def submit_code(self, *args, **kwargs):
@@ -218,3 +220,15 @@ class FZU(Base):
             return False
         except:
             return False
+
+    @staticmethod
+    def is_accepted(verdict):
+        return verdict == 'Accepted'
+
+    @staticmethod
+    def is_running(verdict):
+        return verdict in ['Judging...', 'Queuing...']
+
+    @staticmethod
+    def is_compile_error(verdict):
+        return verdict == 'Compile Error'
