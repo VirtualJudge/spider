@@ -104,13 +104,11 @@ class WUST(Base):
 
     def check_login_status(self):
         url = 'http://acm.wust.edu.cn/'
-        try:
-            res = self._req.get(url)
-            website_data = res.text
-            if re.search(r'<a href="logout.php">Logout</a>', website_data) is not None:
-                return True
-        except:
+        res = self._req.get(url)
+        if res is None:
             return False
+        if re.search(r'<a href="logout.php">Logout</a>', res.text) is not None:
+            return True
 
     def login_webside(self, account, *args, **kwargs):
         if self.check_login_status():
@@ -121,14 +119,11 @@ class WUST(Base):
         post_data = {'user_id': account.username,
                      'password': account.password,
                      'submit': 'Submit'}
-        try:
-            self._req.get(login_page_url)
-            self._req.post(login_link_url, post_data)
-            if self.check_login_status():
-                return True
-            return False
-        except:
-            return False
+        self._req.get(login_page_url)
+        self._req.post(login_link_url, post_data)
+        if self.check_login_status():
+            return True
+        return False
 
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
@@ -139,39 +134,36 @@ class WUST(Base):
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):
             return False
-        try:
-            code = kwargs['code']
-            language = kwargs['language']
-            pid = kwargs['pid']
-            link_page_url = 'http://acm.wust.edu.cn/submitpage.php?id=' + str(pid) + '&soj=0'
-            link_post_url = 'http://acm.wust.edu.cn/submit.php'
-            res = self._req.get(link_page_url)
-            if res.status_code != 200:
-                return False
-            soup = BeautifulSoup(res.text, 'lxml')
-            submitkey = soup.find('input', attrs={'name': 'submitkey'})['value']
-            post_data = {'id': str(pid), 'soj': '0', 'language': language, 'source': code, 'submitkey': str(submitkey)}
-            self._headers['Referer'] = link_page_url
-            res = self._req.post(url=link_post_url, data=post_data, headers=self._headers)
-            if res.status_code != 200:
-                return False
-            return True
-        except:
+        code = kwargs['code']
+        language = kwargs['language']
+        pid = kwargs['pid']
+        link_page_url = 'http://acm.wust.edu.cn/submitpage.php?id=' + str(pid) + '&soj=0'
+        link_post_url = 'http://acm.wust.edu.cn/submit.php'
+        res = self._req.get(link_page_url)
+        if res is None or res.status_code != 200:
             return False
+        soup = BeautifulSoup(res.text, 'lxml')
+        submitkey = soup.find('input', attrs={'name': 'submitkey'})['value']
+        post_data = {'id': str(pid), 'soj': '0', 'language': language, 'source': code, 'submitkey': str(submitkey)}
+        self._headers['Referer'] = link_page_url
+        res = self._req.post(url=link_post_url, data=post_data, headers=self._headers)
+        if res is None or res.status_code != 200:
+            return False
+        return True
 
     def find_language(self, *args, **kwargs):
         if self.login_webside(*args, **kwargs) is False:
             return None
         url = 'http://acm.wust.edu.cn/submitpage.php?id=1000&soj=0'
         languages = {}
-        try:
-            res = self._req.get(url)
-            soup = BeautifulSoup(res.text, 'lxml')
-            options = soup.find('select', attrs={'name': 'language'}).find_all('option')
-            for option in options:
-                languages[option.get('value')] = option.string
-        finally:
+        res = self._req.get(url)
+        if res is None:
             return languages
+        soup = BeautifulSoup(res.text, 'lxml')
+        options = soup.find('select', attrs={'name': 'language'}).find_all('option')
+        for option in options:
+            languages[option.get('value')] = option.string
+        return languages
 
     def get_result(self, *args, **kwargs):
         account = kwargs.get('account')
@@ -198,12 +190,10 @@ class WUST(Base):
 
     def check_status(self):
         url = 'http://acm.wust.edu.cn/'
-        try:
-            res = self._req.get(url)
-            if re.search(r'<a href="index.php">WUST Online Judge</a>', res.text):
-                return True
-        except:
-            return False
+        res = self._req.get(url)
+        if res and re.search(r'<a href="index.php">WUST Online Judge</a>', res.text):
+            return True
+        return False
 
     @staticmethod
     def is_accepted(verdict):

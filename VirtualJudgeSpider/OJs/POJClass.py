@@ -179,7 +179,7 @@ class POJ(Base):
     def check_status(self):
         url = "http://poj.org/"
         res = self._req.get(url)
-        if re.search(r'color=blue>Welcome To PKU JudgeOnline</font>', res.text):
+        if res and re.search(r'color=blue>Welcome To PKU JudgeOnline</font>', res.text):
             return True
         return False
 

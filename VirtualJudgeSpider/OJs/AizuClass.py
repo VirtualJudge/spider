@@ -1,5 +1,6 @@
 import json
 import ssl
+import time
 
 from bs4 import BeautifulSoup
 from bs4 import element
@@ -127,26 +128,20 @@ class Aizu(Base):
             'id': account.username,
             'password': account.password
         }
-        try:
-            res = self._req.post(url=login_link_url, json=post_data)
-            if res.status_code != 200:
-                return False
-            if self.check_login_status(self, *args, **kwargs):
-                return True
+        res = self._req.post(url=login_link_url, json=post_data)
+        if res and res.status_code != 200:
             return False
-        except:
-            return False
+        if self.check_login_status(self, *args, **kwargs):
+            return True
+        return False
 
     # 检查登录状态
     def check_login_status(self, *args, **kwargs):
         url = 'https://judgeapi.u-aizu.ac.jp/self'
-        try:
-            res = self._req.get(url)
-            if res.status_code == 200:
-                return True
-            return False
-        except:
-            return False
+        res = self._req.get(url)
+        if res and res.status_code == 200:
+            return True
+        return False
 
     # 获取题目
     def get_problem(self, *args, **kwargs):
@@ -175,7 +170,7 @@ class Aizu(Base):
         account = kwargs.get('account')
         pid = str(kwargs.get('pid'))
         url = 'https://judgeapi.u-aizu.ac.jp/submission_records/users/' + str(account.username) + '/problems/' + pid
-        import time
+
         time.sleep(3)
         res = self._req.get(url)
         if res.status_code != 200:
@@ -211,13 +206,10 @@ class Aizu(Base):
     # 检查源OJ是否运行正常
     def check_status(self):
         url = 'https://judgeapi.u-aizu.ac.jp/categories'
-        try:
-            res = self._req.get(url)
-            if res.status_code == 200:
-                return True
-            return False
-        except:
-            return False
+        res = self._req.get(url)
+        if res and res.status_code == 200:
+            return True
+        return False
 
     @staticmethod
     def is_accepted(verdict):

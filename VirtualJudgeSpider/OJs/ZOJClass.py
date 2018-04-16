@@ -104,26 +104,20 @@ class ZOJ(Base):
 
     def check_login_status(self):
         url = 'http://acm.zju.edu.cn/onlinejudge/'
-        try:
-            res = self._req.get(url)
-            if re.search(r'/onlinejudge/logout.do">Logout', res.text) is not None:
-                return True
-            return False
-        except:
-            return False
+        res = self._req.get(url)
+        if res and re.search(r'/onlinejudge/logout.do">Logout', res.text) is not None:
+            return True
+        return False
 
     def login_webside(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
         login_link_url = 'http://acm.zju.edu.cn/onlinejudge/login.do'
         post_data = {'handle': account.username, 'password': account.password}
-        try:
-            self._req.post(url=login_link_url, data=post_data)
-            if self.check_login_status():
-                return True
-            return False
-        except:
-            return False
+        self._req.post(url=login_link_url, data=post_data)
+        if self.check_login_status():
+            return True
+        return False
 
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
@@ -134,22 +128,21 @@ class ZOJ(Base):
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):
             return False
-        try:
-            code = kwargs['code']
-            language = kwargs['language']
-            pid = kwargs['pid']
-            problem_url = 'http://acm.zju.edu.cn/onlinejudge/showProblem.do?problemCode=' + str(pid)
-            res = self._req.get(problem_url)
-            website_data = res.text
-            problem_id = re.search('problemId=(\d*)"><font color="blue">Submit</font>', website_data).group(1)
-            url = 'http://acm.zju.edu.cn/onlinejudge/submit.do?problemId=' + str(problem_id)
-            post_data = {'languageId': str(language), 'problemId': str(pid), 'source': code}
-            res = self._req.post(url=url, data=post_data)
-            if res.status_code == 200:
-                return True
+        code = kwargs['code']
+        language = kwargs['language']
+        pid = kwargs['pid']
+        problem_url = 'http://acm.zju.edu.cn/onlinejudge/showProblem.do?problemCode=' + str(pid)
+        res = self._req.get(problem_url)
+        if res is None:
             return False
-        except:
-            return False
+
+        problem_id = re.search('problemId=(\d*)"><font color="blue">Submit</font>', res.text).group(1)
+        url = 'http://acm.zju.edu.cn/onlinejudge/submit.do?problemId=' + str(problem_id)
+        post_data = {'languageId': str(language), 'problemId': str(pid), 'source': code}
+        res = self._req.post(url=url, data=post_data)
+        if res and res.status_code == 200:
+            return True
+        return False
 
     def find_language(self, *args, **kwargs):
         if self.login_webside(*args, **kwargs) is False:
@@ -189,12 +182,10 @@ class ZOJ(Base):
 
     def check_status(self):
         url = 'http://acm.zju.edu.cn/onlinejudge/'
-        try:
-            website_data = self._req.get(url)
-            if re.search(r'<div class="welcome_msg">Welcome to ZOJ</div>', website_data.text):
-                return True
-        except:
-            return False
+        res = self._req.get(url)
+        if res and re.search(r'<div class="welcome_msg">Welcome to ZOJ</div>', res.text):
+            return True
+        return False
 
     @staticmethod
     def is_accepted(verdict):

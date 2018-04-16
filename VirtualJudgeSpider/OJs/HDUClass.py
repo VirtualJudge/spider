@@ -103,7 +103,8 @@ class HDUParser(BaseParser):
 
 class HDU(Base):
     def __init__(self):
-        self._req = HttpUtil(custom_headers=Config.custom_headers)
+        self._code_type = 'gb18030'
+        self._req = HttpUtil(custom_headers=Config.custom_headers, code_type=self._code_type)
 
     @staticmethod
     def home_page_url():
@@ -112,13 +113,10 @@ class HDU(Base):
 
     def check_login_status(self):
         url = 'http://acm.hdu.edu.cn/'
-        try:
-            website_data = self._req.get(url)
-            if re.search(r'userloginex\.php\?action=logout', website_data.text) is not None:
-                return True
-            return False
-        except:
-            return False
+        res = self._req.get(url)
+        if res and re.search(r'userloginex\.php\?action=logout', res.text) is not None:
+            return True
+        return False
 
     def login_webside(self, account, *args, **kwargs):
         if self.check_login_status():
@@ -128,14 +126,11 @@ class HDU(Base):
                      'userpass': account.password,
                      'login': 'Sign In'
                      }
-        try:
-            self._req.post(url=login_link_url, data=post_data,
-                           params={'action': 'login'})
-            if self.check_login_status():
-                return True
-            return False
-        except:
-            return False
+        self._req.post(url=login_link_url, data=post_data,
+                       params={'action': 'login'})
+        if self.check_login_status():
+            return True
+        return False
 
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
@@ -146,32 +141,29 @@ class HDU(Base):
     def submit_code(self, *args, **kwargs):
         if not self.login_webside(*args, **kwargs):
             return False
-        try:
-            code = kwargs.get('code')
-            language = kwargs.get('language')
-            pid = kwargs.get('pid')
-            url = 'http://acm.hdu.edu.cn/submit.php'
-            post_data = {'check': '0', 'language': language, 'problemid': pid, 'usercode': code}
-            res = self._req.post(url=url, data=post_data, params={'action': 'submit'})
-            if res.status_code == 200:
-                return True
-            return False
-        except:
-            return False
+        code = kwargs.get('code')
+        language = kwargs.get('language')
+        pid = kwargs.get('pid')
+        url = 'http://acm.hdu.edu.cn/submit.php'
+        post_data = {'check': '0', 'language': language, 'problemid': pid, 'usercode': code}
+        res = self._req.post(url=url, data=post_data, params={'action': 'submit'})
+        if res and res.status_code == 200:
+            return True
+        return False
 
     def find_language(self, *args, **kwargs):
         if self.login_webside(*args, **kwargs) is False:
             return None
         url = 'http://acm.hdu.edu.cn/submit.php'
         languages = {}
-        try:
-            website_data = self._req.get(url)
-            soup = BeautifulSoup(website_data.text, 'lxml')
-            options = soup.find('select', attrs={'name': 'language'}).find_all('option')
-            for option in options:
-                languages[option.get('value')] = option.string
-        finally:
+        res = self._req.get(url)
+        if res is None:
             return languages
+        soup = BeautifulSoup(res.text, 'lxml')
+        options = soup.find('select', attrs={'name': 'language'}).find_all('option')
+        for option in options:
+            languages[option.get('value')] = option.string
+        return languages
 
     def get_result(self, *args, **kwargs):
         account = kwargs.get('account')
@@ -194,12 +186,10 @@ class HDU(Base):
 
     def check_status(self):
         url = 'http://acm.hdu.edu.cn/'
-        try:
-            website_data = self._req.get(url)
-            if re.search(r'<H1>Welcome to HDU Online Judge System</H1>', website_data.text):
-                return True
-        except:
-            return False
+        res = self._req.get(url)
+        if res and re.search(r'<H1>Welcome to HDU Online Judge System</H1>', res.text):
+            return True
+        return False
 
     @staticmethod
     def is_accepted(verdict):
