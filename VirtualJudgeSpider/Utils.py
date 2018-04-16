@@ -19,9 +19,7 @@ class HttpUtil(object):
 
     def get(self, url, **kwargs):
         try:
-            print('Before', self._request.cookies.get_dict())
             self._response = self._request.get(url, timeout=self._timeout, **kwargs)
-            print('After', self._request.cookies.get_dict())
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
@@ -30,9 +28,7 @@ class HttpUtil(object):
 
     def post(self, url, data=None, json=None, **kwargs):
         try:
-            print('Before', self._request.cookies.get_dict())
             self._response = self._request.post(url, data, json, timeout=self._timeout, **kwargs)
-            print('After', self._request.cookies.get_dict())
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
@@ -80,9 +76,9 @@ class HtmlTag(object):
         TITLE 和 CONTENT 需要加额外的 Style 保证网页风格一致
         """
         TITLE = 'font-family: Helvetica,"PingFang SC","Hiragino Sans GB' \
-                '","Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 18px;font-weight: bold;'
+                '","Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 20px;font-weight: bold;'
         CONTENT = 'font-family: Helvetica,"PingFang SC","Hiragino Sans GB' \
-                  '","Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 14px;'
+                  '","Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 16px;'
 
     @staticmethod
     def update_tag(tag, oj_prefix, update_style=None):
