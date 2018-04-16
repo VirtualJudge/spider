@@ -72,11 +72,14 @@ class Controller(object):
     # 获取结果
     def get_result(self, account, pid, **kwargs):
         if not self._oj:
-            return None
-
+            result = Result()
+            result.verdict_code = Result.VerdictCode.STATUS_SUBMIT_FAILED
+            return result
         result = self._oj.get_result(account=account, pid=pid, **kwargs)
         if result is None:
-            return Result()
+            result = Result()
+            result.verdict_code = Result.VerdictCode.STATUS_SUBMIT_FAILED
+            return result
         if self._oj.is_accepted(result.verdict):
             result.verdict_code = Result.VerdictCode.STATUS_ACCEPTED
         elif self._oj.is_running(result.verdict):
@@ -89,10 +92,14 @@ class Controller(object):
     # 通过运行id获取结果
     def get_result_by_rid_and_pid(self, rid, pid):
         if not self._oj:
-            return Result()
+            result = Result()
+            result.verdict_code = Result.VerdictCode.STATUS_SUBMIT_FAILED
+            return result
         result = self._oj.get_result_by_rid_and_pid(rid, pid)
         if result is None:
-            return Result()
+            result = Result()
+            result.verdict_code = Result.VerdictCode.STATUS_SUBMIT_FAILED
+            return result
         if self._oj.is_accepted(result.verdict):
             result.verdict_code = Result.VerdictCode.STATUS_ACCEPTED
         elif self._oj.is_running(result.verdict):

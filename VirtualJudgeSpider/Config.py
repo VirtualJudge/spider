@@ -96,16 +96,16 @@ class Result(object):
         STATUS_ERROR = 4
 
         """
-        STATUS_SUBMIT_FAILED = 0
-        STATUS_RUNNING = 1
-        STATUS_ACCEPTED = 2
-        STATUS_COMPILE_ERROR = 3
-        STATUS_RESULT_ERROR = 4
+        STATUS_RUNNING = 0
+        STATUS_ACCEPTED = 1
+        STATUS_COMPILE_ERROR = 2
+        STATUS_RESULT_ERROR = 3
+        STATUS_SUBMIT_FAILED = 4
 
     def __init__(self):
         self.origin_run_id = None
         self.verdict = None
-        self.verdict_code = Result.VerdictCode.STATUS_SUBMIT_FAILED
+        self.verdict_code = Result.VerdictCode.STATUS_RUNNING
         self.execute_time = None
         self.execute_memory = None
         self.status = None
