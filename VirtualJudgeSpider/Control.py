@@ -98,3 +98,18 @@ class Controller(object):
         if not self._oj:
             return None
         return self._oj.check_status()
+
+    def is_accepted(self, verdict):
+        if not self._oj:
+            return None
+        return self._oj.is_accepted(verdict)
+
+    def is_running(self, verdict):
+        if not self._oj:
+            return None
+        return self._oj.is_running(verdict)
+
+    def is_compile_error(self, verdict):
+        if not self._oj:
+            return None
+        return self._oj.is_compile_error(verdict)
