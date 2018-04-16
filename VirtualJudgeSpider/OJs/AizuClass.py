@@ -173,7 +173,7 @@ class Aizu(Base):
 
         time.sleep(3)
         res = self._req.get(url)
-        if res.status_code != 200:
+        if res is None or res.status_code != 200:
             return None
 
         recent_list = json.loads(res.text)

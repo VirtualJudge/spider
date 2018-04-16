@@ -102,10 +102,10 @@ class Result(object):
         STATUS_RESULT_ERROR = 3
         STATUS_SUBMIT_FAILED = 4
 
-    def __init__(self):
+    def __init__(self, verdict_code=VerdictCode.STATUS_RUNNING):
         self.origin_run_id = None
         self.verdict = None
-        self.verdict_code = Result.VerdictCode.STATUS_RUNNING
+        self.verdict_code = verdict_code
         self.execute_time = None
         self.execute_memory = None
         self.status = None

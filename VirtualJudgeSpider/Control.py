@@ -71,43 +71,39 @@ class Controller(object):
 
     # 获取结果
     def get_result(self, account, pid, **kwargs):
+
         if not self._oj:
-            result = Result()
-            result.verdict_code = Result.VerdictCode.STATUS_SUBMIT_FAILED
-            return result
+            return Result(Result.VerdictCode.STATUS_SUBMIT_FAILED)
         result = self._oj.get_result(account=account, pid=pid, **kwargs)
-        if result is None:
-            result = Result()
-            result.verdict_code = Result.VerdictCode.STATUS_SUBMIT_FAILED
+        if result is not None:
+            if self._oj.is_accepted(result.verdict):
+                result.verdict_code = Result.VerdictCode.STATUS_ACCEPTED
+            elif self._oj.is_running(result.verdict):
+                result.verdict_code = Result.VerdictCode.STATUS_RUNNING
+            elif self._oj.is_compile_error(result.verdict):
+                result.verdict_code = Result.VerdictCode.STATUS_COMPILE_ERROR
+            else:
+                result.verdict_code = Result.VerdictCode.STATUS_RESULT_ERROR
             return result
-        if self._oj.is_accepted(result.verdict):
-            result.verdict_code = Result.VerdictCode.STATUS_ACCEPTED
-        elif self._oj.is_running(result.verdict):
-            result.verdict_code = Result.VerdictCode.STATUS_RUNNING
-        elif self._oj.is_compile_error(result.verdict):
-            result.verdict_code = Result.VerdictCode.STATUS_COMPILE_ERROR
-        else:
-            result.verdict_code = Result.VerdictCode.STATUS_RESULT_ERROR
+        return Result(Result.VerdictCode.STATUS_SUBMIT_FAILED)
 
     # 通过运行id获取结果
     def get_result_by_rid_and_pid(self, rid, pid):
         if not self._oj:
-            result = Result()
-            result.verdict_code = Result.VerdictCode.STATUS_SUBMIT_FAILED
-            return result
+            return Result(Result.VerdictCode.STATUS_SUBMIT_FAILED)
+
         result = self._oj.get_result_by_rid_and_pid(rid, pid)
-        if result is None:
-            result = Result()
-            result.verdict_code = Result.VerdictCode.STATUS_SUBMIT_FAILED
+        if result is not None:
+            if self._oj.is_accepted(result.verdict):
+                result.verdict_code = Result.VerdictCode.STATUS_ACCEPTED
+            elif self._oj.is_running(result.verdict):
+                result.verdict_code = Result.VerdictCode.STATUS_RUNNING
+            elif self._oj.is_compile_error(result.verdict):
+                result.verdict_code = Result.VerdictCode.STATUS_COMPILE_ERROR
+            else:
+                result.verdict_code = Result.VerdictCode.STATUS_RESULT_ERROR
             return result
-        if self._oj.is_accepted(result.verdict):
-            result.verdict_code = Result.VerdictCode.STATUS_ACCEPTED
-        elif self._oj.is_running(result.verdict):
-            result.verdict_code = Result.VerdictCode.STATUS_RUNNING
-        elif self._oj.is_compile_error(result.verdict):
-            result.verdict_code = Result.VerdictCode.STATUS_COMPILE_ERROR
-        else:
-            result.verdict_code = Result.VerdictCode.STATUS_RESULT_ERROR
+        return Result(Result.VerdictCode.STATUS_SUBMIT_FAILED)
 
     # 获取源OJ语言
     def find_language(self, account, **kwargs):
