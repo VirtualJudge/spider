@@ -187,7 +187,7 @@ class WUST(Base):
         return self.get_result_by_url(url=url)
 
     def get_result_by_url(self, url):
-        print(url)
+        #print(url)
         res = self._req.get(url)
 
         return WUSTParser().result_parse(res)
