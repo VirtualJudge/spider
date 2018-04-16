@@ -143,7 +143,7 @@ class ZOJ(Base):
         if res is None:
             return False
 
-        problem_id = re.search('problemId=(\d*)"><font color="blue">Submit</font>', res.text).group(1)
+        problem_id = re.search(r'problemId=(\d*)"><font color="blue">Submit</font>', res.text).group(1)
         url = 'http://acm.zju.edu.cn/onlinejudge/submit.do?problemId=' + str(problem_id)
         post_data = {'languageId': str(language), 'problemId': str(pid), 'source': code}
         res = self._req.post(url=url, data=post_data)
