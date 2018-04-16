@@ -21,13 +21,20 @@ def submit():
 
             ans = False
             tries = 3
+            print('start')
+            account = Account('robot4test', 'robot4test')
             while ans is False and tries > 0:
                 tries -= 1
-                ans = Controller(str(remote_oj)).submit_code(pid=remote_id, account=Account('robot4test', 'robot4test'),
-                                                             code=source_code.read(), language=language)
+                controller = Controller(str(remote_oj))
+                ans = controller.submit_code(pid=remote_id, account=account,
+                                             code=source_code.read(), language=language)
+                account.set_cookies(controller.get_cookies())
             if ans is False:
                 return "SUBMIT FAILED"
-            result = Controller(remote_oj).get_result(account=Account('robot4test', 'robot4test'), pid=remote_id)
+            controller = Controller(remote_oj)
+            result = controller.get_result(account=account, pid=remote_id)
+            account.set_cookies(controller.get_cookies())
+            print('end')
             tries = 5
             while result.status == Result.Status.STATUS_RESULT and tries > 0:
                 time.sleep(2)
@@ -37,6 +44,7 @@ def submit():
                 else:
                     break
                 tries -= 1
+
             if result.status == Result.Status.STATUS_RESULT:
                 return str(result.__dict__)
             return result.status.name

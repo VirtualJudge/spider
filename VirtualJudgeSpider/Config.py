@@ -10,9 +10,10 @@ custom_headers = {
 
 
 class Account:
-    def __init__(self, username, password):
+    def __init__(self, username, password, cookies=None):
         self._username = username
         self._password = password
+        self._cookies = cookies
 
     @property
     def username(self):
@@ -21,6 +22,15 @@ class Account:
     @property
     def password(self):
         return self._password
+
+    @property
+    def cookies(self):
+        return self._cookies
+
+    def set_cookies(self, cookies):
+        if type(cookies) != dict:
+            raise TypeError(f'set_cookies() required type {type(dict)}, but wo got {type(cookies)}')
+        self._cookies = cookies
 
 
 class Problem(object):

@@ -89,8 +89,17 @@ class POJ(Base):
         url = 'http://poj.org/'
         return url
 
+    def get_cookies(self):
+        return self._req.cookies.get_dict()
+
+    def set_cookies(self, cookies):
+        if type(cookies) == dict:
+            self._req.cookies.update(cookies)
+
     # 登录页面
     def login_website(self, account, *args, **kwargs):
+        if account and account.cookies:
+            self._req.cookies.update(account.cookies)
         if self.check_login_status():
             return True
         login_page_url = 'http://poj.org/'
@@ -101,9 +110,7 @@ class POJ(Base):
                      'url': '/'}
         self._req.get(url=login_page_url)
         res = self._req.post(url=login_link_url, data=post_data)
-        if res.status_code == 200 and self.check_login_status():
-            return True
-        return False
+        return self.check_login_status()
 
     # 检查登录状态
     def check_login_status(self, *args, **kwargs):
@@ -130,7 +137,7 @@ class POJ(Base):
         url = 'http://poj.org/submit'
         post_data = {'problem_id': pid,
                      'language': language,
-                     'source': base64.b64encode(bytes(code, encoding='utf-8')),
+                     'source': base64.b64encode(code),
                      'submit': 'Submit',
                      'encoded': '1'}
         res = self._req.post(url=url, data=post_data)

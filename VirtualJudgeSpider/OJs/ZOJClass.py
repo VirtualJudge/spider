@@ -109,15 +109,22 @@ class ZOJ(Base):
             return True
         return False
 
+    def get_cookies(self):
+        return self._req.cookies.get_dict()
+
+    def set_cookies(self, cookies):
+        if type(cookies) == dict:
+            self._req.cookies.update(cookies)
+
     def login_website(self, account, *args, **kwargs):
+        if account and account.cookies:
+            self._req.cookies.update(account.cookies)
         if self.check_login_status():
             return True
         login_link_url = 'http://acm.zju.edu.cn/onlinejudge/login.do'
         post_data = {'handle': account.username, 'password': account.password}
         self._req.post(url=login_link_url, data=post_data)
-        if self.check_login_status():
-            return True
-        return False
+        return self.check_login_status()
 
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])

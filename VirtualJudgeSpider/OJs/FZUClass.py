@@ -110,6 +110,13 @@ class FZU(Base):
     def home_page_url():
         return FZU.OJ_PREFIX
 
+    def get_cookies(self):
+        return self._req.cookies.get_dict()
+
+    def set_cookies(self, cookies):
+        if type(cookies) == dict:
+            self._req.cookies.update(cookies)
+
     def check_login_status(self):
         url = 'http://acm.fzu.edu.cn/'
         res = self._req.get(url)
@@ -118,6 +125,9 @@ class FZU(Base):
         return False
 
     def login_website(self, account, *args, **kwargs):
+        if account and account.cookies:
+            self._req.cookies.update(account.cookies)
+
         if self.check_login_status():
             return True
         login_page_url = 'http://acm.fzu.edu.cn/login.php'
@@ -126,9 +136,7 @@ class FZU(Base):
                      'submit': 'Submit'}
         self._req.get(login_page_url)
         self._req.post(login_link_url, post_data)
-        if self.check_login_status():
-            return True
-        return False
+        return self.check_login_status()
 
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])

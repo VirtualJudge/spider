@@ -6,7 +6,7 @@ from requests import RequestException
 
 
 class HttpUtil(object):
-    def __init__(self, custom_headers=None, code_type=None):
+    def __init__(self, custom_headers=None, code_type=None, cookies=None):
         self._headers = custom_headers
         self._request = requests.session()
         self._code_type = code_type
@@ -14,10 +14,14 @@ class HttpUtil(object):
         self._response = None
         if self._headers:
             self._request.headers.update(self._headers)
+        if cookies:
+            self._request.cookies.update(cookies)
 
     def get(self, url, **kwargs):
         try:
+            print('Before', self._request.cookies.get_dict())
             self._response = self._request.get(url, timeout=self._timeout, **kwargs)
+            print('After', self._request.cookies.get_dict())
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
@@ -26,12 +30,18 @@ class HttpUtil(object):
 
     def post(self, url, data=None, json=None, **kwargs):
         try:
+            print('Before', self._request.cookies.get_dict())
             self._response = self._request.post(url, data, json, timeout=self._timeout, **kwargs)
+            print('After', self._request.cookies.get_dict())
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
         except RequestException:
             return None
+
+    @property
+    def cookies(self):
+        return self._request.cookies
 
     @staticmethod
     def abs_url(remote_path, oj_prefix):

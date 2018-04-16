@@ -108,7 +108,7 @@ class AizuParser(BaseParser):
 
 class Aizu(Base):
 
-    def __init__(self):
+    def __init__(self, cookies=None):
         self._headers = {'Content-Type': 'application/json'}
 
         self._req = HttpUtil(custom_headers=self._headers)
@@ -119,8 +119,17 @@ class Aizu(Base):
         url = 'https://onlinejudge.u-aizu.ac.jp/'
         return url
 
+    def set_cookies(self, cookies):
+        if type(cookies) == dict:
+            self._req.cookies.update(cookies)
+
+    def get_cookies(self):
+        return self._req.cookies.get_dict()
+
     # 登录页面
     def login_website(self, account, *args, **kwargs):
+        if account and account.cookies:
+            self._req.cookies.update(account.cookies)
         if self.check_login_status(self, *args, **kwargs):
             return True
         login_link_url = 'https://judgeapi.u-aizu.ac.jp/session'
@@ -129,11 +138,7 @@ class Aizu(Base):
             'password': account.password
         }
         res = self._req.post(url=login_link_url, json=post_data)
-        if res and res.status_code != 200:
-            return False
-        if self.check_login_status(self, *args, **kwargs):
-            return True
-        return False
+        return self.check_login_status(self, *args, **kwargs)
 
     # 检查登录状态
     def check_login_status(self, *args, **kwargs):

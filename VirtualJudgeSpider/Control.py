@@ -53,6 +53,11 @@ class Controller(object):
             return None
         return self._oj.home_page_url()
 
+    def get_cookies(self):
+        if not self._oj:
+            return None
+        return self._oj.get_cookies()
+
     # 获取题面
     def get_problem(self, pid, account, **kwargs):
         if not self._oj:
@@ -61,12 +66,14 @@ class Controller(object):
             problem.remote_id = pid
             problem.status = Problem.Status.STATUS_OJ_NOT_EXIST
             return problem
+        self._oj.set_cookies(account.cookies)
         return self._oj.get_problem(pid=pid, account=account, **kwargs)
 
     # 提交代码
     def submit_code(self, pid, account, code, language, **kwargs):
         if not self._oj:
             return None
+        self._oj.set_cookies(account.cookies)
         return self._oj.submit_code(account=account, code=code, language=language, pid=pid, **kwargs)
 
     # 获取结果
@@ -74,6 +81,7 @@ class Controller(object):
 
         if not self._oj:
             return Result(Result.VerdictCode.STATUS_SUBMIT_FAILED)
+        self._oj.set_cookies(account.cookies)
         result = self._oj.get_result(account=account, pid=pid, **kwargs)
         if result is not None:
             if self._oj.is_accepted(result.verdict):
@@ -109,6 +117,7 @@ class Controller(object):
     def find_language(self, account, **kwargs):
         if not self._oj:
             return None
+        self._oj.set_cookies(account.cookies)
         return self._oj.find_language(account=account, **kwargs)
 
     # 判断是否是等待判题的返回结果，例如pending,Queuing,Compiling

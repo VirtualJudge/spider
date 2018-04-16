@@ -14,4 +14,6 @@ class TestResult(unittest.TestCase):
                                                'execute_time': '1000 MS',
                                                'origin_run_id': '1',
                                                'status': None,
-                                               'verdict': 'Accepted'})
+                                               'info': None,
+                                               'verdict': 'Accepted',
+                                               'verdict_code': Result.VerdictCode.STATUS_RUNNING})

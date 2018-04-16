@@ -12,6 +12,12 @@ class Base(object):
     def home_page_url():
         pass
 
+    def get_cookies(self):
+        pass
+
+    def set_cookies(self, cookies):
+        pass
+
     # 登录页面
     def login_website(self, *args, **kwargs):
         pass

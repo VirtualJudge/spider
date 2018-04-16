@@ -111,6 +111,13 @@ class HDU(Base):
         url = 'http://acm.hdu.edu.cn/'
         return url
 
+    def get_cookies(self):
+        return self._req.cookies.get_dict()
+
+    def set_cookies(self, cookies):
+        if type(cookies) == dict:
+            self._req.cookies.update(cookies)
+
     def check_login_status(self):
         url = 'http://acm.hdu.edu.cn/'
         res = self._req.get(url)
@@ -119,6 +126,8 @@ class HDU(Base):
         return False
 
     def login_website(self, account, *args, **kwargs):
+        if account and account.cookies:
+            self._req.cookies.update(account.cookies)
         if self.check_login_status():
             return True
         login_link_url = 'http://acm.hdu.edu.cn/userloginex.php'
@@ -128,9 +137,7 @@ class HDU(Base):
                      }
         self._req.post(url=login_link_url, data=post_data,
                        params={'action': 'login'})
-        if self.check_login_status():
-            return True
-        return False
+        return self.check_login_status()
 
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
