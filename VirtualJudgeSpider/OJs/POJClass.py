@@ -135,6 +135,8 @@ class POJ(Base):
         language = kwargs['language']
         pid = kwargs['pid']
         url = 'http://poj.org/submit'
+        if type(code) is str:
+            code = bytes(code,encoding='utf-8')
         post_data = {'problem_id': pid,
                      'language': language,
                      'source': base64.b64encode(code),
