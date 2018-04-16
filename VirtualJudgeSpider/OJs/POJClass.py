@@ -69,7 +69,7 @@ class POJParser(BaseParser):
             result.verdict = line[3].string
             result.execute_time = line[5].string
             result.execute_memory = line[4].string
-            result.status = Result.Status.STATUS_RESULT_GET
+            result.status = Result.Status.STATUS_RESULT
         else:
             result.status = Result.Status.STATUS_RESULT_NOT_EXIST
         return result
@@ -90,7 +90,7 @@ class POJ(Base):
         return url
 
     # 登录页面
-    def login_webside(self, account, *args, **kwargs):
+    def login_website(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
         login_page_url = 'http://poj.org/'
@@ -122,7 +122,7 @@ class POJ(Base):
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
-        if not self.login_webside(*args, **kwargs):
+        if not self.login_website(*args, **kwargs):
             return False
         code = kwargs['code']
         language = kwargs['language']
@@ -157,7 +157,7 @@ class POJ(Base):
 
     # 获取源OJ支持的语言类型
     def find_language(self, *args, **kwargs):
-        if self.login_webside(*args, **kwargs) is False:
+        if self.login_website(*args, **kwargs) is False:
             return None
         url = 'http://poj.org/submit'
         language = {}

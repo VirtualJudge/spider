@@ -13,7 +13,7 @@ class Base(object):
         pass
 
     # 登录页面
-    def login_webside(self, *args, **kwargs):
+    def login_website(self, *args, **kwargs):
         pass
 
     # 检查登录状态

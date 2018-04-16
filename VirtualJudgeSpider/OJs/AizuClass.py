@@ -99,7 +99,7 @@ class AizuParser(BaseParser):
             result.verdict = self._judge_static_string[int(submission_record['status'])]
             result.execute_time = str(format(float(submission_record['cpuTime']) / float(100), '.2f')) + ' s'
             result.execute_memory = str(submission_record['memory']) + ' KB'
-            result.status = Result.Status.STATUS_RESULT_GET
+            result.status = Result.Status.STATUS_RESULT
         except:
             result.status = Result.Status.STATUS_PARSE_ERROR
         finally:
@@ -120,7 +120,7 @@ class Aizu(Base):
         return url
 
     # 登录页面
-    def login_webside(self, account, *args, **kwargs):
+    def login_website(self, account, *args, **kwargs):
         if self.check_login_status(self, *args, **kwargs):
             return True
         login_link_url = 'https://judgeapi.u-aizu.ac.jp/session'
@@ -152,7 +152,7 @@ class Aizu(Base):
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
-        if not self.login_webside(*args, **kwargs):
+        if not self.login_website(*args, **kwargs):
             return False
         url = 'https://judgeapi.u-aizu.ac.jp/submissions'
 

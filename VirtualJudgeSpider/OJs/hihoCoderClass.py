@@ -18,7 +18,7 @@ class hihoCoder(Base):
         return url
 
     # 登录页面
-    def login_webside(self, account, *args, **kwargs):
+    def login_website(self, account, *args, **kwargs):
         if self.check_login_status(self, *args, **kwargs):
             return True
         if not kwargs.get('account'):
@@ -56,7 +56,7 @@ class hihoCoder(Base):
     def get_problem(self, *args, **kwargs):
         url = 'https://hihocoder.com/problemset/problem/' + str(kwargs['pid'])
         problem = Problem()
-        if not self.login_webside(*args, **kwargs):
+        if not self.login_website(*args, **kwargs):
             return None
         try:
             problem.remote_id = kwargs['pid']

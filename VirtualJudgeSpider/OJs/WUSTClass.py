@@ -83,7 +83,7 @@ class WUSTParser(BaseParser):
                 result.verdict = line[4].string
                 result.execute_time = line[6].string
                 result.execute_memory = line[5].string
-                result.status = Result.Status.STATUS_RESULT_GET
+                result.status = Result.Status.STATUS_RESULT
             else:
                 result.status = Result.Status.STATUS_RESULT_NOT_EXIST
         except:
@@ -110,7 +110,7 @@ class WUST(Base):
         if re.search(r'<a href="logout.php">Logout</a>', res.text) is not None:
             return True
 
-    def login_webside(self, account, *args, **kwargs):
+    def login_website(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
         login_page_url = 'http://acm.wust.edu.cn/loginpage.php'
@@ -132,7 +132,7 @@ class WUST(Base):
         return WUSTParser().problem_parse(res, pid, url)
 
     def submit_code(self, *args, **kwargs):
-        if not self.login_webside(*args, **kwargs):
+        if not self.login_website(*args, **kwargs):
             return False
         code = kwargs['code']
         language = kwargs['language']
@@ -152,7 +152,7 @@ class WUST(Base):
         return True
 
     def find_language(self, *args, **kwargs):
-        if self.login_webside(*args, **kwargs) is False:
+        if self.login_website(*args, **kwargs) is False:
             return None
         url = 'http://acm.wust.edu.cn/submitpage.php?id=1000&soj=0'
         languages = {}

@@ -29,7 +29,7 @@ def submit():
                 return "SUBMIT FAILED"
             result = Controller(remote_oj).get_result(account=Account('robot4test', 'robot4test'), pid=remote_id)
             tries = 5
-            while result.status == Result.Status.STATUS_RESULT_GET and tries > 0:
+            while result.status == Result.Status.STATUS_RESULT and tries > 0:
                 time.sleep(2)
                 if Controller(remote_oj).is_waiting_for_judge(result.verdict):
                     result = Controller(remote_oj).get_result_by_rid_and_pid(rid=result.origin_run_id,
@@ -37,7 +37,7 @@ def submit():
                 else:
                     break
                 tries -= 1
-            if result.status == Result.Status.STATUS_RESULT_GET:
+            if result.status == Result.Status.STATUS_RESULT:
                 return str(result.__dict__)
             return result.status.name
     except:

@@ -65,7 +65,7 @@ class FZUParser(BaseParser):
                 result.verdict = line[2].string
                 result.execute_time = line[5].string
                 result.execute_memory = line[6].string
-                result.status = Result.Status.STATUS_RESULT_GET
+                result.status = Result.Status.STATUS_RESULT
             else:
                 result.status = Result.Status.STATUS_RESULT_NOT_EXIST
         except:
@@ -90,7 +90,7 @@ class FZUParser(BaseParser):
                     result.verdict = tag_tds[2].string
                     result.execute_time = tag_tds[5].string
                     result.execute_memory = tag_tds[6].string
-                    result.status = Result.Status.STATUS_RESULT_GET
+                    result.status = Result.Status.STATUS_RESULT
                     return result, True
             result.status = Result.Status.STATUS_RESULT_NOT_EXIST
             return result, False
@@ -117,7 +117,7 @@ class FZU(Base):
             return True
         return False
 
-    def login_webside(self, account, *args, **kwargs):
+    def login_website(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
         login_page_url = 'http://acm.fzu.edu.cn/login.php'
@@ -138,7 +138,7 @@ class FZU(Base):
         return FZUParser().problem_parse(res, pid, url)
 
     def submit_code(self, *args, **kwargs):
-        if not self.login_webside(*args, **kwargs):
+        if not self.login_website(*args, **kwargs):
             return False
         code = kwargs['code']
         language = kwargs['language']
@@ -155,7 +155,7 @@ class FZU(Base):
         return False
 
     def find_language(self, *args, **kwargs):
-        if self.login_webside(*args, **kwargs) is False:
+        if self.login_website(*args, **kwargs) is False:
             return False
         url = 'http://acm.fzu.edu.cn/submit.php?'
         languages = {}

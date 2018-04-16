@@ -1,4 +1,4 @@
-from VirtualJudgeSpider.Config import Problem
+from VirtualJudgeSpider.Config import Problem, Result
 
 supports = ['Aizu', 'HDU', 'FZU', 'POJ', 'WUST', 'ZOJ']
 
@@ -73,13 +73,34 @@ class Controller(object):
     def get_result(self, account, pid, **kwargs):
         if not self._oj:
             return None
-        return self._oj.get_result(account=account, pid=pid, **kwargs)
+
+        result = self._oj.get_result(account=account, pid=pid, **kwargs)
+        if result is None:
+            return Result()
+        if self._oj.is_accepted(result.verdict):
+            result.verdict_code = Result.VerdictCode.STATUS_ACCEPTED
+        elif self._oj.is_running(result.verdict):
+            result.verdict_code = Result.VerdictCode.STATUS_RUNNING
+        elif self._oj.is_compile_error(result.verdict):
+            result.verdict_code = Result.VerdictCode.STATUS_COMPILE_ERROR
+        else:
+            result.verdict_code = Result.VerdictCode.STATUS_RESULT_ERROR
 
     # 通过运行id获取结果
     def get_result_by_rid_and_pid(self, rid, pid):
         if not self._oj:
-            return None
-        return self._oj.get_result_by_rid_and_pid(rid, pid)
+            return Result()
+        result = self._oj.get_result_by_rid_and_pid(rid, pid)
+        if result is None:
+            return Result()
+        if self._oj.is_accepted(result.verdict):
+            result.verdict_code = Result.VerdictCode.STATUS_ACCEPTED
+        elif self._oj.is_running(result.verdict):
+            result.verdict_code = Result.VerdictCode.STATUS_RUNNING
+        elif self._oj.is_compile_error(result.verdict):
+            result.verdict_code = Result.VerdictCode.STATUS_COMPILE_ERROR
+        else:
+            result.verdict_code = Result.VerdictCode.STATUS_RESULT_ERROR
 
     # 获取源OJ语言
     def find_language(self, account, **kwargs):
@@ -99,17 +120,26 @@ class Controller(object):
             return None
         return self._oj.check_status()
 
+    # 判断结果是否AC
     def is_accepted(self, verdict):
         if not self._oj:
             return None
         return self._oj.is_accepted(verdict)
 
+    # 判断是否运行中或者排队中
     def is_running(self, verdict):
         if not self._oj:
             return None
         return self._oj.is_running(verdict)
 
+    # 判断是否编译错误
     def is_compile_error(self, verdict):
         if not self._oj:
             return None
         return self._oj.is_compile_error(verdict)
+
+    # 判断爬虫账号是否可以正常登陆
+    def is_account_valid(self, account):
+        if self._oj and account and self._oj.login_website(account=account):
+            return True
+        return False

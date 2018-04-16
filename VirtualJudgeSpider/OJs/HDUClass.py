@@ -92,7 +92,7 @@ class HDUParser(BaseParser):
                 result.verdict = line[2].get_text()
                 result.execute_time = line[4].string
                 result.execute_memory = line[5].string
-                result.status = Result.Status.STATUS_RESULT_GET
+                result.status = Result.Status.STATUS_RESULT
             else:
                 result.status = Result.Status.STATUS_RESULT_NOT_EXIST
         except:
@@ -118,7 +118,7 @@ class HDU(Base):
             return True
         return False
 
-    def login_webside(self, account, *args, **kwargs):
+    def login_website(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
         login_link_url = 'http://acm.hdu.edu.cn/userloginex.php'
@@ -139,7 +139,7 @@ class HDU(Base):
         return HDUParser().problem_parse(res, pid, url)
 
     def submit_code(self, *args, **kwargs):
-        if not self.login_webside(*args, **kwargs):
+        if not self.login_website(*args, **kwargs):
             return False
         code = kwargs.get('code')
         language = kwargs.get('language')
@@ -152,7 +152,7 @@ class HDU(Base):
         return False
 
     def find_language(self, *args, **kwargs):
-        if self.login_webside(*args, **kwargs) is False:
+        if self.login_website(*args, **kwargs) is False:
             return None
         url = 'http://acm.hdu.edu.cn/submit.php'
         languages = {}
