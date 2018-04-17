@@ -6,7 +6,7 @@ from bs4.element import Tag
 
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem, Result
-from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
+from VirtualJudgeSpider.OJs.base import Base, BaseParser
 from VirtualJudgeSpider.Utils import HttpUtil, HtmlTag
 
 

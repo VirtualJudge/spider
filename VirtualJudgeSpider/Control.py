@@ -8,8 +8,7 @@ class OJBuilder(object):
     def build_oj(name, *args, **kwargs):
         if name:
             try:
-                module_meta = __import__('VirtualJudgeSpider.OJs.%sClass' % (name,), globals(), locals(),
-                                         [name])
+                module_meta = __import__(f'VirtualJudgeSpider.OJs.{str(name).lower()}', globals(), locals(), [name])
                 class_meta = getattr(module_meta, name)
                 oj = class_meta(*args, **kwargs)
                 return oj

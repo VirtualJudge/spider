@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from bs4 import element
 
 from VirtualJudgeSpider.Config import Problem, Result
-from VirtualJudgeSpider.OJs.BaseClass import Base, BaseParser
+from VirtualJudgeSpider.OJs.base import Base, BaseParser
 from VirtualJudgeSpider.Utils import HtmlTag, HttpUtil
 
 ssl._create_default_https_context = ssl._create_unverified_context

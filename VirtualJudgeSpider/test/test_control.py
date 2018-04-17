@@ -1,7 +1,7 @@
 import unittest
 
 from VirtualJudgeSpider.Control import OJBuilder
-from VirtualJudgeSpider.OJs.HDUClass import HDU
+from VirtualJudgeSpider.OJs.hdu import HDU
 
 
 class TestOJBuilder(unittest.TestCase):

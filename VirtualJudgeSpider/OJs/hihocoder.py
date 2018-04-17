@@ -2,7 +2,7 @@ import requests
 import re
 from VirtualJudgeSpider import Config
 from VirtualJudgeSpider.Config import Problem
-from VirtualJudgeSpider.OJs.BaseClass import Base
+from VirtualJudgeSpider.OJs.base import Base
 import traceback
 
 
