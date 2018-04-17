@@ -3,10 +3,10 @@ import re
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from VirtualJudgeSpider import Config
-from VirtualJudgeSpider.Config import Problem, Result
+from VirtualJudgeSpider import config
+from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.Utils import HtmlTag, HttpUtil
+from VirtualJudgeSpider.utils import HtmlTag, HttpUtil
 
 
 class ZOJParaer(BaseParser):
@@ -95,7 +95,7 @@ class ZOJParaer(BaseParser):
 
 class ZOJ(Base):
     def __init__(self):
-        self._req = HttpUtil(custom_headers=Config.custom_headers)
+        self._req = HttpUtil(custom_headers=config.custom_headers)
 
     @staticmethod
     def home_page_url():

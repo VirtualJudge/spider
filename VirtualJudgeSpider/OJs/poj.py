@@ -4,10 +4,10 @@ import re
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from VirtualJudgeSpider import Config
-from VirtualJudgeSpider.Config import Problem, Result
+from VirtualJudgeSpider import config
+from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.Utils import HttpUtil, HtmlTag
+from VirtualJudgeSpider.utils import HttpUtil, HtmlTag
 
 
 class POJParser(BaseParser):
@@ -78,7 +78,7 @@ class POJParser(BaseParser):
 class POJ(Base):
     def __init__(self):
         self.code_type = 'utf-8'
-        self._headers = Config.custom_headers
+        self._headers = config.custom_headers
         self._headers['Referer'] = 'http://poj.org/'
         self._headers['Content-Type'] = 'application/x-www-form-urlencoded'
 

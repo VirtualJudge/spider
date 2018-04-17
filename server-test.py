@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request
 import json
-from VirtualJudgeSpider.Config import Account
-from VirtualJudgeSpider.Control import Controller
-from VirtualJudgeSpider.Config import Problem, Result
+from VirtualJudgeSpider.config import Account
+from VirtualJudgeSpider.control import Controller
+from VirtualJudgeSpider.config import Problem, Result
 import traceback
 import time
 

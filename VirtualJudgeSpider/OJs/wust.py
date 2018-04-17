@@ -4,10 +4,10 @@ import traceback
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from VirtualJudgeSpider import Config
-from VirtualJudgeSpider.Config import Problem, Result
+from VirtualJudgeSpider import config
+from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.Utils import HttpUtil, HtmlTag
+from VirtualJudgeSpider.utils import HttpUtil, HtmlTag
 
 
 class WUSTParser(BaseParser):
@@ -94,7 +94,7 @@ class WUSTParser(BaseParser):
 
 class WUST(Base):
     def __init__(self):
-        self._headers = Config.custom_headers
+        self._headers = config.custom_headers
         self._req = HttpUtil(self._headers, 'utf-8')
 
     @staticmethod

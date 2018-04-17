@@ -3,10 +3,10 @@ import re
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from VirtualJudgeSpider import Config
-from VirtualJudgeSpider.Config import Problem, Result
+from VirtualJudgeSpider import config
+from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from ..Utils import HttpUtil, HtmlTag
+from ..utils import HttpUtil, HtmlTag
 
 
 class HDUParser(BaseParser):
@@ -104,7 +104,7 @@ class HDUParser(BaseParser):
 class HDU(Base):
     def __init__(self):
         self._code_type = 'gb18030'
-        self._req = HttpUtil(custom_headers=Config.custom_headers, code_type=self._code_type)
+        self._req = HttpUtil(custom_headers=config.custom_headers, code_type=self._code_type)
 
     @staticmethod
     def home_page_url():

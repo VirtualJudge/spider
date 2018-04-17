@@ -1,6 +1,6 @@
 import unittest
 
-from VirtualJudgeSpider.Config import Result
+from VirtualJudgeSpider.config import Result
 
 
 class TestResult(unittest.TestCase):

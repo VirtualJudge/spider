@@ -1,7 +1,7 @@
 import requests
 import re
-from VirtualJudgeSpider import Config
-from VirtualJudgeSpider.Config import Problem
+from VirtualJudgeSpider import config
+from VirtualJudgeSpider.config import Problem
 from VirtualJudgeSpider.OJs.base import Base
 import traceback
 
@@ -9,7 +9,7 @@ import traceback
 class hihoCoder(Base):
     def __init__(self):
         self.req = requests.session()
-        self.headers = Config.custom_headers
+        self.headers = config.custom_headers
 
     # 主页链接
     @staticmethod

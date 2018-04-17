@@ -1,6 +1,6 @@
 import unittest
 
-from VirtualJudgeSpider.Utils import HttpUtil
+from VirtualJudgeSpider.utils import HttpUtil
 
 
 class TestUtils(unittest.TestCase):

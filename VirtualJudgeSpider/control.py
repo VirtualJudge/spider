@@ -1,4 +1,4 @@
-from VirtualJudgeSpider.Config import Problem, Result
+from VirtualJudgeSpider.config import Problem, Result
 
 supports = ['Aizu', 'HDU', 'FZU', 'POJ', 'WUST', 'ZOJ']
 

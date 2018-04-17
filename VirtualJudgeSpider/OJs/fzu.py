@@ -2,10 +2,10 @@ import re
 
 from bs4 import BeautifulSoup
 
-from VirtualJudgeSpider import Config
-from VirtualJudgeSpider.Config import Problem, Result
+from VirtualJudgeSpider import config
+from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.Utils import HtmlTag, HttpUtil
+from VirtualJudgeSpider.utils import HtmlTag, HttpUtil
 
 
 class FZUParser(BaseParser):
@@ -104,7 +104,7 @@ class FZU(Base):
 
     def __init__(self):
         self._code_type = 'utf-8'
-        self._req = HttpUtil(custom_headers=Config.custom_headers, code_type=self._code_type)
+        self._req = HttpUtil(custom_headers=config.custom_headers, code_type=self._code_type)
 
     @staticmethod
     def home_page_url():
@@ -153,7 +153,7 @@ class FZU(Base):
         pid = kwargs['pid']
         username = kwargs['account'].username
         url = 'http://acm.fzu.edu.cn/submit.php?act=5'
-        Config.custom_headers['Referer'] = 'http://acm.fzu.edu.cn/submit.php?pid=' + str(pid)
+        config.custom_headers['Referer'] = 'http://acm.fzu.edu.cn/submit.php?pid=' + str(pid)
 
         post_data = {'usr': username, 'lang': str(language), 'pid': pid, 'code': code, 'submit': 'Submit'}
 

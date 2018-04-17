@@ -1,7 +1,7 @@
 import unittest
 
-from VirtualJudgeSpider.Config import Account
-from VirtualJudgeSpider.Control import Controller
+from VirtualJudgeSpider.config import Account
+from VirtualJudgeSpider.control import Controller
 
 
 class TestPOJ(unittest.TestCase):
