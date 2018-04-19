@@ -218,15 +218,15 @@ class Aizu(Base):
 
     @staticmethod
     def is_accepted(verdict):
-        return verdict == 4
+        return verdict == 'Accepted'
 
     @staticmethod
     def is_running(verdict):
-        return verdict in [5, 9]
+        return verdict in ['Waiting', 'Running']
 
     @staticmethod
     def is_compile_error(verdict):
-        return verdict == 0
+        return verdict == 'Compile Error'
 
 
 """
