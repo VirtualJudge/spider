@@ -1,7 +1,7 @@
 # VirtualJudgeSpider
 VirtualJudge - Judge Spider  
 [![Build Status](https://travis-ci.org/VirtualJudge/Spider.svg?branch=master)](https://travis-ci.org/VirtualJudge/Spider)
-[![Coverage Status](https://coveralls.io/repos/github/VirtualJudge/VirtualJudgeSpider/badge.svg?branch=master)](https://coveralls.io/github/VirtualJudge/VirtualJudgeSpider?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/VirtualJudge/Spider/badge.svg?branch=master)](https://coveralls.io/github/VirtualJudge/Spider?branch=master)
 ***
 ### build script
 `python3 setup.py bdist_wheel`
