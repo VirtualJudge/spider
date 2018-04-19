@@ -6,27 +6,15 @@ VirtualJudge - Judge Spider
 ### build script
 `python3 setup.py bdist_wheel`
 
-### supports
+### feature
+ - 对于每道题目爬取标题，时间限制，空间限制，和题面。
+ - 删除题面的样式，统一使用style(后面可以自定义style)
+ - 保存登录session，提高抓取效率
+
+### now supports
  - HDU
  - WUST
  - POJ
  - FZU
  - Aizu
  - ZOJ
- 
-### working
- - Codeforces
- - hihoCoder
- 
-### pending
- - URAL
- - ACdream
- - UESTC
- - WHU
- - UVA
- - NBUT
- - CodeChef
- - HYSBZ
- - AtCoder
- - UOJ
- - LeetCode
