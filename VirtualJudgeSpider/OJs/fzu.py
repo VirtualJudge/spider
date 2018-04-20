@@ -137,7 +137,6 @@ class FZU(Base):
         pid = str(kwargs['pid'])
         url = 'http://acm.fzu.edu.cn/problem.php?pid=' + pid
         res = self._req.get(url)
-        print(res.encoding)
         return FZUParser().problem_parse(res, pid, url)
 
     def submit_code(self, *args, **kwargs):
@@ -191,7 +190,6 @@ class FZU(Base):
         return result
 
     def get_result_by_url(self, url):
-        print(url)
         res = self._req.get(url)
         return FZUParser().result_parse(res)
 
