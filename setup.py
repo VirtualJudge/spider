@@ -1,5 +1,4 @@
 from distutils.core import setup
-import setuptools
 
 setup(name='VirtualJudgeSpider',
       version='0.8.0',

@@ -1,9 +1,10 @@
-import requests
 import re
+
+import requests
+
 from VirtualJudgeSpider import config
-from VirtualJudgeSpider.config import Problem
 from VirtualJudgeSpider.OJs.base import Base
-import traceback
+from VirtualJudgeSpider.config import Problem
 
 
 class hihoCoder(Base):
@@ -26,45 +27,35 @@ class hihoCoder(Base):
             return False
         login_page_url = 'https://hihocoder.com/login'
         login_link_url = 'https://hihocoder.com/api/User/login.json'
-        try:
-            self.req.get(login_page_url)
-            post_data = {'email': kwargs['account'].get_username(), 'passwd': kwargs['account'].get_password()}
-            res = self.req.post(login_link_url, post_data)
-            if res.status_code != 200:
-                return False
-            if self.check_login_status(self, *args, **kwargs):
-                return True
-        except:
-            traceback.print_exc()
-            pass
+        self.req.get(login_page_url)
+        post_data = {'email': kwargs['account'].get_username(), 'passwd': kwargs['account'].get_password()}
+        res = self.req.post(login_link_url, post_data)
+        if res is None or res.status_code != 200:
+            return False
+        if self.check_login_status(self, *args, **kwargs):
+            return True
         return False
 
     # 检查登录状态
     def check_login_status(self, *args, **kwargs):
         url = 'https://hihocoder.com'
-        try:
-            res = self.req.get(url=url)
-            website_data = res.text
-            if re.search(r'api.logout\(\);', website_data):
-                return True
+        res = self.req.get(url=url)
+        if res is None:
             return False
-        except:
-            traceback.print_exc()
-            return False
+        website_data = res.text
+        if re.search(r'api.logout\(\);', website_data):
+            return True
+        return False
 
     # 获取题目
-    def get_problem(self, *args, **kwargs):
+    def get_problem(self, pid, *args, **kwargs):
         url = 'https://hihocoder.com/problemset/problem/' + str(kwargs['pid'])
         problem = Problem()
         if not self.login_website(*args, **kwargs):
             return None
-        try:
-            problem.remote_id = kwargs['pid']
-            problem.remote_url = url
-            problem.remote_oj = 'hihoCoder'
-
-        except:
-            pass
+        problem.remote_id = pid
+        problem.remote_url = url
+        problem.remote_oj = 'hihoCoder'
 
     # 提交代码
     def submit_code(self, *args, **kwargs):

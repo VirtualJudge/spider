@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from VirtualJudgeSpider import config
-from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
+from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.utils import HttpUtil, HtmlTag
 
 
@@ -34,28 +34,29 @@ class POJParser(BaseParser):
             return problem
         soup = BeautifulSoup(website_data, 'lxml')
 
-        try:
+        match_groups = re.search(r'ptt" lang="en-US">([\s\S]*?)</div>', website_data)
+        if match_groups:
+            problem.title = match_groups.group(1)
+        match_groups = re.search(r'(\d*MS)', website_data)
+        if match_groups:
+            problem.time_limit = match_groups.group(1)
+        match_groups = re.search(r'Memory Limit:</b> ([\s\S]*?)</td>', website_data)
+        if match_groups:
+            problem.memory_limit = match_groups.group(1)
+        problem.special_judge = re.search(r'red;">Special Judge</td>', website_data) is not None
+        problem.html = ''
+        for tag in soup.find('div', attrs={'class': 'ptt'}).next_siblings:
+            if type(tag) == Tag and set(tag.get('class')).intersection({'ptx', 'pst', 'sio'}):
+                if set(tag['class']).intersection({'pst', }):
+                    tag['style'] = HtmlTag.TagStyle.TITLE.value
 
-            problem.title = re.search(r'ptt" lang="en-US">([\s\S]*?)</div>', website_data).group(1)
-            problem.time_limit = re.search(r'(\d*MS)', website_data).group(1)
-            problem.memory_limit = re.search(r'Memory Limit:</b> ([\s\S]*?)</td>', website_data).group(1)
-            problem.special_judge = re.search(r'red;">Special Judge</td>', website_data) is not None
-            problem.html = ''
-            for tag in soup.find('div', attrs={'class': 'ptt'}).next_siblings:
-                if type(tag) == Tag and set(tag.get('class')).intersection({'ptx', 'pst', 'sio'}):
-                    if set(tag['class']).intersection({'pst', }):
-                        tag['style'] = HtmlTag.TagStyle.TITLE.value
-
-                        tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
-                    else:
-                        tag['style'] = HtmlTag.TagStyle.CONTENT.value
-                        tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
-                    problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
-            problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
-        except:
-            problem.status = Problem.Status.STATUS_PARSE_ERROR
-        finally:
-            return problem
+                    tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                else:
+                    tag['style'] = HtmlTag.TagStyle.CONTENT.value
+                    tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+        problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        return problem
 
     def result_parse(self, response):
         result = Result()
@@ -109,7 +110,7 @@ class POJ(Base):
                      'B1': 'login',
                      'url': '/'}
         self._req.get(url=login_page_url)
-        res = self._req.post(url=login_link_url, data=post_data)
+        self._req.post(url=login_link_url, data=post_data)
         return self.check_login_status()
 
     # 检查登录状态
@@ -136,7 +137,7 @@ class POJ(Base):
         pid = kwargs['pid']
         url = 'http://poj.org/submit'
         if type(code) is str:
-            code = bytes(code,encoding='utf-8')
+            code = bytes(code, encoding='utf-8')
         post_data = {'problem_id': pid,
                      'language': language,
                      'source': base64.b64encode(code),

@@ -38,35 +38,35 @@ class ZOJParaer(BaseParser):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
             return problem
 
-        try:
-            soup = BeautifulSoup(website_data, 'lxml')
-            problem.title = str(soup.find('span', attrs={'class': 'bigProblemTitle'}).get_text())
-            problem.time_limit = re.search(r'(\d* Second)', website_data).group(1)
-            problem.memory_limit = re.search(r'(\d* KB)', website_data).group(1)
-            problem.special_judge = re.search(r'<font color="blue">Special Judge</font>',
-                                              website_data) is not None
-            problem.html = ''
-            problem.html += self._script
-            raw_html = soup.find('div', attrs={'id': 'content_body'})
-            for tag in raw_html.children:
-                if type(tag) == element.NavigableString:
-                    problem.html += str(tag)
-                if type(tag) == element.Tag and tag.name not in ['center', 'hr']:
-                    if tag.name == 'a' and tag.get('href') == '/onlinejudge/faq.do#sample':
-                        continue
-                    if tag.name == 'h2':
-                        tag['style'] = HtmlTag.TagStyle.TITLE.value
-                    elif tag.name == 'p' and tag.b and tag.b.string in ['Input', 'Output', 'Sample Input',
-                                                                        'Sample Output']:
-                        tag.b['style'] = HtmlTag.TagStyle.TITLE.value
-                    else:
-                        tag['style'] = HtmlTag.TagStyle.CONTENT.value
-                    problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
-            problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
-        except:
-            problem.status = Problem.Status.STATUS_PARSE_ERROR
-        finally:
-            return problem
+        soup = BeautifulSoup(website_data, 'lxml')
+        problem.title = str(soup.find('span', attrs={'class': 'bigProblemTitle'}).get_text())
+        match_groups = re.search(r'(\d* Second)', website_data)
+        if match_groups:
+            problem.time_limit = match_groups.group(1)
+        match_groups = re.search(r'(\d* KB)', website_data)
+        if match_groups:
+            problem.memory_limit = match_groups.group(1)
+        problem.special_judge = re.search(r'<font color="blue">Special Judge</font>',
+                                          website_data) is not None
+        problem.html = ''
+        problem.html += self._script
+        raw_html = soup.find('div', attrs={'id': 'content_body'})
+        for tag in raw_html.children:
+            if type(tag) == element.NavigableString:
+                problem.html += str(tag)
+            if type(tag) == element.Tag and tag.name not in ['center', 'hr']:
+                if tag.name == 'a' and tag.get('href') == '/onlinejudge/faq.do#sample':
+                    continue
+                if tag.name == 'h2':
+                    tag['style'] = HtmlTag.TagStyle.TITLE.value
+                elif tag.name == 'p' and tag.b and tag.b.string in ['Input', 'Output', 'Sample Input',
+                                                                    'Sample Output']:
+                    tag.b['style'] = HtmlTag.TagStyle.TITLE.value
+                else:
+                    tag['style'] = HtmlTag.TagStyle.CONTENT.value
+                problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+        problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        return problem
 
     def result_parse(self, response):
         result = Result()
@@ -74,23 +74,19 @@ class ZOJParaer(BaseParser):
         if response is None or response.status_code != 200:
             result.status = Result.Status.STATUS_NETWORK_ERROR
             return result
-        try:
-            website_data = response.text
-            soup = BeautifulSoup(website_data, 'lxml')
-            line = soup.find('table', attrs={'class': 'list'}).find('tr', attrs={'class': 'rowOdd'}).find_all(
-                'td')
-            if line:
-                result.origin_run_id = line[0].string
-                result.verdict = line[2].get_text().strip()
-                result.execute_time = line[5].string
-                result.execute_memory = line[6].string
-                result.status = Result.Status.STATUS_RESULT
-            else:
-                result.status = Result.Status.STATUS_RESULT_NOT_EXIST
-        except:
-            result.status = Result.Status.STATUS_PARSE_ERROR
-        finally:
-            return result
+        website_data = response.text
+        soup = BeautifulSoup(website_data, 'lxml')
+        line = soup.find('table', attrs={'class': 'list'}).find('tr', attrs={'class': 'rowOdd'}).find_all(
+            'td')
+        if line:
+            result.origin_run_id = line[0].string
+            result.verdict = line[2].get_text().strip()
+            result.execute_time = line[5].string
+            result.execute_memory = line[6].string
+            result.status = Result.Status.STATUS_RESULT
+        else:
+            result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+        return result
 
 
 class ZOJ(Base):

@@ -1,55 +1,53 @@
-from flask import Flask, render_template, request
 import json
-from VirtualJudgeSpider.config import Account
-from VirtualJudgeSpider.control import Controller
-from VirtualJudgeSpider.config import Problem, Result
-import traceback
 import time
+
+from flask import Flask, render_template, request
+
+from VirtualJudgeSpider.config import Account
+from VirtualJudgeSpider.config import Problem, Result
+from VirtualJudgeSpider.control import Controller
 
 app = Flask(__name__, template_folder='.')
 
 
 @app.route("/submit", methods=['POST'])
 def submit():
-    try:
-        source_code = request.files['source_code']
-        if request.form.get('remote_oj') and request.form.get('language') and request.form.get(
-                'remote_id') and source_code:
-            remote_oj = request.form['remote_oj']
-            remote_id = request.form['remote_id']
-            language = request.form['language']
+    source_code = request.files['source_code']
+    if request.form.get('remote_oj') and request.form.get('language') and request.form.get(
+            'remote_id') and source_code:
+        remote_oj = request.form['remote_oj']
+        remote_id = request.form['remote_id']
+        language = request.form['language']
 
-            ans = False
-            tries = 3
-            print('start')
-            account = Account('robot4test', 'robot4test')
-            while ans is False and tries > 0:
-                tries -= 1
-                controller = Controller(str(remote_oj))
-                ans = controller.submit_code(pid=remote_id, account=account,
-                                             code=source_code.read(), language=language)
-                account.set_cookies(controller.get_cookies())
-            if ans is False:
-                return "SUBMIT FAILED"
-            controller = Controller(remote_oj)
-            result = controller.get_result(account=account, pid=remote_id)
+        ans = False
+        tries = 3
+        print('start')
+        account = Account('robot4test', 'robot4test')
+        while ans is False and tries > 0:
+            tries -= 1
+            controller = Controller(str(remote_oj))
+            ans = controller.submit_code(pid=remote_id, account=account,
+                                         code=source_code.read(), language=language)
             account.set_cookies(controller.get_cookies())
-            print('end')
-            tries = 5
-            while result.status == Result.Status.STATUS_RESULT and tries > 0:
-                time.sleep(2)
-                if Controller(remote_oj).is_waiting_for_judge(result.verdict):
-                    result = Controller(remote_oj).get_result_by_rid_and_pid(rid=result.origin_run_id,
-                                                                             pid=remote_id)
-                else:
-                    break
-                tries -= 1
+        if ans is False:
+            return "SUBMIT FAILED"
+        controller = Controller(remote_oj)
+        result = controller.get_result(account=account, pid=remote_id)
+        account.set_cookies(controller.get_cookies())
+        print('end')
+        tries = 5
+        while result.status == Result.Status.STATUS_RESULT and tries > 0:
+            time.sleep(2)
+            if Controller(remote_oj).is_waiting_for_judge(result.verdict):
+                result = Controller(remote_oj).get_result_by_rid_and_pid(rid=result.origin_run_id,
+                                                                         pid=remote_id)
+            else:
+                break
+            tries -= 1
 
-            if result.status == Result.Status.STATUS_RESULT:
-                return str(result.__dict__)
-            return result.status.name
-    except:
-        traceback.print_exc()
+        if result.status == Result.Status.STATUS_RESULT:
+            return str(result.__dict__)
+        return result.status.name
     return "Error"
 
 

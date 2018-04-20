@@ -3,8 +3,8 @@ import re
 from bs4 import BeautifulSoup
 
 from VirtualJudgeSpider import config
-from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
+from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.utils import HtmlTag, HttpUtil
 
 
@@ -31,24 +31,27 @@ class FZUParser(BaseParser):
         if re.search('No Such Problem!', website_data):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
             return problem
-        try:
-            soup = BeautifulSoup(website_data, 'lxml')
-            problem.title = re.search(r'<b> Problem [\d]* ([\s\S]*?)</b>', website_data).group(1)
-            problem.time_limit = re.search(r'(\d* mSec)', website_data).group(1)
-            problem.memory_limit = re.search(r'(\d* KB)', website_data).group(1)
-            problem.special_judge = re.search(r'<font color="blue">Special Judge</font>', website_data) is not None
-            problem.html = ''
-            for tag in soup.find('div', attrs={'class': 'problem_content'}).children:
-                if tag.name == 'h2':
-                    if tag.img:
-                        tag.img.decompose()
-                problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
-            problem.html = '<body>' + problem.html + '</body>'
-            problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
-        except:
-            problem.status = Problem.Status.STATUS_PARSE_ERROR
-        finally:
-            return problem
+        soup = BeautifulSoup(website_data, 'lxml')
+        match_groups = re.search(r'<b> Problem [\d]* ([\s\S]*?)</b>', website_data)
+        if match_groups:
+            problem.title = match_groups.group(1)
+        match_groups = re.search(r'(\d* mSec)', website_data)
+        if match_groups:
+            problem.time_limit = match_groups.group(1)
+        match_groups = re.search(r'(\d* KB)', website_data)
+        if match_groups:
+            problem.memory_limit = match_groups.group(1)
+
+        problem.special_judge = re.search(r'<font color="blue">Special Judge</font>', website_data) is not None
+        problem.html = ''
+        for tag in soup.find('div', attrs={'class': 'problem_content'}).children:
+            if tag.name == 'h2':
+                if tag.img:
+                    tag.img.decompose()
+            problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+        problem.html = '<body>' + problem.html + '</body>'
+        problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        return problem
 
     def result_parse(self, response):
         result = Result()
@@ -56,22 +59,18 @@ class FZUParser(BaseParser):
             result.status = Result.Status.STATUS_NETWORK_ERROR
             return result
 
-        try:
-            website_data = response.text
-            soup = BeautifulSoup(website_data, 'lxml')
-            line = soup.find('tr', attrs={'onmouseover': 'hl(this);'}).find_all('td')
-            if line is not None:
-                result.origin_run_id = line[0].string
-                result.verdict = line[2].string
-                result.execute_time = line[5].string
-                result.execute_memory = line[6].string
-                result.status = Result.Status.STATUS_RESULT
-            else:
-                result.status = Result.Status.STATUS_RESULT_NOT_EXIST
-        except:
-            result.status = Result.Status.STATUS_PARSE_ERROR
-        finally:
-            return result
+        website_data = response.text
+        soup = BeautifulSoup(website_data, 'lxml')
+        line = soup.find('tr', attrs={'onmouseover': 'hl(this);'}).find_all('td')
+        if line is not None:
+            result.origin_run_id = line[0].string
+            result.verdict = line[2].string
+            result.execute_time = line[5].string
+            result.execute_memory = line[6].string
+            result.status = Result.Status.STATUS_RESULT
+        else:
+            result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+        return result
 
     def result_parse_by_rid(self, response, rid):
         result = Result()
@@ -79,24 +78,20 @@ class FZUParser(BaseParser):
             result.status = Result.Status.STATUS_NETWORK_ERROR
             return result, False
 
-        try:
-            website_data = response.text
-            soup = BeautifulSoup(website_data, 'lxml')
-            lines = soup.find_all('tr', attrs={'onmouseover': 'hl(this);'})
-            for line in lines:
-                tag_tds = line.find_all('td')
-                if len(tag_tds) == 9 and int(tag_tds[0].get_text()) == int(rid):
-                    result.origin_run_id = tag_tds[0].string
-                    result.verdict = tag_tds[2].string
-                    result.execute_time = tag_tds[5].string
-                    result.execute_memory = tag_tds[6].string
-                    result.status = Result.Status.STATUS_RESULT
-                    return result, True
-            result.status = Result.Status.STATUS_RESULT_NOT_EXIST
-            return result, False
-        except:
-            result.status = Result.Status.STATUS_PARSE_ERROR
-            return result, False
+        website_data = response.text
+        soup = BeautifulSoup(website_data, 'lxml')
+        lines = soup.find_all('tr', attrs={'onmouseover': 'hl(this);'})
+        for line in lines:
+            tag_tds = line.find_all('td')
+            if len(tag_tds) == 9 and int(tag_tds[0].get_text()) == int(rid):
+                result.origin_run_id = tag_tds[0].string
+                result.verdict = tag_tds[2].string
+                result.execute_time = tag_tds[5].string
+                result.execute_memory = tag_tds[6].string
+                result.status = Result.Status.STATUS_RESULT
+                return result, True
+        result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+        return result, False
 
 
 class FZU(Base):

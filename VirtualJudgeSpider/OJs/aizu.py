@@ -5,8 +5,8 @@ import time
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
+from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.utils import HtmlTag, HttpUtil
 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -55,34 +55,29 @@ class AizuParser(BaseParser):
         elif status_code != 200:
             problem.status = Problem.Status.STATUS_NETWORK_ERROR
             return problem
-        try:
-            site_data = json.loads(website_data)
-            soup = BeautifulSoup(site_data.get('html'), 'lxml')
-            problem.title = str(soup.find('h1').get_text())
-            problem.time_limit = str(site_data.get('time_limit')) + ' sec'
-            problem.memory_limit = str(site_data.get('memory_limit')) + ' KB'
-            problem.special_judge = False
+        site_data = json.loads(website_data)
+        soup = BeautifulSoup(site_data.get('html'), 'lxml')
+        problem.title = str(soup.find('h1').get_text())
+        problem.time_limit = str(site_data.get('time_limit')) + ' sec'
+        problem.memory_limit = str(site_data.get('memory_limit')) + ' KB'
+        problem.special_judge = False
 
-            problem.html = ''
+        problem.html = ''
 
-            for tag in soup.body:
-                if type(tag) == element.Tag and tag.name in ['p', 'h2', 'pre', 'center']:
-                    if not tag.get('class'):
-                        tag['class'] = ()
-                    if tag.name == 'h2':
-                        tag['style'] = HtmlTag.TagStyle.TITLE.value
-                        tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
-                    else:
-                        tag['style'] = HtmlTag.TagStyle.CONTENT.value
-                        tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
-                    problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
-            problem.html += self._script
-
-            problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
-        except:
-            problem.status = Problem.Status.STATUS_PARSE_ERROR
-        finally:
-            return problem
+        for tag in soup.body:
+            if type(tag) == element.Tag and tag.name in ['p', 'h2', 'pre', 'center']:
+                if not tag.get('class'):
+                    tag['class'] = ()
+                if tag.name == 'h2':
+                    tag['style'] = HtmlTag.TagStyle.TITLE.value
+                    tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                else:
+                    tag['style'] = HtmlTag.TagStyle.CONTENT.value
+                    tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+        problem.html += self._script
+        problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        return problem
 
     def result_parse(self, response):
         result = Result()
@@ -91,19 +86,15 @@ class AizuParser(BaseParser):
             result.status = Result.Status.STATUS_NETWORK_ERROR
             return result
 
-        try:
-            website_data = response.text
-            site_data = json.loads(website_data)
-            submission_record = site_data['submissionRecord']
-            result.origin_run_id = str(submission_record['judgeId'])
-            result.verdict = self._judge_static_string[int(submission_record['status'])]
-            result.execute_time = str(format(float(submission_record['cpuTime']) / float(100), '.2f')) + ' s'
-            result.execute_memory = str(submission_record['memory']) + ' KB'
-            result.status = Result.Status.STATUS_RESULT
-        except:
-            result.status = Result.Status.STATUS_PARSE_ERROR
-        finally:
-            return result
+        website_data = response.text
+        site_data = json.loads(website_data)
+        submission_record = site_data['submissionRecord']
+        result.origin_run_id = str(submission_record['judgeId'])
+        result.verdict = self._judge_static_string[int(submission_record['status'])]
+        result.execute_time = str(format(float(submission_record['cpuTime']) / float(100), '.2f')) + ' s'
+        result.execute_memory = str(submission_record['memory']) + ' KB'
+        result.status = Result.Status.STATUS_RESULT
+        return result
 
 
 class Aizu(Base):
@@ -137,7 +128,7 @@ class Aizu(Base):
             'id': account.username,
             'password': account.password
         }
-        res = self._req.post(url=login_link_url, json=post_data)
+        self._req.post(url=login_link_url, json=post_data)
         return self.check_login_status(self, *args, **kwargs)
 
     # 检查登录状态

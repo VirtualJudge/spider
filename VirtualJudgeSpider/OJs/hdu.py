@@ -50,31 +50,34 @@ class HDUParser(BaseParser):
         if re.search('No such problem', website_data):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
             return problem
-        try:
-            soup = BeautifulSoup(website_data, 'lxml')
-            problem.title = re.search(r'color:#1A5CC8\'>([\s\S]*?)</h1>', website_data).group(1)
-            problem.time_limit = re.search(r'(\d* MS)', website_data).group(1)
-            problem.memory_limit = re.search(r'/(\d* K)', website_data).group(1)
-            problem.special_judge = re.search(r'color=red>Special Judge</font>', website_data) is not None
+        soup = BeautifulSoup(website_data, 'lxml')
 
-            problem.html = ''
-            for tag in soup.find('h1').parent.children:
-                if type(tag) == element.Tag and tag.get('class') and set(tag['class']).intersection({'panel_title',
-                                                                                                     'panel_content',
-                                                                                                     'panel_bottom'}):
-                    if set(tag['class']).intersection({'panel_title', }):
-                        tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
-                        tag['style'] = HtmlTag.TagStyle.TITLE.value
-                    else:
-                        tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
-                        tag['style'] = HtmlTag.TagStyle.CONTENT.value
-                    problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
-            problem.html += self._script
-            problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
-        except:
-            problem.status = Problem.Status.STATUS_PARSE_ERROR
-        finally:
-            return problem
+        match_groups = re.search(r'color:#1A5CC8\'>([\s\S]*?)</h1>', website_data)
+        if match_groups:
+            problem.title = match_groups.group(1)
+        match_groups = re.search(r'(\d* MS)', website_data)
+        if match_groups:
+            problem.time_limit = match_groups.group(1)
+        match_groups = re.search(r'/(\d* K)', website_data)
+        if match_groups:
+            problem.memory_limit = match_groups.group(1)
+        problem.special_judge = re.search(r'color=red>Special Judge</font>', website_data) is not None
+
+        problem.html = ''
+        for tag in soup.find('h1').parent.children:
+            if type(tag) == element.Tag and tag.get('class') and set(tag['class']).intersection({'panel_title',
+                                                                                                 'panel_content',
+                                                                                                 'panel_bottom'}):
+                if set(tag['class']).intersection({'panel_title', }):
+                    tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                    tag['style'] = HtmlTag.TagStyle.TITLE.value
+                else:
+                    tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                    tag['style'] = HtmlTag.TagStyle.CONTENT.value
+                problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+        problem.html += self._script
+        problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        return problem
 
     def result_parse(self, response):
         result = Result()
@@ -82,23 +85,19 @@ class HDUParser(BaseParser):
         if response is None or response.status_code != 200:
             result.status = Result.Status.STATUS_NETWORK_ERROR
             return result
-        try:
-            website_data = response.text
-            soup = BeautifulSoup(website_data, 'lxml')
-            line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
-                'td')
-            if line:
-                result.origin_run_id = line[0].string
-                result.verdict = line[2].get_text()
-                result.execute_time = line[4].string
-                result.execute_memory = line[5].string
-                result.status = Result.Status.STATUS_RESULT
-            else:
-                result.status = Result.Status.STATUS_RESULT_NOT_EXIST
-        except:
-            result.status = Result.Status.STATUS_PARSE_ERROR
-        finally:
-            return result
+        website_data = response.text
+        soup = BeautifulSoup(website_data, 'lxml')
+        line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
+            'td')
+        if line:
+            result.origin_run_id = line[0].string
+            result.verdict = line[2].get_text()
+            result.execute_time = line[4].string
+            result.execute_memory = line[5].string
+            result.status = Result.Status.STATUS_RESULT
+        else:
+            result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+        return result
 
 
 class HDU(Base):
