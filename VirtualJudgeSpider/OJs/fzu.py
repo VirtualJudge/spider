@@ -211,7 +211,7 @@ class FZU(Base):
 
     @staticmethod
     def is_running(verdict):
-        return verdict in ['Judging...', 'Queuing...']
+        return verdict in ['Judging...', 'Queuing...', 'Pending']
 
     @staticmethod
     def is_compile_error(verdict):
