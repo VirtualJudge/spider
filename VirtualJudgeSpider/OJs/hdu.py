@@ -185,11 +185,6 @@ class HDU(Base):
         res = self._req.get(url)
         return HDUParser().result_parse(res)
 
-    def is_waiting_for_judge(self, verdict):
-        if verdict in ['Queuing', 'Compiling', 'Running']:
-            return True
-        return False
-
     def check_status(self):
         url = 'http://acm.hdu.edu.cn/'
         res = self._req.get(url)

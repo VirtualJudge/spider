@@ -82,20 +82,22 @@ class Result(object):
         STATUS_PENDING = 0
         STATUS_RUNNING = 1
         STATUS_RESULT = 2
-        STATUS_NETWORK_ERROR = 3
+        STATUS_SUBMIT_FAILED = 3
         STATUS_RESULT_NOT_EXIST = 4
         STATUS_NO_ACCOUNT = 5
         STATUS_OJ_NOT_EXIST = 6
         STATUS_PARSE_ERROR = 7
+        STATUS_NETWORK_ERROR = 8
         """
         STATUS_PENDING = 0
         STATUS_RUNNING = 1
         STATUS_RESULT = 2
-        STATUS_NETWORK_ERROR = 3
+        STATUS_SUBMIT_FAILED = 3
         STATUS_RESULT_NOT_EXIST = 4
         STATUS_NO_ACCOUNT = 5
         STATUS_OJ_NOT_EXIST = 6
         STATUS_PARSE_ERROR = 7
+        STATUS_NETWORK_ERROR = 8
 
     class VerdictCode(Enum):
         """

@@ -179,12 +179,6 @@ class POJ(Base):
                 language[option.get('value')] = option.string
         return language
 
-    # 判断当前提交结果的运行状态
-    def is_waiting_for_judge(self, verdict):
-        if verdict in ['Queuing', 'Compiling', 'Waiting', 'Running & Judging']:
-            return True
-        return False
-
     # 检查源OJ是否运行正常
     def check_status(self):
         url = "http://poj.org/"

@@ -195,11 +195,6 @@ class FZU(Base):
         res = self._req.get(url)
         return FZUParser().result_parse(res)
 
-    def is_waiting_for_judge(self, verdict):
-        if verdict in ['Judging...', 'Queuing...']:
-            return True
-        return False
-
     def check_status(self):
         url = 'http://acm.fzu.edu.cn/index.php'
         res = self._req.get(url)

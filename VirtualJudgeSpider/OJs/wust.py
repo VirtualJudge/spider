@@ -188,11 +188,6 @@ class WUST(Base):
 
         return WUSTParser().result_parse(res)
 
-    def is_waiting_for_judge(self, verdict):
-        if verdict in ['Pending', 'Pending Rejudge', 'Compiling', 'Running & Judging']:
-            return True
-        return False
-
     def check_status(self):
         url = 'http://acm.wust.edu.cn/'
         res = self._req.get(url)

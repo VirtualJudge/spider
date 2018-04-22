@@ -178,11 +178,6 @@ class ZOJ(Base):
         res = self._req.get(url)
         return ZOJParaer().result_parse(res)
 
-    def is_waiting_for_judge(self, verdict):
-        if verdict in ['Queuing', 'Compiling']:
-            return True
-        return False
-
     def check_status(self):
         url = 'http://acm.zju.edu.cn/onlinejudge/'
         res = self._req.get(url)

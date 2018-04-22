@@ -77,10 +77,15 @@ class hihoCoder(Base):
     def find_language(self, *args, **kwargs):
         pass
 
-    # 判断当前提交结果的运行状态
-    def is_waiting_for_judge(self, verdict):
-        pass
-
     # 检查源OJ是否运行正常
     def check_status(self):
+        pass
+
+    def is_compile_error(verdict):
+        pass
+
+    def is_accepted(verdict):
+        pass
+
+    def is_running(verdict):
         pass
