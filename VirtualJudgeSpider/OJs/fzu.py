@@ -61,15 +61,17 @@ class FZUParser(BaseParser):
 
         website_data = response.text
         soup = BeautifulSoup(website_data, 'lxml')
-        line = soup.find('tr', attrs={'onmouseover': 'hl(this);'}).find_all('td')
-        if line is not None:
-            result.origin_run_id = line[0].string
-            result.verdict = line[2].string
-            result.execute_time = line[5].string
-            result.execute_memory = line[6].string
-            result.status = Result.Status.STATUS_RESULT
-        else:
-            result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+        lines = soup.find('tr', attrs={'onmouseover': 'hl(this);'})
+        if lines is not None:
+            line = lines.find_all('td')
+            if line is not None:
+                result.origin_run_id = line[0].string
+                result.verdict = line[2].string
+                result.execute_time = line[5].string
+                result.execute_memory = line[6].string
+                result.status = Result.Status.STATUS_RESULT
+            else:
+                result.status = Result.Status.STATUS_RESULT_NOT_EXIST
         return result
 
     def result_parse_by_rid(self, response, rid):
@@ -211,7 +213,7 @@ class FZU(Base):
 
     @staticmethod
     def is_running(verdict):
-        return verdict in ['Judging...', 'Queuing...', 'Pending']
+        return verdict in ['Judging...', 'Queuing...']
 
     @staticmethod
     def is_compile_error(verdict):
