@@ -26,13 +26,13 @@ class ZOJParaer(BaseParser):
         problem.remote_url = url
         problem.remote_oj = 'ZOJ'
         if not response:
-            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
             return problem
         website_data = response.text
         status_code = response.status_code
 
         if status_code != 200:
-            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
             return problem
         if re.search('No such problem', website_data):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
@@ -72,7 +72,7 @@ class ZOJParaer(BaseParser):
         result = Result()
 
         if response is None or response.status_code != 200:
-            result.status = Result.Status.STATUS_NETWORK_ERROR
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
             return result
         website_data = response.text
         soup = BeautifulSoup(website_data, 'lxml')
@@ -85,7 +85,7 @@ class ZOJParaer(BaseParser):
             result.execute_memory = line[6].string + "KB"
             result.status = Result.Status.STATUS_RESULT
         else:
-            result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
         return result
 
 

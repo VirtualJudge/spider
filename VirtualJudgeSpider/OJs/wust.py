@@ -19,12 +19,12 @@ class WUSTParser(BaseParser):
         problem.remote_url = url
         problem.remote_oj = 'WUST'
         if response is None:
-            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
             return problem
         website_data = response.text
         status_code = response.status_code
         if status_code != 200:
-            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
             return problem
         if re.search('Problem is not Available', website_data):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
@@ -71,11 +71,14 @@ class WUSTParser(BaseParser):
     def result_parse(self, response):
         result = Result()
         if response is None or response.status_code != 200:
-            result.status = Result.Status.STATUS_NETWORK_ERROR
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
             return result
 
         website_data = response.text
         soup = BeautifulSoup(website_data, 'lxml')
+        if soup.find('table', attrs={'id': 'result-tab'}).find('tr', attrs={'class': 'evenrow'}) is None:
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
+            return result
         line = soup.find('table', attrs={'id': 'result-tab'}).find('tr', attrs={'class': 'evenrow'}).find_all('td')
         if line:
             result.origin_run_id = line[0].string
@@ -84,7 +87,7 @@ class WUSTParser(BaseParser):
             result.execute_memory = line[5].string
             result.status = Result.Status.STATUS_RESULT
         else:
-            result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
         return result
 
 

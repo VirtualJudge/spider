@@ -22,12 +22,12 @@ class POJParser(BaseParser):
         problem.remote_oj = 'POJ'
 
         if response is None:
-            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
             return problem
         website_data = response.text
         status_code = response.status_code
         if status_code != 200:
-            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
             return problem
         if re.search('Can not find problem', website_data):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
@@ -61,7 +61,7 @@ class POJParser(BaseParser):
     def result_parse(self, response):
         result = Result()
         if response is None or response.status_code != 200:
-            result.status = Result.Status.STATUS_NETWORK_ERROR
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
             return result
         soup = BeautifulSoup(response.text, 'lxml')
         line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
@@ -72,7 +72,7 @@ class POJParser(BaseParser):
             result.execute_memory = line[4].string
             result.status = Result.Status.STATUS_RESULT
         else:
-            result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
         return result
 
 

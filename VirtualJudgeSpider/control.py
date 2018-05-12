@@ -1,4 +1,5 @@
 from VirtualJudgeSpider.config import Problem, Result
+import time
 
 supports = ['Aizu', 'HDU', 'FZU', 'POJ', 'WUST', 'ZOJ']
 
@@ -73,7 +74,11 @@ class Controller(object):
         if not self._oj:
             return None
         self._oj.set_cookies(account.cookies)
-        return self._oj.submit_code(account=account, code=code, language=language, pid=pid, **kwargs)
+        if self._oj.submit_code(account=account, code=code, language=language, pid=pid, **kwargs):
+            time.sleep(2)
+            return self.get_result(account=account, pid=pid, **kwargs)
+        else:
+            return Result(Result.VerdictCode.STATUS_SUBMIT_FAILED)
 
     # 获取结果
     def get_result(self, account, pid, **kwargs):

@@ -45,7 +45,7 @@ class AizuParser(BaseParser):
         problem.remote_oj = 'Aizu'
         problem.remote_url = url
         if response is None:
-            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
             return problem
         website_data = response.text
         status_code = response.status_code
@@ -53,7 +53,7 @@ class AizuParser(BaseParser):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
             return problem
         elif status_code != 200:
-            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
             return problem
         site_data = json.loads(website_data)
         soup = BeautifulSoup(site_data.get('html'), 'lxml')
@@ -83,7 +83,7 @@ class AizuParser(BaseParser):
         result = Result()
 
         if response is None or response.status_code != 200:
-            result.status = Result.Status.STATUS_NETWORK_ERROR
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
             return result
 
         website_data = response.text

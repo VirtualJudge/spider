@@ -30,7 +30,7 @@ class Codeforces(Base):
             self._req.cookies.update(cookies)
 
     # 登录页面
-    def login_website(self,account, *args, **kwargs):
+    def login_website(self, account, *args, **kwargs):
         pass
 
     # 检查登录状态

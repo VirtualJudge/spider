@@ -20,13 +20,13 @@ class FZUParser(BaseParser):
         problem.remote_oj = 'FZU'
 
         if response is None:
-            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
             return problem
         website_data = response.text
         status_code = response.status_code
 
         if status_code != 200:
-            problem.status = Problem.Status.STATUS_NETWORK_ERROR
+            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
             return problem
         if re.search('No Such Problem!', website_data):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
@@ -56,7 +56,7 @@ class FZUParser(BaseParser):
     def result_parse(self, response):
         result = Result()
         if response is None or response.status_code != 200:
-            result.status = Result.Status.STATUS_NETWORK_ERROR
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
             return result
 
         website_data = response.text
@@ -71,13 +71,13 @@ class FZUParser(BaseParser):
                 result.execute_memory = line[6].string
                 result.status = Result.Status.STATUS_RESULT
             else:
-                result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+                result.status = Result.Status.STATUS_SUBMIT_FAILED
         return result
 
     def result_parse_by_rid(self, response, rid):
         result = Result()
         if response is None or response.status_code != 200:
-            result.status = Result.Status.STATUS_NETWORK_ERROR
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
             return result, False
 
         website_data = response.text
@@ -92,7 +92,7 @@ class FZUParser(BaseParser):
                 result.execute_memory = tag_tds[6].string
                 result.status = Result.Status.STATUS_RESULT
                 return result, True
-        result.status = Result.Status.STATUS_RESULT_NOT_EXIST
+        result.status = Result.Status.STATUS_SUBMIT_FAILED
         return result, False
 
 
