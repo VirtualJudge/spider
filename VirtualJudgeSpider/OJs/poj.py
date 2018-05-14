@@ -114,7 +114,7 @@ class POJ(Base):
         return self.check_login_status()
 
     # 检查登录状态
-    def check_login_status(self, *args, **kwargs):
+    def check_login_status(self):
         url = 'http://poj.org/'
         res = self._req.get(url=url)
         if res and re.search(r'action=logout&', res.text):

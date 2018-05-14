@@ -121,7 +121,7 @@ class Aizu(Base):
     def login_website(self, account, *args, **kwargs):
         if account and account.cookies:
             self._req.cookies.update(account.cookies)
-        if self.check_login_status(self, *args, **kwargs):
+        if self.check_login_status():
             return True
         login_link_url = 'https://judgeapi.u-aizu.ac.jp/session'
         post_data = {
@@ -129,10 +129,10 @@ class Aizu(Base):
             'password': account.password
         }
         self._req.post(url=login_link_url, json=post_data)
-        return self.check_login_status(self, *args, **kwargs)
+        return self.check_login_status()
 
     # 检查登录状态
-    def check_login_status(self, *args, **kwargs):
+    def check_login_status(self):
         url = 'https://judgeapi.u-aizu.ac.jp/self'
         res = self._req.get(url)
         if res and res.status_code == 200:

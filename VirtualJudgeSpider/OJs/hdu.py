@@ -138,8 +138,7 @@ class HDU(Base):
                        params={'action': 'login'})
         return self.check_login_status()
 
-    def get_problem(self, *args, **kwargs):
-        pid = str(kwargs['pid'])
+    def get_problem(self, pid, *args, **kwargs):
         url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + pid
         res = self._req.get(url)
         return HDUParser().problem_parse(res, pid, url)
