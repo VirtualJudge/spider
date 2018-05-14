@@ -177,5 +177,6 @@ class Controller(object):
 
 if __name__ == '__main__':
     account = Account('robot4test', 'robot4test')
-    result = Controller('CodeForces').get_result(account, '879A')
-    print(result.__dict__)
+    # result = Controller('CodeForces').get_result(account, '879A')
+    result = Controller('codeforces').find_language(account=account)
+    print(result)

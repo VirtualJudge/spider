@@ -234,10 +234,13 @@ class Codeforces(Base):
     # 获取源OJ支持的语言类型
     def find_language(self, *args, **kwargs):
         if self.login_website(*args, **kwargs) is False:
+            print('login failed')
             return {}
+        print('login success')
         res = self._req.get('http://codeforces.com/problemset/submit')
         languages = {}
         if res and res.text and res.status_code == 200:
+            print('res accepted')
             soup = BeautifulSoup(res.text, 'lxml')
             tags = soup.find('select', attrs={'name': 'programTypeId'})
             if tags:
