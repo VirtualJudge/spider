@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from bs4 import element
 
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.config import custom_headers, Problem, Account, Result
+from VirtualJudgeSpider.config import custom_headers, Problem, Result
 from VirtualJudgeSpider.utils import HtmlTag
 from VirtualJudgeSpider.utils import HttpUtil
 
