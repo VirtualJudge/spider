@@ -81,6 +81,7 @@ MathJax.Hub.Config({
                 else:
                     problem.html += str(HtmlTag.update_tag(child, self._static_prefix))
         problem.html = '<html>' + problem.html + self._script + '</html>'
+        problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
         return problem
 
     def result_parse(self, response):
@@ -126,10 +127,12 @@ class Codeforces(Base):
             self._req.cookies.update(cookies)
 
     def get_csrf_token(self):
-        page = self._req.get(self.home_page_url())
-        soup = BeautifulSoup(page.text, 'lxml')
+        res = self._req.get(self.home_page_url())
+        if res is None or res.status_code != 200 or res.text is None:
+            return ''
+        soup = BeautifulSoup(res.text, 'lxml')
         item = soup.find('meta', attrs={'name': 'X-Csrf-Token'})
-        csrf_token = item['content']
+        csrf_token = item.get('content')
         return csrf_token
 
     # 登录页面
