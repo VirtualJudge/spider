@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from bs4 import element
 
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.config import custom_headers, Problem, Account
+from VirtualJudgeSpider.config import custom_headers, Problem, Account, Result
 from VirtualJudgeSpider.utils import HtmlTag
 from VirtualJudgeSpider.utils import HttpUtil
 
@@ -21,7 +21,7 @@ MathJax.Hub.Config({
  jax: ["input/TeX", "output/HTML-CSS"],
  tex2jax: {
      inlineMath:  [ ["$$$", "$$$"] ],
-     displayMath: [ ["$$","$$"] ],
+     displayMath: [ ["$$$$$$","$$$$$$"] ],
      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre','code','a']
  },
  "HTML-CSS": {
@@ -81,11 +81,30 @@ MathJax.Hub.Config({
                 else:
                     problem.html += str(HtmlTag.update_tag(child, self._static_prefix))
         problem.html = '<html>' + problem.html + self._script + '</html>'
-        print(problem.html)
         return problem
 
     def result_parse(self, response):
-        pass
+        if response is None or response.status_code != 200 or response.text is None:
+            result = Result()
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
+            return result
+        soup = BeautifulSoup(response.text, 'lxml')
+        table = soup.find('table')
+        tag = None
+        if table:
+            tag = table.find_all('tr')
+        if tag:
+            children_tag = tag[-1].find_all('td')
+            if len(children_tag) > 9:
+                result = Result()
+                result.origin_run_id = children_tag[0].string
+                result.verdict = children_tag[4].span.string
+                result.execute_time = children_tag[5].string
+                result.execute_memory = children_tag[6].string
+                return result
+        result = Result()
+        result.status = Result.Status.STATUS_SUBMIT_FAILED
+        return result
 
 
 class Codeforces(Base):
@@ -177,16 +196,33 @@ class Codeforces(Base):
         return False
 
     # 获取当然运行结果
-    def get_result(self, *args, **kwargs):
-        pass
+    def get_result(self, account, pid, *args, **kwargs):
+        if self.login_website(account, *args, **kwargs) is False:
+            result = Result()
+            result.status = Result.Status.STATUS_SUBMIT_FAILED
+            return result
+
+        request_url = 'http://codeforces.com/problemset/status?friends=on'
+        res = self._req.get(request_url)
+        if res and res.status_code == 200:
+            website_data = res.text
+            soup = BeautifulSoup(website_data, 'lxml')
+            tag = soup.find('table', attrs={'class': 'status-frame-datatable'})
+            if tag:
+                list_tr = tag.find_all('tr')
+                for tr in list_tr:
+                    if isinstance(tr, element.Tag) and tr.get('data-submission-id'):
+                        return self.get_result_by_url(
+                            'http://codeforces.com/contest/' + pid[:-1] + '/submission/' + tr.get('data-submission-id'))
 
     # 根据源OJ的运行id获取结构
     def get_result_by_rid_and_pid(self, rid, pid):
-        pass
+        return self.get_result_by_url('http://codeforces.com/contest/' + str(pid)[:-1] + '/submission/' + str(rid))
 
     # 根据源OJ的url获取结果
     def get_result_by_url(self, url):
-        pass
+        res = self._req.get(url=url)
+        return CodeforcesParser().result_parse(response=res)
 
     # 获取源OJ支持的语言类型
     def find_language(self, *args, **kwargs):
@@ -222,58 +258,4 @@ class Codeforces(Base):
     # 判断是否运行中
     @staticmethod
     def is_running(verdict):
-        return str(verdict).startswith('Running on test')
-
-
-if __name__ == '__main__':
-    # print(Codeforces().login_website(Account('robot4test', 'robot4test')))
-    # print(Codeforces().get_problem('980C').__dict__)
-    account = Account('robot4test', 'robot4test')
-    result = Codeforces().find_language(account=account)
-
-"""
-1 GNU G++ 5.1.0
-2 Microsoft Visual C++ 2010
-3 Delphi 7
-4 Free Pascal 3
-6 PHP 7.0.12
-7 Python 2.7
-8 Ruby 2.0.0p645
-9 C# Mono 5
-10 GNU GCC 5.1.0
-12 Haskell GHC 7.8.3
-13 Perl 5.20.1
-14 ActiveTcl 8.5
-15 Io-2008-01-07 (Win32)
-17 Pike 7.8
-18 Befunge
-19 OCaml 4.02.1
-20 Scala 2.12
-22 OpenCobol 1.0
-25 Factor
-26 Secret_171
-27 Roco
-28 D DMD32 v2.074.1
-31 Python 3.6
-32 Go 1.8
-33 Ada GNAT 4
-34 JavaScript V8 4.8.0
-36 Java 1.8.0_131
-38 Mysterious Language
-39 FALSE
-40 PyPy 2.7.13 (5.9.0)
-41 PyPy 3.5.3 (5.10.0)
-42 GNU G++11 5.1.0
-43 GNU GCC C11 5.1.0
-44 Picat 0.9
-45 GNU C++11 5 ZIP
-46 Java 8 ZIP
-47 J
-48 Kotlin 1.1.3-2
-49 Rust 1.21
-50 GNU G++14 6.4.0
-51 PascalABC.NET 2
-52 Clang++17 Diagnostics
-53 GNU C++17 Diagnostics (DrMemory)
-54 GNU G++17 7.2.0
-"""
+        return str(verdict).startswith('Running on test') or verdict == 'In queue'

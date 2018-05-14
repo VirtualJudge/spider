@@ -1,7 +1,8 @@
-from VirtualJudgeSpider.config import Problem, Result
 import time
 
-supports = ['Aizu', 'HDU', 'FZU', 'POJ', 'WUST', 'ZOJ']
+from VirtualJudgeSpider.config import Problem, Result, Account
+
+supports = ['Aizu', 'HDU', 'FZU', 'POJ', 'WUST', 'ZOJ', 'Codeforces']
 
 
 class OJBuilder(object):
@@ -23,6 +24,9 @@ class Controller(object):
         remote_oj = Controller.get_real_remote_oj(oj_name)
         self._oj = OJBuilder.build_oj(remote_oj)
         self._origin_name = oj_name
+
+    def _space_and_enter_strip(self, data):
+        return str(data).strip(' ').strip('\r\n').strip(' ')
 
     @staticmethod
     def get_real_remote_oj(name):
@@ -96,6 +100,8 @@ class Controller(object):
                 result.verdict_code = Result.VerdictCode.STATUS_COMPILE_ERROR
             else:
                 result.verdict_code = Result.VerdictCode.STATUS_RESULT_ERROR
+            result.execute_time = self._space_and_enter_strip(result.execute_time)
+            result.execute_memory = self._space_and_enter_strip(result.execute_memory)
             return result
         return Result(Result.VerdictCode.STATUS_SUBMIT_FAILED)
 
@@ -114,6 +120,8 @@ class Controller(object):
                 result.verdict_code = Result.VerdictCode.STATUS_COMPILE_ERROR
             else:
                 result.verdict_code = Result.VerdictCode.STATUS_RESULT_ERROR
+            result.execute_time = self._space_and_enter_strip(result.execute_time)
+            result.execute_memory = self._space_and_enter_strip(result.execute_memory)
             return result
         return Result(Result.VerdictCode.STATUS_SUBMIT_FAILED)
 
@@ -159,3 +167,9 @@ class Controller(object):
         if self._oj and account and self._oj.login_website(account=account):
             return True
         return False
+
+
+if __name__ == '__main__':
+    account = Account('robot4test', 'robot4test')
+    result = Controller('CodeForces').get_result(account, '879A')
+    print(result.__dict__)
