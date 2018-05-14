@@ -26,7 +26,8 @@ class Controller(object):
         self._origin_name = oj_name
 
     def _space_and_enter_strip(self, data):
-        return str(data).strip(' ').strip('\r\n').strip(' ')
+        if data:
+            return str(data).strip(' ').strip('\r\n').strip(' ')
 
     @staticmethod
     def get_real_remote_oj(name):
@@ -71,7 +72,11 @@ class Controller(object):
             problem.status = Problem.Status.STATUS_OJ_NOT_EXIST
             return problem
         self._oj.set_cookies(account.cookies)
-        return self._oj.get_problem(pid=pid, account=account, **kwargs)
+        problem = self._oj.get_problem(pid=pid, account=account, **kwargs)
+        problem.title = self._space_and_enter_strip(problem.title)
+        problem.time_limit = self._space_and_enter_strip(problem.time_limit)
+        problem.memory_limit = self._space_and_enter_strip(problem.memory_limit)
+        return problem
 
     # 提交代码
     def submit_code(self, pid, account, code, language, **kwargs):
@@ -102,6 +107,7 @@ class Controller(object):
                 result.verdict_code = Result.VerdictCode.STATUS_RESULT_ERROR
             result.execute_time = self._space_and_enter_strip(result.execute_time)
             result.execute_memory = self._space_and_enter_strip(result.execute_memory)
+
             return result
         return Result(Result.VerdictCode.STATUS_SUBMIT_FAILED)
 

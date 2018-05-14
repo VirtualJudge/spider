@@ -52,6 +52,10 @@ MathJax.Hub.Config({
             return problem
         website = response.text
         soup = BeautifulSoup(website, 'lxml')
+        match_groups = soup.find('div', attrs={'class': 'title'})
+        if match_groups:
+            problem.title = match_groups.string
+            problem.title = str(problem.title)[2:]
         match_groups = soup.find(name='div', attrs={'class': 'time-limit'})
         if match_groups:
             problem.time_limit = match_groups.contents[-1]
