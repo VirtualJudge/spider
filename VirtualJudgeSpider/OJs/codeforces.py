@@ -1,12 +1,19 @@
+import os
 import re
 
 from bs4 import BeautifulSoup
 from bs4 import element
+from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
 from VirtualJudgeSpider.config import custom_headers, Problem, Result
 from VirtualJudgeSpider.utils import HtmlTag
 from VirtualJudgeSpider.utils import HttpUtil
+
+
+def get_env(key, value=''):
+    return os.environ.get(key, value)
 
 
 class CodeforcesParser(BaseParser):
@@ -113,10 +120,20 @@ MathJax.Hub.Config({
 
 
 class Codeforces(Base):
-    def __init__(self, cookies=None):
+    def __init__(self):
         self._bfaa = ''
         self._ftaa = ''
-        self._req = HttpUtil(custom_headers=custom_headers)
+        self._csrf_token = ''
+        self._remote = 'http://' + str(get_env('PHANTOMJS_HOST', '127.0.0.1')) + ':' + str(
+            get_env('PHANTOMJS_PORT', '8910'))
+        driver = webdriver.Remote(command_executor=self._remote, desired_capabilities=DesiredCapabilities.PHANTOMJS)
+        driver.get('http://codeforces.com/enter')
+        self._bfaa = driver.execute_script('return _bfaa')
+        self._ftaa = driver.execute_script('return _ftaa')
+        self._csrf_token = driver.find_element_by_name('csrf_token').get_attribute('value')
+        cookies = {item['name']: item['value'] for item in driver.get_cookies()}
+        self._req = HttpUtil(custom_headers=custom_headers, cookies=cookies)
+        driver.quit()
 
     # 主页链接
     @staticmethod
@@ -141,13 +158,11 @@ class Codeforces(Base):
 
     # 登录页面
     def login_website(self, account, *args, **kwargs):
-        if account and account.cookies:
-            self._req.cookies.update(account.cookies)
         if self.check_login_status():
             return True
         login_link_url = 'http://codeforces.com/enter?back=%2F'
 
-        csrf_token = self.get_csrf_token()
+        csrf_token = self._csrf_token
         post_data = {'handleOrEmail': account.username,
                      'password': account.password,
                      'ftaa': self._ftaa,
