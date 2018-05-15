@@ -114,8 +114,8 @@ MathJax.Hub.Config({
 
 class Codeforces(Base):
     def __init__(self, cookies=None):
-        self._bfaa = '32782a5d13ff8f38dd0b9a2dddcff6ef'
-        self._ftaa = 'rayyydfdyxlkydjl9e'
+        self._bfaa = ''
+        self._ftaa = ''
         self._req = HttpUtil(custom_headers=custom_headers)
 
     # 主页链接
@@ -153,7 +153,10 @@ class Codeforces(Base):
                      'ftaa': self._ftaa,
                      'bfaa': self._bfaa,
                      'action': 'enter',
+                     'remember': 'on',
+                     '_tta': 871,
                      'csrf_token': csrf_token}
+        print(post_data)
         self._req.post(url=login_link_url, data=post_data)
         return self.check_login_status()
 
@@ -232,8 +235,8 @@ class Codeforces(Base):
         return CodeforcesParser().result_parse(response=res)
 
     # 获取源OJ支持的语言类型
-    def find_language(self, *args, **kwargs):
-        if self.login_website(*args, **kwargs) is False:
+    def find_language(self, account, *args, **kwargs):
+        if self.login_website(account, *args, **kwargs) is False:
             print('login failed')
             return {}
         print('login success')

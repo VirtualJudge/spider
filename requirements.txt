@@ -5,3 +5,4 @@ requests
 coverage
 Flask
 requests[socks]
+selenium

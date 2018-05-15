@@ -12,6 +12,7 @@ class HttpUtil(object):
         self._code_type = code_type
         self._timeout = (3.03, 6)
         self._response = None
+        self._advanced = False
         if self._headers:
             self._request.headers.update(self._headers)
         if cookies:
