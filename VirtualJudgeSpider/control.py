@@ -2,7 +2,15 @@ import time
 
 from VirtualJudgeSpider.config import Problem, Result, Account
 
-supports = ['Aizu', 'HDU', 'FZU', 'POJ', 'WUST', 'ZOJ', 'Codeforces']
+supports = [
+    'Aizu',
+    'HDU',
+    'FZU',
+    'POJ',
+    'WUST',
+    'ZOJ',
+    # 'Codeforces'
+]
 
 
 class OJBuilder(object):
@@ -175,8 +183,32 @@ class Controller(object):
         return False
 
 
+post_code = """// 2052
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+#include <iostream>
+#include <set>
+using namespace std;
+int main(){
+    int n;
+    cin >> n;
+    int a,b;
+    int ans = 0;
+    while(n--){
+        cin >> a >> b;
+        while(ans>=a) a+=b;
+        ans = a;
+    }
+    cout << ans << endl;
+    return 0;
+}
+"""
+
 if __name__ == '__main__':
     account = Account('robot4test', 'robot4test')
-    # result = Controller('CodeForces').get_result(account, '879A')
-    result = Controller('codeforces').find_language(account=account)
+
+    # start = datetime.datetime.now()
+    result = Controller('codeforces').submit_code(pid='879A', account=account, code=post_code, language='50')
+    # print((datetime.datetime.now() - start).seconds)
     print(result)

@@ -1,10 +1,14 @@
 import os
 import re
+import time
 
 from bs4 import BeautifulSoup
 from bs4 import element
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
 from VirtualJudgeSpider.config import custom_headers, Problem, Result
@@ -108,11 +112,16 @@ MathJax.Hub.Config({
         if tag:
             children_tag = tag[-1].find_all('td')
             if len(children_tag) > 9:
+                print(children_tag)
                 result = Result()
                 result.origin_run_id = children_tag[0].string
-                result.verdict = children_tag[4].span.string
+                result.verdict = ''
+                for item in children_tag[4].stripped_strings:
+                    result.verdict += str(item) + ' '
+                result.verdict = result.verdict.strip(' ')
                 result.execute_time = children_tag[5].string
                 result.execute_memory = children_tag[6].string
+                result.status = Result.Status.STATUS_RESULT
                 return result
         result = Result()
         result.status = Result.Status.STATUS_SUBMIT_FAILED
@@ -126,14 +135,10 @@ class Codeforces(Base):
         self._csrf_token = ''
         self._remote = 'http://' + str(get_env('PHANTOMJS_HOST', '127.0.0.1')) + ':' + str(
             get_env('PHANTOMJS_PORT', '8910'))
-        driver = webdriver.Remote(command_executor=self._remote, desired_capabilities=DesiredCapabilities.PHANTOMJS)
-        driver.get('http://codeforces.com/enter')
-        self._bfaa = driver.execute_script('return _bfaa')
-        self._ftaa = driver.execute_script('return _ftaa')
-        self._csrf_token = driver.find_element_by_name('csrf_token').get_attribute('value')
-        cookies = {item['name']: item['value'] for item in driver.get_cookies()}
-        self._req = HttpUtil(custom_headers=custom_headers, cookies=cookies)
-        driver.quit()
+        # self._driver = webdriver.Remote(command_executor=self._remote,
+        #                                desired_capabilities=DesiredCapabilities.PHANTOMJS)
+        self._driver = webdriver.Chrome()
+        self._req = HttpUtil(custom_headers=custom_headers)
 
     # 主页链接
     @staticmethod
@@ -141,46 +146,31 @@ class Codeforces(Base):
         return 'http://codeforces.com/'
 
     def get_cookies(self):
-        return self._req.cookies.get_dict()
+        return {item['name']: item['value'] for item in self._driver.get_cookies()}
 
     def set_cookies(self, cookies):
         if type(cookies) == dict:
-            self._req.cookies.update(cookies)
+            self._driver.add_cookie(cookies)
 
     def get_csrf_token(self):
-        res = self._req.get(self.home_page_url())
-        if res is None or res.status_code != 200 or res.text is None:
-            return ''
-        soup = BeautifulSoup(res.text, 'lxml')
-        item = soup.find('meta', attrs={'name': 'X-Csrf-Token'})
-        csrf_token = item.get('content')
-        return csrf_token
+        return self._csrf_token
 
     # 登录页面
     def login_website(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
-        login_link_url = 'http://codeforces.com/enter?back=%2F'
-
-        csrf_token = self._csrf_token
-        post_data = {'handleOrEmail': account.username,
-                     'password': account.password,
-                     'ftaa': self._ftaa,
-                     'bfaa': self._bfaa,
-                     'action': 'enter',
-                     'remember': 'on',
-                     '_tta': 871,
-                     'csrf_token': csrf_token}
-        print(post_data)
-        self._req.post(url=login_link_url, data=post_data)
+        self._driver.get('http://codeforces.com/enter?back=%2F')
+        self._driver.find_element_by_name('handleOrEmail').send_keys(account.username)
+        self._driver.find_element_by_name('password').send_keys(account.password)
+        self._driver.find_element_by_class_name('submit').click()
+        time.sleep(2)
         return self.check_login_status()
 
     # 检查登录状态
     def check_login_status(self):
-        res = self._req.get(self.home_page_url())
-        if res and res.status_code == 200 and res.text:
-            if re.search(r'logout">Logout</a>', res.text) is not None:
-                return True
+        self._driver.get('http://codeforces.com')
+        if re.search(r'logout">Logout</a>', str(self._driver.page_source)):
+            return True
         return False
 
     # 获取题目
@@ -200,23 +190,26 @@ class Codeforces(Base):
     def submit_code(self, *args, **kwargs):
         if not self.login_website(*args, **kwargs):
             return False
+        print('login success')
         code = kwargs.get('code')
         language = kwargs.get('language')
         pid = kwargs.get('pid')
-        url = 'http://codeforces.com/problemset/submit?csrf_token=' + self.get_csrf_token()
 
-        post_data = {
-            'csrf_token': self.get_csrf_token(),
-            'ftaa': self._ftaa,
-            'bfaa': self._bfaa,
-            'action': 'submitSolutionFormSubmitted',
-            'submittedProblemCode': pid,
-            'programTypeId': language,
-            'source': code,
-            'tabSize': 4
-        }
-        res = self._req.post(url=url, data=post_data)
-        if res and res.status_code == 302:
+        self._driver.get('http://codeforces.com/problemset/submit')
+        try:
+            if not self._driver.find_element_by_id('toggleEditorCheckbox').is_selected():
+                self._driver.find_element_by_id('toggleEditorCheckbox').send_keys(Keys.SPACE)
+
+            self._driver.find_element_by_name('submittedProblemCode').send_keys(pid)
+            Select(self._driver.find_element_by_name('programTypeId')).select_by_value(language)
+            self._driver.find_element_by_id('sourceCodeTextarea').send_keys(code)
+            self._driver.find_element_by_class_name('submit').click()
+        except NoSuchElementException:
+            return False
+        time.sleep(2)
+        cur_url = self._driver.current_url
+        website_data = self._driver.page_source
+        if website_data and re.search(r'status', cur_url):
             return True
         return False
 
@@ -228,9 +221,10 @@ class Codeforces(Base):
             return result
 
         request_url = 'http://codeforces.com/problemset/status?friends=on'
-        res = self._req.get(request_url)
-        if res and res.status_code == 200:
-            website_data = res.text
+        self._driver.get(request_url)
+        website_data = self._driver.page_source
+        self._driver.quit()
+        if website_data:
             soup = BeautifulSoup(website_data, 'lxml')
             tag = soup.find('table', attrs={'class': 'status-frame-datatable'})
             if tag:
@@ -239,6 +233,7 @@ class Codeforces(Base):
                     if isinstance(tr, element.Tag) and tr.get('data-submission-id'):
                         return self.get_result_by_url(
                             'http://codeforces.com/contest/' + pid[:-1] + '/submission/' + tr.get('data-submission-id'))
+        return Result(Result.Status.STATUS_SUBMIT_FAILED)
 
     # 根据源OJ的运行id获取结构
     def get_result_by_rid_and_pid(self, rid, pid):
@@ -246,6 +241,7 @@ class Codeforces(Base):
 
     # 根据源OJ的url获取结果
     def get_result_by_url(self, url):
+        print('url', url)
         res = self._req.get(url=url)
         return CodeforcesParser().result_parse(response=res)
 
@@ -255,11 +251,12 @@ class Codeforces(Base):
             print('login failed')
             return {}
         print('login success')
-        res = self._req.get('http://codeforces.com/problemset/submit')
+        self._driver.get('http://codeforces.com/problemset/submit')
+        website_data = self._driver.page_source
         languages = {}
-        if res and res.text and res.status_code == 200:
+        if website_data:
             print('res accepted')
-            soup = BeautifulSoup(res.text, 'lxml')
+            soup = BeautifulSoup(website_data, 'lxml')
             tags = soup.find('select', attrs={'name': 'programTypeId'})
             if tags:
                 for child in tags.find_all('option'):
