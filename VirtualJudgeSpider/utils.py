@@ -76,10 +76,10 @@ class HtmlTag(object):
         """
         TITLE 和 CONTENT 需要加额外的 Style 保证网页风格一致
         """
-        TITLE = 'font-family: Helvetica,"PingFang SC","Hiragino Sans GB' \
-                '","Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 20px;font-weight: bold;'
-        CONTENT = 'font-family: Helvetica,"PingFang SC","Hiragino Sans GB' \
-                  '","Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 16px;'
+        TITLE = 'font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB"' \
+                ',"Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 14px;font-weight: bold;'
+        CONTENT = 'font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB",' \
+                  '"Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 12px;'
 
     @staticmethod
     def update_tag(tag, oj_prefix, update_style=None):
