@@ -10,7 +10,7 @@ class HttpUtil(object):
         self._headers = custom_headers
         self._request = requests.session()
         self._code_type = code_type
-        self._timeout = (3.03, 6)
+        self._timeout = (3.03, 12)
         self._response = None
         self._advanced = False
         if self._headers:
@@ -77,7 +77,7 @@ class HtmlTag(object):
         TITLE 和 CONTENT 需要加额外的 Style 保证网页风格一致
         """
         TITLE = 'font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB"' \
-                ',"Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 14px;font-weight: bold;'
+                ',"Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 14px;font-weight: bold;color:#000000;'
         CONTENT = 'font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB",' \
                   '"Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 14px;color:#495060;'
 
@@ -98,6 +98,7 @@ class HtmlTag(object):
                     if not child.get('class'):
                         child['class'] = ()
                     child['class'] += (HtmlTag.TagDesc.ANCHOR.value,)
+                    child['target'] = ('_blank', '_parent')
                     child['href'] = HttpUtil.abs_url(child.get('href'), oj_prefix=oj_prefix)[-1]
                 if child.name == 'img' and child.get('src'):
                     if not child.get('class'):

@@ -11,6 +11,8 @@ from VirtualJudgeSpider.utils import HtmlTag, HttpUtil
 class FZUParser(BaseParser):
     def __init__(self):
         self._static_prefix = 'http://acm.fzu.edu.cn/'
+        self._global_style = """<style>*{font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB",
+        "Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 14px;color:#495060;}</style>"""
 
     def problem_parse(self, response, pid, url):
         problem = Problem()
@@ -45,11 +47,24 @@ class FZUParser(BaseParser):
         problem.special_judge = re.search(r'<font color="blue">Special Judge</font>', website_data) is not None
         problem.html = ''
         for tag in soup.find('div', attrs={'class': 'problem_content'}).children:
+            print(type(tag))
+            print(tag)
             if tag.name == 'h2':
                 if tag.img:
                     tag.img.decompose()
+                if not tag.get('class'):
+                    tag['class'] = (HtmlTag.TagDesc.TITLE.value,)
+                else:
+                    tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                tag['style'] = HtmlTag.TagStyle.TITLE.value
+            if tag.name == 'div':
+                if not tag.get('class'):
+                    tag['class'] = (HtmlTag.TagDesc.CONTENT.value,)
+                else:
+                    tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                tag['style'] = HtmlTag.TagStyle.CONTENT.value
             problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
-        problem.html = '<body>' + problem.html + '</body>'
+        problem.html = '<body>' + self._global_style + problem.html + '</body>'
         problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
         return problem
 

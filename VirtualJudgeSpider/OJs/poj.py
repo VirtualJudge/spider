@@ -20,7 +20,6 @@ class POJParser(BaseParser):
         problem.remote_id = pid
         problem.remote_url = url
         problem.remote_oj = 'POJ'
-
         if response is None:
             problem.status = Problem.Status.STATUS_SUBMIT_FAILED
             return problem
@@ -125,6 +124,7 @@ class POJ(Base):
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
         url = 'http://poj.org/problem?id=' + pid
+        print(url)
         res = self._req.get(url=url)
         return POJParser().problem_parse(res, pid, url)
 

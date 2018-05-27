@@ -59,12 +59,25 @@ class ZOJParaer(BaseParser):
                     continue
                 if tag.name == 'h2':
                     tag['style'] = HtmlTag.TagStyle.TITLE.value
+                    if tag.get('class'):
+                        tag['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                    else:
+                        tag['class'] = (HtmlTag.TagDesc.TITLE.value,)
                 elif tag.name == 'p' and tag.b and tag.b.string in ['Input', 'Output', 'Sample Input',
                                                                     'Sample Output']:
                     tag.b['style'] = HtmlTag.TagStyle.TITLE.value
+                    if tag.get('class'):
+                        tag.b['class'] += (HtmlTag.TagDesc.TITLE.value,)
+                    else:
+                        tag.b['class'] = (HtmlTag.TagDesc.TITLE.value,)
                 else:
                     tag['style'] = HtmlTag.TagStyle.CONTENT.value
-                problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
+                    if tag.get('class'):
+                        tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
+                    else:
+                        tag['class'] = (HtmlTag.TagDesc.CONTENT.value,)
+                    HtmlTag.update_tag(tag, self._static_prefix)
+                problem.html += str(tag)
         problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
         return problem
 
