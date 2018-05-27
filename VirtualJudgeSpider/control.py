@@ -150,7 +150,7 @@ class Controller(object):
     def is_waiting_for_judge(self, verdict):
         if not self._oj:
             return None
-        return self._oj.is_waiting_for_judge(verdict)
+        return self._oj.is_running(verdict)
 
     # 判断源OJ的网络连接是否良好
     def check_status(self):
