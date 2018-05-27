@@ -1,6 +1,6 @@
 # VirtualJudgeSpider
 VirtualJudge - Judge Spider  
-[![Build Status](https://travis-ci.org/VirtualJudge/Spider.svg?branch=master)](https://travis-ci.org/VirtualJudge/Spider)
+[![Build Status](https://travis-ci.org/VirtualJudge/spider.svg?branch=master)](https://travis-ci.org/VirtualJudge/spider)
 [![Coverage Status](https://coveralls.io/repos/github/VirtualJudge/Spider/badge.svg?branch=master)](https://coveralls.io/github/VirtualJudge/Spider?branch=master)
 ***
 ### build script
