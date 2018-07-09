@@ -1,22 +1,12 @@
-import os
 import re
-import time
 
 from bs4 import BeautifulSoup
 from bs4 import element
-from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import Select
+from robobrowser import RoboBrowser
 
 from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.config import custom_headers, Problem, Result
+from VirtualJudgeSpider.config import Problem, Result
 from VirtualJudgeSpider.utils import HtmlTag
-from VirtualJudgeSpider.utils import HttpUtil
-
-
-def get_env(key, value=''):
-    return os.environ.get(key, value)
 
 
 class CodeforcesParser(BaseParser):
@@ -129,15 +119,7 @@ MathJax.Hub.Config({
 
 class Codeforces(Base):
     def __init__(self):
-        self._bfaa = ''
-        self._ftaa = ''
-        self._csrf_token = ''
-        self._remote = 'http://' + str(get_env('PHANTOMJS_HOST', '127.0.0.1')) + ':' + str(
-            get_env('PHANTOMJS_PORT', '8910'))
-        # self._driver = webdriver.Remote(command_executor=self._remote,
-        #                                desired_capabilities=DesiredCapabilities.PHANTOMJS)
-        self._driver = webdriver.Chrome()
-        self._req = HttpUtil(custom_headers=custom_headers)
+        self._browser = RoboBrowser()
 
     # 主页链接
     @staticmethod
@@ -145,30 +127,29 @@ class Codeforces(Base):
         return 'http://codeforces.com/'
 
     def get_cookies(self):
-        return {item['name']: item['value'] for item in self._driver.get_cookies()}
+        return self._browser.session.cookies
 
     def set_cookies(self, cookies):
-        if type(cookies) == dict:
-            self._driver.add_cookie(cookies)
-
-    def get_csrf_token(self):
-        return self._csrf_token
+        if isinstance(cookies, dict):
+            self._browser.session.cookies = cookies
 
     # 登录页面
     def login_website(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
-        self._driver.get('http://codeforces.com/enter?back=%2F')
-        self._driver.find_element_by_name('handleOrEmail').send_keys(account.username)
-        self._driver.find_element_by_name('password').send_keys(account.password)
-        self._driver.find_element_by_class_name('submit').click()
-        time.sleep(2)
+        self._browser.open('http://codeforces.com/enter?back=%2F')
+        enter_form = self._browser.get_form('enterForm')
+
+        enter_form['handleOrEmail'] = account.username
+        enter_form['password'] = account.password
+
+        self._browser.submit_form(enter_form)
         return self.check_login_status()
 
     # 检查登录状态
     def check_login_status(self):
-        self._driver.get('http://codeforces.com')
-        if re.search(r'logout">Logout</a>', str(self._driver.page_source)):
+        self._browser.open('http://codeforces.com')
+        if re.search(r'logout">Logout</a>', self._browser.response.text):
             return True
         return False
 
@@ -182,8 +163,8 @@ class Codeforces(Base):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
             return problem
         p_url = 'http://codeforces.com/problemset/problem/' + str(pid)[:-1] + '/' + str(pid)[-1]
-        res = self._req.get(url=p_url)
-        return CodeforcesParser().problem_parse(res, pid, p_url)
+        self._browser.open(url=p_url)
+        return CodeforcesParser().problem_parse(self._browser.response, pid, p_url)
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
@@ -194,22 +175,14 @@ class Codeforces(Base):
         language = kwargs.get('language')
         pid = kwargs.get('pid')
 
-        self._driver.get('http://codeforces.com/problemset/submit')
-        try:
-            if not self._driver.find_element_by_id('toggleEditorCheckbox').is_selected():
-                self._driver.find_element_by_id('toggleEditorCheckbox').send_keys(Keys.SPACE)
+        self._browser.open('http://codeforces.com/problemset/submit')
+        form = self._browser.get_form(class_='submit-form')
+        print(form)
+        form['programTypeId'] = language
+        form['source'] = code
+        form['submittedProblemCode'] = pid
+        self._browser.submit_form(form)
 
-            self._driver.find_element_by_name('submittedProblemCode').send_keys(pid)
-            Select(self._driver.find_element_by_name('programTypeId')).select_by_value(language)
-            self._driver.find_element_by_id('sourceCodeTextarea').send_keys(code)
-            self._driver.find_element_by_class_name('submit').click()
-        except NoSuchElementException:
-            return False
-        time.sleep(2)
-        cur_url = self._driver.current_url
-        website_data = self._driver.page_source
-        if website_data and re.search(r'status', cur_url):
-            return True
         return False
 
     # 获取当然运行结果
@@ -220,9 +193,8 @@ class Codeforces(Base):
             return result
 
         request_url = 'http://codeforces.com/problemset/status?friends=on'
-        self._driver.get(request_url)
-        website_data = self._driver.page_source
-        self._driver.quit()
+        self._browser.open(request_url)
+        website_data = self._browser.response.page_source
         if website_data:
             soup = BeautifulSoup(website_data, 'lxml')
             tag = soup.find('table', attrs={'class': 'status-frame-datatable'})
@@ -241,7 +213,8 @@ class Codeforces(Base):
     # 根据源OJ的url获取结果
     def get_result_by_url(self, url):
         print('url', url)
-        res = self._req.get(url=url)
+        self._browser.open(url=url)
+        res = self._browser.response
         return CodeforcesParser().result_parse(response=res)
 
     # 获取源OJ支持的语言类型
@@ -250,8 +223,8 @@ class Codeforces(Base):
             print('login failed')
             return {}
         print('login success')
-        self._driver.get('http://codeforces.com/problemset/submit')
-        website_data = self._driver.page_source
+        self._browser.open('http://codeforces.com/problemset/submit')
+        website_data = self._browser.response.page_source
         languages = {}
         if website_data:
             print('res accepted')
@@ -264,10 +237,7 @@ class Codeforces(Base):
 
     # 检查源OJ是否运行正常
     def check_status(self):
-        res = self._req.get(self.home_page_url())
-        if res and res.status_code == 200:
-            return True
-        return False
+        pass
 
     #  判断结果是否正确
     @staticmethod
