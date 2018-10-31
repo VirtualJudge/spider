@@ -1,4 +1,4 @@
-FROM python:3.6.5-jessie
+FROM python:3.7-jessie
 
 ADD . /spider
 WORKDIR /spider

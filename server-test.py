@@ -71,6 +71,7 @@ def language(remote_oj):
 @app.route("/<string:remote_oj>/<string:remote_id>")
 def problem(remote_oj, remote_id):
     problem = Controller(remote_oj).get_problem(remote_id, account=Account('robot4test', 'robot4test'))
+    print(problem.title)
     if problem.status == Problem.Status.STATUS_CRAWLING_SUCCESS:
         return problem.html
     return problem.status.name
@@ -89,4 +90,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=7777, host='0.0.0.0')
+    app.run(debug=True, port=7777, host='127.0.0.1')
