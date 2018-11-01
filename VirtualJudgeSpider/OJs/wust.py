@@ -29,7 +29,7 @@ class WUSTParser(BaseParser):
         if re.search('Problem is not Available', website_data):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
             return problem
-        match_groups = re.search(r': ([\s\S]*?)</h2>', website_data)
+        match_groups = re.search(r'[\d]{4,}: ([\s\S]*?)</h2>', website_data)
         if match_groups:
             problem.title = match_groups.group(1)
         match_groups = re.search(r'(\d* Sec)', website_data)
