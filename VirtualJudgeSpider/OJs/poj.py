@@ -11,7 +11,7 @@ from VirtualJudgeSpider.utils import HttpUtil, HtmlTag
 
 
 class POJParser(BaseParser):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._static_prefix = 'http://poj.org/'
 
     def problem_parse(self, response, pid, url):
@@ -76,13 +76,13 @@ class POJParser(BaseParser):
 
 
 class POJ(Base):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.code_type = 'utf-8'
         self._headers = config.custom_headers
         self._headers['Referer'] = 'http://poj.org/'
         self._headers['Content-Type'] = 'application/x-www-form-urlencoded'
 
-        self._req = HttpUtil(custom_headers=self._headers, code_type=self.code_type)
+        self._req = HttpUtil(custom_headers=self._headers, code_type=self.code_type, *args, **kwargs)
 
     @staticmethod
     def home_page_url():
@@ -124,7 +124,6 @@ class POJ(Base):
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
         url = 'http://poj.org/problem?id=' + pid
-        print(url)
         res = self._req.get(url=url)
         return POJParser().problem_parse(res, pid, url)
 

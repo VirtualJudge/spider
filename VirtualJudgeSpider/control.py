@@ -23,14 +23,17 @@ class OJBuilder(object):
                 oj = class_meta(*args, **kwargs)
                 return oj
             except ModuleNotFoundError:
-                pass
+                print(name, 'NOT SUPPORT')
         return None
 
 
 class Controller(object):
-    def __init__(self, oj_name):
+    def __init__(self, oj_name, proxies=None, timeout=5):
         remote_oj = Controller.get_real_remote_oj(oj_name)
-        self._oj = OJBuilder.build_oj(remote_oj)
+        if type(proxies) is str or proxies is None:
+            self._oj = OJBuilder.build_oj(remote_oj, proxies=proxies, timeout=timeout)
+        else:
+            self._oj = None
         self._origin_name = oj_name
 
     def _space_and_enter_strip(self, data):
@@ -207,8 +210,5 @@ int main(){
 
 if __name__ == '__main__':
     account = Account('robot4test', 'robot4test')
-
-    # start = datetime.datetime.now()
     result = Controller('codeforces').submit_code(pid='879A', account=account, code=post_code, language='50')
-    # print((datetime.datetime.now() - start).seconds)
     print(result)

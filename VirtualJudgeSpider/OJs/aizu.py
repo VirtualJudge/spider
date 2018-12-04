@@ -14,7 +14,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 class AizuParser(BaseParser):
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._static_prefix = 'http://judge.u-aizu.ac.jp/onlinejudge/'
         self._judge_static_string = ['Compile Error', 'Wrong Answer', 'Time Limit Exceed',
                                      'Memory Limit Exceed', 'Accepted', 'Waiting',
@@ -99,10 +99,10 @@ class AizuParser(BaseParser):
 
 class Aizu(Base):
 
-    def __init__(self, cookies=None):
+    def __init__(self, *args, **kwargs):
         self._headers = {'Content-Type': 'application/json'}
 
-        self._req = HttpUtil(custom_headers=self._headers)
+        self._req = HttpUtil(custom_headers=self._headers, *args, **kwargs)
 
     # 主页链接
     @staticmethod

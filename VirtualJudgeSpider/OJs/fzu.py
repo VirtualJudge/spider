@@ -47,8 +47,6 @@ class FZUParser(BaseParser):
         problem.special_judge = re.search(r'<font color="blue">Special Judge</font>', website_data) is not None
         problem.html = ''
         for tag in soup.find('div', attrs={'class': 'problem_content'}).children:
-            print(type(tag))
-            print(tag)
             if tag.name == 'h2':
                 if tag.img:
                     tag.img.decompose()
@@ -114,9 +112,9 @@ class FZUParser(BaseParser):
 class FZU(Base):
     OJ_PREFIX = 'http://acm.fzu.edu.cn/'
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._code_type = 'utf-8'
-        self._req = HttpUtil(custom_headers=config.custom_headers, code_type=self._code_type)
+        self._req = HttpUtil(custom_headers=config.custom_headers, code_type=self._code_type, *args, **kwargs)
 
     @staticmethod
     def home_page_url():

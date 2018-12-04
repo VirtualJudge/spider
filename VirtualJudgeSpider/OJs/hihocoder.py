@@ -8,9 +8,8 @@ from VirtualJudgeSpider.config import Problem
 
 
 class hihoCoder(Base):
-    def __init__(self):
-        self.req = requests.session()
-        self.headers = config.custom_headers
+    def __init__(self, *args, **kwargs):
+        pass
 
     # 主页链接
     @staticmethod

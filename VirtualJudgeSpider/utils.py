@@ -6,13 +6,19 @@ from requests import RequestException
 
 
 class HttpUtil(object):
-    def __init__(self, custom_headers=None, code_type=None, cookies=None):
+    def __init__(self, custom_headers=None, code_type=None, cookies=None, *args,**kwargs):
         self._headers = custom_headers
         self._request = requests.session()
         self._code_type = code_type
         self._timeout = (3.03, 12)
         self._response = None
         self._advanced = False
+        self._proxies = None
+        if kwargs.get('proxies'):
+            self._proxies = {
+                'http': kwargs.get('proxies'),
+                'https': kwargs.get('proxies')
+            }
         if self._headers:
             self._request.headers.update(self._headers)
         if cookies:
@@ -20,7 +26,7 @@ class HttpUtil(object):
 
     def get(self, url, **kwargs):
         try:
-            self._response = self._request.get(url, timeout=self._timeout, **kwargs)
+            self._response = self._request.get(url, timeout=self._timeout, proxies=self._proxies, **kwargs)
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
@@ -29,7 +35,7 @@ class HttpUtil(object):
 
     def post(self, url, data=None, json=None, **kwargs):
         try:
-            self._response = self._request.post(url, data, json, timeout=self._timeout, **kwargs)
+            self._response = self._request.post(url, data, json, timeout=self._timeout, proxies=self._proxies, **kwargs)
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response

@@ -10,7 +10,7 @@ from VirtualJudgeSpider.utils import HttpUtil, HtmlTag
 
 
 class WUSTParser(BaseParser):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._static_prefix = 'http://acm.wust.edu.cn/'
 
     def problem_parse(self, response, pid, url):
@@ -92,9 +92,9 @@ class WUSTParser(BaseParser):
 
 
 class WUST(Base):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._headers = config.custom_headers
-        self._req = HttpUtil(self._headers, 'utf-8')
+        self._req = HttpUtil(self._headers, 'utf-8', *args, **kwargs)
 
     @staticmethod
     def home_page_url():
@@ -186,7 +186,6 @@ class WUST(Base):
         return self.get_result_by_url(url=url)
 
     def get_result_by_url(self, url):
-        # print(url)
         res = self._req.get(url)
 
         return WUSTParser().result_parse(res)

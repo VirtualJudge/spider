@@ -65,7 +65,6 @@ MathJax.Hub.Config({
         match_groups = soup.find(name='div', attrs={'class': 'problem-statement'})
         problem.html = ''
         if match_groups and isinstance(match_groups, element.Tag):
-            print(match_groups)
             for child in match_groups.children:
                 if isinstance(child, element.Tag) and child.get('class') and set(child['class']).intersection(
                         {'header'}):
@@ -101,7 +100,6 @@ MathJax.Hub.Config({
         if tag:
             children_tag = tag[-1].find_all('td')
             if len(children_tag) > 9:
-                print(children_tag)
                 result = Result()
                 result.origin_run_id = children_tag[0].string
                 result.verdict = ''
@@ -118,7 +116,7 @@ MathJax.Hub.Config({
 
 
 class Codeforces(Base):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._browser = RoboBrowser()
 
     # 主页链接
@@ -170,14 +168,13 @@ class Codeforces(Base):
     def submit_code(self, *args, **kwargs):
         if not self.login_website(*args, **kwargs):
             return False
-        print('login success')
+
         code = kwargs.get('code')
         language = kwargs.get('language')
         pid = kwargs.get('pid')
 
         self._browser.open('http://codeforces.com/problemset/submit')
         form = self._browser.get_form(class_='submit-form')
-        print(form)
         form['programTypeId'] = language
         form['source'] = code
         form['submittedProblemCode'] = pid
@@ -212,7 +209,6 @@ class Codeforces(Base):
 
     # 根据源OJ的url获取结果
     def get_result_by_url(self, url):
-        print('url', url)
         self._browser.open(url=url)
         res = self._browser.response
         return CodeforcesParser().result_parse(response=res)
@@ -220,14 +216,11 @@ class Codeforces(Base):
     # 获取源OJ支持的语言类型
     def find_language(self, account, *args, **kwargs):
         if self.login_website(account, *args, **kwargs) is False:
-            print('login failed')
             return {}
-        print('login success')
         self._browser.open('http://codeforces.com/problemset/submit')
         website_data = self._browser.response.page_source
         languages = {}
         if website_data:
-            print('res accepted')
             soup = BeautifulSoup(website_data, 'lxml')
             tags = soup.find('select', attrs={'name': 'programTypeId'})
             if tags:

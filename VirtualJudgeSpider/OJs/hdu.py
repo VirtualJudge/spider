@@ -10,7 +10,7 @@ from ..utils import HttpUtil, HtmlTag
 
 
 class HDUParser(BaseParser):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._static_prefix = 'http://acm.hdu.edu.cn/'
         self._script = """<script type="text/x-mathjax-config">
      MathJax.Hub.Config({
@@ -101,9 +101,10 @@ class HDUParser(BaseParser):
 
 
 class HDU(Base):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._code_type = 'gb18030'
-        self._req = HttpUtil(custom_headers=config.custom_headers, code_type=self._code_type)
+        self._req = HttpUtil(custom_headers=config.custom_headers, code_type=self._code_type,
+                             *args, **kwargs)
 
     @staticmethod
     def home_page_url():

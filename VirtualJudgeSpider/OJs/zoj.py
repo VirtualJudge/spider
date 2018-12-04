@@ -9,7 +9,7 @@ from VirtualJudgeSpider.OJs.base import Base, BaseParser
 from VirtualJudgeSpider.utils import HtmlTag, HttpUtil
 
 
-class ZOJParaer(BaseParser):
+class ZOJParser(BaseParser):
     def __init__(self):
         self._static_prefix = 'http://acm.zju.edu.cn/onlinejudge/'
         self._script = """<style>
@@ -103,8 +103,8 @@ class ZOJParaer(BaseParser):
 
 
 class ZOJ(Base):
-    def __init__(self):
-        self._req = HttpUtil(custom_headers=config.custom_headers)
+    def __init__(self, *args, **kwargs):
+        self._req = HttpUtil(custom_headers=config.custom_headers, *args, **kwargs)
 
     @staticmethod
     def home_page_url():
@@ -139,7 +139,7 @@ class ZOJ(Base):
         pid = str(kwargs['pid'])
         url = 'http://acm.zju.edu.cn/onlinejudge/showProblem.do?problemCode=' + pid
         res = self._req.get(url)
-        return ZOJParaer().problem_parse(res, pid, url)
+        return ZOJParser().problem_parse(res, pid, url)
 
     def submit_code(self, *args, **kwargs):
         if not self.login_website(*args, **kwargs):
@@ -189,7 +189,7 @@ class ZOJ(Base):
 
     def get_result_by_url(self, url):
         res = self._req.get(url)
-        return ZOJParaer().result_parse(res)
+        return ZOJParser().result_parse(res)
 
     def check_status(self):
         url = 'http://acm.zju.edu.cn/onlinejudge/'
