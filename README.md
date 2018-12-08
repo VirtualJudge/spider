@@ -1,21 +1,29 @@
-# VirtualJudgeSpider
-VirtualJudge - Judge Spider  
+# spider
+
+VirtualJudge - Spider
+  
 [![Build Status](https://travis-ci.org/VirtualJudge/spider.svg?branch=master)](https://travis-ci.org/VirtualJudge/spider)
 [![Coverage Status](https://coveralls.io/repos/github/VirtualJudge/Spider/badge.svg?branch=master)](https://coveralls.io/github/VirtualJudge/Spider?branch=master)
 ***
-### build script
+
+### Build script  
 `python3 setup.py bdist_wheel`
+### Run test  
+`python3 server-test.py`  
 
-### feature
- - 对于每道题目爬取标题，时间限制，空间限制，和题面。
- - 删除题面的样式，统一使用style(后面可以自定义style)
- - 标注题面标题，内容，图片，文件。
- - 保存登录session，提高抓取效率
+### Feature
+ - Grab title, time limits, memory limits and content from each problem.  
+ - Remove original problem styles and use universal styles for all problems.  
+ - Marked problems title, content, images, files.  
+ - Save login sessions and improved grab efficiency.  
+ - Support Mathjax currently and Katex will be added soon.  
+ - Proxies(http, https, socks) supported.
 
-### now supports
+### Now supports
  - HDU
  - WUST
  - POJ
  - FZU
  - Aizu
  - ZOJ
+ - Codeforces(working...)
