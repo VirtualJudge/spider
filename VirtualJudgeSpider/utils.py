@@ -6,7 +6,7 @@ from requests import RequestException
 
 
 class HttpUtil(object):
-    def __init__(self, custom_headers=None, code_type=None, cookies=None, *args,**kwargs):
+    def __init__(self, custom_headers=None, code_type=None, cookies=None, *args, **kwargs):
         self._headers = custom_headers
         self._request = requests.session()
         self._code_type = code_type

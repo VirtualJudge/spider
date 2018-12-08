@@ -1,13 +1,10 @@
 import re
 
-import requests
-
-from VirtualJudgeSpider import config
 from VirtualJudgeSpider.OJs.base import Base
 from VirtualJudgeSpider.config import Problem
 
 
-class hihoCoder(Base):
+class HihoCoder(Base):
     def __init__(self, *args, **kwargs):
         pass
 
@@ -21,16 +18,16 @@ class hihoCoder(Base):
     def login_website(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
-        login_page_url = 'https://hihocoder.com/login'
-        login_link_url = 'https://hihocoder.com/api/User/login.json'
-        self.req.get(login_page_url)
-        post_data = {'email': kwargs['account'].get_username(), 'passwd': kwargs['account'].get_password()}
-        res = self.req.post(login_link_url, post_data)
-        if res is None or res.status_code != 200:
-            return False
-        if self.check_login_status():
-            return True
-        return False
+        # login_page_url = 'https://hihocoder.com/login'
+        # login_link_url = 'https://hihocoder.com/api/User/login.json'
+        # self.req.get(login_page_url)
+        # post_data = {'email': kwargs['account'].get_username(), 'passwd': kwargs['account'].get_password()}
+        # res = self.req.post(login_link_url, post_data)
+        # if res is None or res.status_code != 200:
+        #     return False
+        # if self.check_login_status():
+        #     return True
+        # return False
 
     # 检查登录状态
     def check_login_status(self):
