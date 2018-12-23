@@ -3,7 +3,7 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setuptools.setup(name='VirtualJudgeSpider',
+setuptools.setup(name='src',
                  version='1.0',
                  description='Virtual Judge Spider',
                  author='prefixai',

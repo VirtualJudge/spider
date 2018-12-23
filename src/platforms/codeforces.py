@@ -2,11 +2,10 @@ import re
 
 from bs4 import BeautifulSoup
 from bs4 import element
-from robobrowser import RoboBrowser
 
-from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.config import Problem, Result
-from VirtualJudgeSpider.utils import HtmlTag
+from src.config import Problem, Result
+from src.platforms.base import Base, BaseParser
+from src.utils import HtmlTag, HttpUtil
 
 
 class CodeforcesParser(BaseParser):
@@ -117,7 +116,7 @@ MathJax.Hub.Config({
 
 class Codeforces(Base):
     def __init__(self, *args, **kwargs):
-        self._browser = RoboBrowser()
+        self._req = HttpUtil()
 
     # 主页链接
     @staticmethod
@@ -125,30 +124,39 @@ class Codeforces(Base):
         return 'http://codeforces.com/'
 
     def get_cookies(self):
-        return self._browser.session.cookies
+        return self._req.cookies
 
     def set_cookies(self, cookies):
         if isinstance(cookies, dict):
-            self._browser.session.cookies = cookies
+            self._req.cookies.update(cookies)
 
     # 登录页面
     def login_website(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
-        self._browser.open('http://codeforces.com/enter?back=%2F')
-        enter_form = self._browser.get_form('enterForm')
-
-        enter_form['handleOrEmail'] = account.username
-        enter_form['password'] = account.password
-
-        self._browser.submit_form(enter_form)
+        res = self._req.get('http://codeforces.com/enter?back=%2F')
+        soup = BeautifulSoup(res.text, 'lxml')
+        csrf_token = soup.find(attrs={'name': 'X-Csrf-Token'}).get('content')
+        print(csrf_token)
+        post_data = {
+            'csrf_token': csrf_token,
+            'action': 'enter',
+            'ftaa': '',
+            'bfaa': '',
+            'handleOrEmail': account.username,
+            'password': account.password,
+            'remember': []
+        }
+        self._req.post(url='http://codeforces.com/enter', data=post_data)
         return self.check_login_status()
 
     # 检查登录状态
     def check_login_status(self):
-        self._browser.open('http://codeforces.com')
-        if re.search(r'logout">Logout</a>', self._browser.response.text):
+        res = self._req.get('http://codeforces.com')
+        if res and re.search(r'logout">Logout</a>', res.text):
+            print('已登录')
             return True
+        print('未登录')
         return False
 
     # 获取题目
@@ -161,26 +169,36 @@ class Codeforces(Base):
             problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
             return problem
         p_url = 'http://codeforces.com/problemset/problem/' + str(pid)[:-1] + '/' + str(pid)[-1]
-        self._browser.open(url=p_url)
-        return CodeforcesParser().problem_parse(self._browser.response, pid, p_url)
+        res = self._req.get(url=p_url)
+        return CodeforcesParser().problem_parse(res.text, pid, p_url)
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
         if not self.login_website(*args, **kwargs):
             return False
 
+        res = self._req.get('http://codeforces.com/problemset/submit')
+
         code = kwargs.get('code')
         language = kwargs.get('language')
         pid = kwargs.get('pid')
+        soup = BeautifulSoup(res.text, 'lxml')
+        csrf_token = soup.find(attrs={'name': 'X-Csrf-Token'}).get('content')
+        print(csrf_token)
+        post_data = {
+            'csrf_token': csrf_token,
+            'ftaa': '',
+            'bfaa': '',
+            'action': 'submitSolutionFormSubmitted',
+            'submittedProblemCode': pid,
+            'programTypeId': language,
+            'source': code,
+            'tabSize': 0,
+            'sourceFile': '',
 
-        self._browser.open('http://codeforces.com/problemset/submit')
-        form = self._browser.get_form(class_='submit-form')
-        form['programTypeId'] = language
-        form['source'] = code
-        form['submittedProblemCode'] = pid
-        self._browser.submit_form(form)
-
-        return False
+        }
+        self._req.post('http://codeforces.com/problemset/submit?csrf_token=' + csrf_token, data=post_data)
+        return True
 
     # 获取当然运行结果
     def get_result(self, account, pid, *args, **kwargs):
@@ -190,8 +208,8 @@ class Codeforces(Base):
             return result
 
         request_url = 'http://codeforces.com/problemset/status?friends=on'
-        self._browser.open(request_url)
-        website_data = self._browser.response.page_source
+        res = self._req.get(request_url)
+        website_data = res.text
         if website_data:
             soup = BeautifulSoup(website_data, 'lxml')
             tag = soup.find('table', attrs={'class': 'status-frame-datatable'})
@@ -209,16 +227,15 @@ class Codeforces(Base):
 
     # 根据源OJ的url获取结果
     def get_result_by_url(self, url):
-        self._browser.open(url=url)
-        res = self._browser.response
+        res = self._req.get(url=url)
         return CodeforcesParser().result_parse(response=res)
 
     # 获取源OJ支持的语言类型
     def find_language(self, account, *args, **kwargs):
         if self.login_website(account, *args, **kwargs) is False:
             return {}
-        self._browser.open('http://codeforces.com/problemset/submit')
-        website_data = self._browser.response.page_source
+        res = self._req.get('http://codeforces.com/problemset/submit')
+        website_data = res.text
         languages = {}
         if website_data:
             soup = BeautifulSoup(website_data, 'lxml')
@@ -246,3 +263,35 @@ class Codeforces(Base):
     @staticmethod
     def is_running(verdict):
         return str(verdict).startswith('Running on test') or verdict == 'In queue'
+
+
+post_code = """// 2052132
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+#include <iostream>
+#include <set>
+using namespace std;
+int main(){
+    int n;
+    cin >> n;
+    int a,b;
+    int ans = 0;
+    while(n--){
+        cin >> a >> b;
+        while(ans>=a) a+=b;
+        ans = a;
+    }
+    cout << ans << endl;
+    return 0;
+}
+"""
+from src.config import Account
+
+if __name__ == '__main__':
+    account = Account('robot4test', 'robot4test')
+    oj = Codeforces()
+    result = oj.submit_code(pid='879A', account=account, code=post_code, language='50')
+    if result:
+        res = oj.get_result(account, '879A')
+        print(res.__dict__)

@@ -4,10 +4,10 @@ import re
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from VirtualJudgeSpider import config
-from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.config import Problem, Result
-from VirtualJudgeSpider.utils import HttpUtil, HtmlTag
+from src import config
+from src.platforms.base import Base, BaseParser
+from src.config import Problem, Result
+from src.utils import HttpUtil, HtmlTag
 
 
 class POJParser(BaseParser):
@@ -78,11 +78,11 @@ class POJParser(BaseParser):
 class POJ(Base):
     def __init__(self, *args, **kwargs):
         self.code_type = 'utf-8'
-        self._headers = config.custom_headers
+        self._headers = config.default_headers
         self._headers['Referer'] = 'http://poj.org/'
         self._headers['Content-Type'] = 'application/x-www-form-urlencoded'
 
-        self._req = HttpUtil(custom_headers=self._headers, code_type=self.code_type, *args, **kwargs)
+        self._req = HttpUtil(headers=self._headers, code_type=self.code_type, *args, **kwargs)
 
     @staticmethod
     def home_page_url():
@@ -93,7 +93,7 @@ class POJ(Base):
         return self._req.cookies.get_dict()
 
     def set_cookies(self, cookies):
-        if type(cookies) == dict:
+        if isinstance(cookies, dict):
             self._req.cookies.update(cookies)
 
     # 登录页面

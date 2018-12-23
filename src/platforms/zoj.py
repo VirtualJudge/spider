@@ -3,10 +3,10 @@ import re
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from VirtualJudgeSpider import config
-from VirtualJudgeSpider.config import Problem, Result
-from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.utils import HtmlTag, HttpUtil
+from src import config
+from src.config import Problem, Result
+from src.platforms.base import Base, BaseParser
+from src.utils import HtmlTag, HttpUtil
 
 
 class ZOJParser(BaseParser):
@@ -104,7 +104,7 @@ class ZOJParser(BaseParser):
 
 class ZOJ(Base):
     def __init__(self, *args, **kwargs):
-        self._req = HttpUtil(custom_headers=config.custom_headers, *args, **kwargs)
+        self._req = HttpUtil(headers=config.default_headers, *args, **kwargs)
 
     @staticmethod
     def home_page_url():
@@ -122,7 +122,7 @@ class ZOJ(Base):
         return self._req.cookies.get_dict()
 
     def set_cookies(self, cookies):
-        if type(cookies) == dict:
+        if isinstance(cookies, dict):
             self._req.cookies.update(cookies)
 
     def login_website(self, account, *args, **kwargs):

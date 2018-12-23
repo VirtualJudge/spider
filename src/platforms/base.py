@@ -7,7 +7,6 @@ class BaseParser(object):
 
 
 class Base(object):
-
     # 主页链接
     @staticmethod
     def home_page_url():

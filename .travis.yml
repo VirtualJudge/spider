@@ -8,7 +8,7 @@ install:
 script:
   - python3 setup.py install
   - flake8 --max-line-length=120 --exclude=venv,__pycache__
-  - coverage run --source=VirtualJudgeSpider setup.py test
+  - coverage run --source=src setup.py test
   - coverage report
 after_success:
   coveralls

@@ -3,10 +3,10 @@ import re
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from VirtualJudgeSpider import config
-from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.config import Problem, Result
-from VirtualJudgeSpider.utils import HttpUtil, HtmlTag
+from src import config
+from src.platforms.base import Base, BaseParser
+from src.config import Problem, Result
+from src.utils import HttpUtil, HtmlTag
 
 
 class WUSTParser(BaseParser):
@@ -93,7 +93,7 @@ class WUSTParser(BaseParser):
 
 class WUST(Base):
     def __init__(self, *args, **kwargs):
-        self._headers = config.custom_headers
+        self._headers = config.default_headers
         self._req = HttpUtil(self._headers, 'utf-8', *args, **kwargs)
 
     @staticmethod
@@ -105,7 +105,7 @@ class WUST(Base):
         return self._req.cookies.get_dict()
 
     def set_cookies(self, cookies):
-        if type(cookies) == dict:
+        if isinstance(cookies, dict):
             self._req.cookies.update(cookies)
 
     def check_login_status(self):

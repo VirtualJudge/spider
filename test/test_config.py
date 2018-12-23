@@ -1,6 +1,6 @@
 import unittest
 
-from VirtualJudgeSpider.config import Result
+from src.config import Result
 
 
 class TestResult(unittest.TestCase):
@@ -16,4 +16,4 @@ class TestResult(unittest.TestCase):
                                                'status': None,
                                                'info': None,
                                                'verdict': 'Accepted',
-                                               'verdict_code': Result.VerdictCode.STATUS_RUNNING})
+                                               'verdict_code': Result.VerdictCode.VERDICT_RUNNING})

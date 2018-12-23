@@ -3,9 +3,9 @@ import re
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from VirtualJudgeSpider import config
-from VirtualJudgeSpider.config import Problem, Result
-from VirtualJudgeSpider.OJs.base import Base, BaseParser
+from src import config
+from src.config import Problem, Result
+from src.platforms.base import Base, BaseParser
 from ..utils import HttpUtil, HtmlTag
 
 
@@ -103,7 +103,7 @@ class HDUParser(BaseParser):
 class HDU(Base):
     def __init__(self, *args, **kwargs):
         self._code_type = 'gb18030'
-        self._req = HttpUtil(custom_headers=config.custom_headers, code_type=self._code_type,
+        self._req = HttpUtil(headers=config.default_headers, code_type=self._code_type,
                              *args, **kwargs)
 
     @staticmethod
@@ -115,7 +115,7 @@ class HDU(Base):
         return self._req.cookies.get_dict()
 
     def set_cookies(self, cookies):
-        if type(cookies) == dict:
+        if isinstance(cookies, dict):
             self._req.cookies.update(cookies)
 
     def check_login_status(self):
