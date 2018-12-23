@@ -5,9 +5,9 @@ import time
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from spider.src.platforms.base import Base, BaseParser
-from spider.src.config import Problem, Result
-from spider.src.utils import HtmlTag, HttpUtil
+from spider.platforms.base import Base, BaseParser
+from spider.config import Problem, Result
+from spider.utils import HtmlTag, HttpUtil
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -36,7 +36,7 @@ class AizuParser(BaseParser):
     }
    });
   </script>
-  <script src="https://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
+  <script spider="https://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
 
     def problem_parse(self, response, pid, url):
         problem = Problem()

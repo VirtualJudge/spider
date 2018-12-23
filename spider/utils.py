@@ -106,9 +106,9 @@ class HtmlTag(object):
                     child['class'] += (HtmlTag.TagDesc.ANCHOR.value,)
                     child['target'] = ('_blank', '_parent')
                     child['href'] = HttpUtil.abs_url(child.get('href'), oj_prefix=oj_prefix)[-1]
-                if child.name == 'img' and child.get('src'):
+                if child.name == 'img' and child.get('spider'):
                     if not child.get('class'):
                         child['class'] = ()
                     child['class'] += (HtmlTag.TagDesc.IMAGE.value,)
-                    child['src'] = HttpUtil.abs_url(child.get('src'), oj_prefix=oj_prefix)[-1]
+                    child['spider'] = HttpUtil.abs_url(child.get('spider'), oj_prefix=oj_prefix)[-1]
         return tag

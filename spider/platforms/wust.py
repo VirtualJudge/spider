@@ -3,10 +3,10 @@ import re
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from spider.src import config
-from spider.src.platforms.base import Base, BaseParser
-from spider.src.config import Problem, Result
-from spider.src.utils import HttpUtil, HtmlTag
+from spider import config
+from spider.platforms.base import Base, BaseParser
+from spider.config import Problem, Result
+from spider.utils import HttpUtil, HtmlTag
 
 
 class WUSTParser(BaseParser):

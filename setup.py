@@ -5,7 +5,7 @@ setuptools.setup(name='spider',
                  description='Virtual Judge Spider',
                  author='prefixai',
                  author_email='xudian.cn@gmail.com',
-                 packages=['spider', ],
+                 packages=setuptools.find_packages(),
                  install_requires=['beautifulsoup4', 'lxml', 'requests'],
                  classifiers=[
                      "Programming Language :: Python :: 3",

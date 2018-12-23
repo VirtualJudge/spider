@@ -1,7 +1,7 @@
 import unittest
 
-from spider.src.config import Account
-from spider.src.core import Core
+from spider.config import Account
+from spider.core import Core
 
 
 class TestWUST(unittest.TestCase):

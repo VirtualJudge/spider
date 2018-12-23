@@ -1,7 +1,7 @@
 import re
 
-from spider.src.platforms.base import Base
-from spider.src.config import Problem
+from spider.platforms.base import Base
+from spider.config import Problem
 
 
 class HihoCoder(Base):

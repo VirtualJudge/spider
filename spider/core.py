@@ -1,6 +1,6 @@
 import time
 
-from spider.src.config import Problem, Result
+from spider.config import Problem, Result
 
 supports = [
     'Aizu',

@@ -1,6 +1,6 @@
 import unittest
 
-from spider.src.config import Result
+from spider.config import Result
 
 
 class TestResult(unittest.TestCase):
