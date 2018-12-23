@@ -1,6 +1,6 @@
 import unittest
 
-from src.utils import HttpUtil
+from spider.src.utils import HttpUtil
 
 
 class TestUtils(unittest.TestCase):

@@ -1,16 +1,11 @@
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
-setuptools.setup(name='src',
+setuptools.setup(name='spider',
                  version='1.0',
                  description='Virtual Judge Spider',
                  author='prefixai',
                  author_email='xudian.cn@gmail.com',
-                 long_description=long_description,
-                 long_description_content_type="text/markdown",
-                 packages=setuptools.find_packages(),
+                 packages=['spider', ],
                  install_requires=['beautifulsoup4', 'lxml', 'requests'],
                  classifiers=[
                      "Programming Language :: Python :: 3",

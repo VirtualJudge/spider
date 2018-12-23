@@ -3,9 +3,9 @@ import re
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from src.config import Problem, Result
-from src.platforms.base import Base, BaseParser
-from src.utils import HtmlTag, HttpUtil
+from spider.src.config import Problem, Result
+from spider.src.platforms.base import Base, BaseParser
+from spider.src.utils import HtmlTag, HttpUtil
 
 
 class CodeforcesParser(BaseParser):
@@ -263,35 +263,3 @@ class Codeforces(Base):
     @staticmethod
     def is_running(verdict):
         return str(verdict).startswith('Running on test') or verdict == 'In queue'
-
-
-post_code = """// 2052132
-#include <cstdio>
-#include <cstring>
-#include <algorithm>
-#include <iostream>
-#include <set>
-using namespace std;
-int main(){
-    int n;
-    cin >> n;
-    int a,b;
-    int ans = 0;
-    while(n--){
-        cin >> a >> b;
-        while(ans>=a) a+=b;
-        ans = a;
-    }
-    cout << ans << endl;
-    return 0;
-}
-"""
-from src.config import Account
-
-if __name__ == '__main__':
-    account = Account('robot4test', 'robot4test')
-    oj = Codeforces()
-    result = oj.submit_code(pid='879A', account=account, code=post_code, language='50')
-    if result:
-        res = oj.get_result(account, '879A')
-        print(res.__dict__)

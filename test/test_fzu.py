@@ -1,7 +1,7 @@
 import unittest
 
-from src.config import Account
-from src.core import Core
+from spider.src.config import Account
+from spider.src.core import Core
 
 
 class TestFZU(unittest.TestCase):

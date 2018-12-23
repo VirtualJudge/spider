@@ -1,6 +1,6 @@
 import time
 
-from src.config import Problem, Result, Account
+from spider.src.config import Problem, Result
 
 supports = [
     'Aizu',
@@ -167,11 +167,3 @@ class Core(object):
         if self._oj and account and self._oj.login_website(account=account):
             return True
         return False
-
-
-
-
-if __name__ == '__main__':
-    account = Account('robot4test', 'robot4test')
-    result = Core('Codeforces').submit_code(pid='899A', account=account, code=post_code, language='50')
-    print(result.__dict__)

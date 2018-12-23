@@ -2,10 +2,10 @@ import re
 
 from bs4 import BeautifulSoup
 
-from src import config
-from src.platforms.base import Base, BaseParser
-from src.config import Problem, Result
-from src.utils import HtmlTag, HttpUtil
+from spider.src import config
+from spider.src.platforms.base import Base, BaseParser
+from spider.src.config import Problem, Result
+from spider.src.utils import HtmlTag, HttpUtil
 
 
 class FZUParser(BaseParser):

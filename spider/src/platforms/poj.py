@@ -4,10 +4,10 @@ import re
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from src import config
-from src.platforms.base import Base, BaseParser
-from src.config import Problem, Result
-from src.utils import HttpUtil, HtmlTag
+from spider.src import config
+from spider.src.platforms.base import Base, BaseParser
+from spider.src import Problem, Result
+from spider.src.utils import HttpUtil, HtmlTag
 
 
 class POJParser(BaseParser):

@@ -1,8 +1,8 @@
 import unittest
 
-from src.platforms.hdu import HDU
-from src.core import Core
-from src.config import Account
+from spider.src.platforms import HDU
+from spider.src.core import Core
+from spider.src.config import Account
 
 
 class TestHDU(unittest.TestCase):

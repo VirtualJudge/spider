@@ -3,10 +3,10 @@ import re
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from src import config
-from src.config import Problem, Result
-from src.platforms.base import Base, BaseParser
-from src.utils import HtmlTag, HttpUtil
+from spider.src import config
+from spider.src.config import Problem, Result
+from spider.src.platforms.base import Base, BaseParser
+from spider.src.utils import HtmlTag, HttpUtil
 
 
 class ZOJParser(BaseParser):

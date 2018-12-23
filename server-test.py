@@ -3,9 +3,9 @@ import time
 
 from flask import Flask, render_template, request
 
-from src.config import Account
-from src.config import Problem, Result
-from src.core import Core
+from spider.src.config import Account
+from spider.src.config import Problem, Result
+from spider.src.core import Core
 
 app = Flask(__name__, template_folder='.')
 

@@ -5,9 +5,9 @@ import time
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from src.platforms.base import Base, BaseParser
-from src.config import Problem, Result
-from src.utils import HtmlTag, HttpUtil
+from spider.src.platforms.base import Base, BaseParser
+from spider.src.config import Problem, Result
+from spider.src.utils import HtmlTag, HttpUtil
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
