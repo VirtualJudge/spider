@@ -5,4 +5,4 @@ requests
 coverage
 Flask
 requests[socks]
-robobrowser
+flake8
