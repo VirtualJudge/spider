@@ -3,9 +3,9 @@ import time
 
 from flask import Flask, render_template, request
 
-from VirtualJudgeSpider.config import Account
-from VirtualJudgeSpider.config import Problem, Result
-from VirtualJudgeSpider.control import Controller
+from src.config import Account
+from src.config import Problem, Result
+from src.core import Core
 
 app = Flask(__name__, template_folder='.')
 
@@ -25,22 +25,21 @@ def submit():
         account = Account('robot4test', 'robot4test')
         while ans is False and tries > 0:
             tries -= 1
-            controller = Controller(str(remote_oj))
-            ans = controller.submit_code(pid=remote_id, account=account,
-                                         code=source_code.read(), language=language)
+            controller = Core(str(remote_oj))
+            ans = controller.submit_code(pid=remote_id, account=account, code=source_code.read(), language=language)
             account.set_cookies(controller.get_cookies())
         if ans is False:
             return "SUBMIT FAILED"
-        controller = Controller(remote_oj)
+        controller = Core(remote_oj)
         result = controller.get_result(account=account, pid=remote_id)
         account.set_cookies(controller.get_cookies())
         print('end')
         tries = 5
         while result.status == Result.Status.STATUS_RESULT and tries > 0:
             time.sleep(2)
-            if Controller(remote_oj).is_waiting_for_judge(result.verdict):
-                result = Controller(remote_oj).get_result_by_rid_and_pid(rid=result.origin_run_id,
-                                                                         pid=remote_id)
+            if Core(remote_oj).is_waiting_for_judge(result.verdict):
+                result = Core(remote_oj).get_result_by_rid_and_pid(rid=result.origin_run_id,
+                                                                   pid=remote_id)
             else:
                 break
             tries -= 1
@@ -53,7 +52,7 @@ def submit():
 
 @app.route("/raw/<string:remote_oj>/<string:remote_id>")
 def get_raw(remote_oj, remote_id):
-    problem = Controller(remote_oj).get_problem(remote_id, account=Account('robot4test', 'robot4test'))
+    problem = Core(remote_oj).get_problem(remote_id, account=Account('robot4test', 'robot4test'))
     if problem and problem.status:
         problem.status = problem.status.value
         return '<xmp>' + str(
@@ -64,13 +63,13 @@ def get_raw(remote_oj, remote_id):
 @app.route("/languages/<string:remote_oj>")
 def language(remote_oj):
     return json.dumps({
-        'languages': Controller(remote_oj).find_language(account=Account('robot4test', 'robot4test'))
+        'languages': Core(remote_oj).find_language(account=Account('robot4test', 'robot4test'))
     })
 
 
 @app.route("/<string:remote_oj>/<string:remote_id>")
 def problem(remote_oj, remote_id):
-    problem = Controller(remote_oj).get_problem(remote_id, account=Account('robot4test', 'robot4test'))
+    problem = Core(remote_oj).get_problem(remote_id, account=Account('robot4test', 'robot4test'))
     if problem.status == Problem.Status.STATUS_CRAWLING_SUCCESS:
         return problem.html
     return problem.status.name
@@ -79,7 +78,7 @@ def problem(remote_oj, remote_id):
 @app.route("/supports")
 def supports():
     return json.dumps({
-        'supports': Controller.get_supports()
+        'supports': Core.get_supports()
     })
 
 

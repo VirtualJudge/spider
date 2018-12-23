@@ -6,8 +6,8 @@ from requests import RequestException
 
 
 class HttpUtil(object):
-    def __init__(self, custom_headers=None, code_type=None, cookies=None, *args, **kwargs):
-        self._headers = custom_headers
+    def __init__(self, headers=None, code_type=None, cookies=None, *args, **kwargs):
+        self._headers = headers
         self._request = requests.session()
         self._code_type = code_type
         self._timeout = (3.03, 12)

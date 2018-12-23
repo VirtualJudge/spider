@@ -2,10 +2,10 @@ import re
 
 from bs4 import BeautifulSoup
 
-from VirtualJudgeSpider import config
-from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.config import Problem, Result
-from VirtualJudgeSpider.utils import HtmlTag, HttpUtil
+from src import config
+from src.platforms.base import Base, BaseParser
+from src.config import Problem, Result
+from src.utils import HtmlTag, HttpUtil
 
 
 class FZUParser(BaseParser):
@@ -114,7 +114,7 @@ class FZU(Base):
 
     def __init__(self, *args, **kwargs):
         self._code_type = 'utf-8'
-        self._req = HttpUtil(custom_headers=config.custom_headers, code_type=self._code_type, *args, **kwargs)
+        self._req = HttpUtil(headers=config.default_headers, code_type=self._code_type, *args, **kwargs)
 
     @staticmethod
     def home_page_url():
@@ -124,7 +124,7 @@ class FZU(Base):
         return self._req.cookies.get_dict()
 
     def set_cookies(self, cookies):
-        if type(cookies) == dict:
+        if isinstance(cookies, dict):
             self._req.cookies.update(cookies)
 
     def check_login_status(self):
@@ -162,7 +162,7 @@ class FZU(Base):
         pid = kwargs['pid']
         username = kwargs['account'].username
         url = 'http://acm.fzu.edu.cn/submit.php?act=5'
-        config.custom_headers['Referer'] = 'http://acm.fzu.edu.cn/submit.php?pid=' + str(pid)
+        config.default_headers['Referer'] = 'http://acm.fzu.edu.cn/submit.php?pid=' + str(pid)
 
         post_data = {'usr': username, 'lang': str(language), 'pid': pid, 'code': code, 'submit': 'Submit'}
 

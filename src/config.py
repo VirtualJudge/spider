@@ -1,6 +1,6 @@
 from enum import Enum
 
-custom_headers = {
+default_headers = {
     'Connection': 'Keep-Alive',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
@@ -29,7 +29,7 @@ class Account:
 
     def set_cookies(self, cookies):
         if type(cookies) != dict:
-            raise TypeError(f'set_cookies() required type {type(dict)}, but wo got {type(cookies)}')
+            raise TypeError(f'set_cookies() required {type(dict)} type, but we got {type(cookies)}')
         self._cookies = cookies
 
 
@@ -39,16 +39,6 @@ class Problem(object):
     """
 
     class Status(Enum):
-        """
-        STATUS_PENDING = 0
-        STATUS_RUNNING = 1
-        STATUS_CRAWLING_SUCCESS = 2
-        STATUS_NETWORK_ERROR = 3
-        STATUS_PROBLEM_NOT_EXIST = 4
-        STATUS_NO_ACCOUNT = 5
-        STATUS_OJ_NOT_EXIST = 6
-        STATUS_PARSE_ERROR = 7
-        """
         STATUS_PENDING = 0
         STATUS_RUNNING = 1
         STATUS_CRAWLING_SUCCESS = 2
@@ -78,17 +68,6 @@ class Result(object):
     """
 
     class Status(Enum):
-        """
-        STATUS_PENDING = 0
-        STATUS_RUNNING = 1
-        STATUS_RESULT = 2
-        STATUS_SUBMIT_FAILED = 3
-        STATUS_RESULT_NOT_EXIST = 4
-        STATUS_NO_ACCOUNT = 5
-        STATUS_OJ_NOT_EXIST = 6
-        STATUS_PARSE_ERROR = 7
-        STATUS_NETWORK_ERROR = 8
-        """
         STATUS_PENDING = 0
         STATUS_RUNNING = 1
         STATUS_RESULT = 2
@@ -99,21 +78,13 @@ class Result(object):
         STATUS_PARSE_ERROR = 7
 
     class VerdictCode(Enum):
-        """
-        STATUS_SUBMIT_FAILED = 0
-        STATUS_RUNNING = 1
-        STATUS_ACCEPT = 2
-        STATUS_COMPILE_ERROR = 3
-        STATUS_ERROR = 4
+        VERDICT_RUNNING = 0
+        VERDICT_ACCEPTED = 1
+        VERDICT_COMPILE_ERROR = 2
+        VERDICT_RESULT_ERROR = 3
+        VERDICT_SUBMIT_FAILED = 4
 
-        """
-        STATUS_RUNNING = 0
-        STATUS_ACCEPTED = 1
-        STATUS_COMPILE_ERROR = 2
-        STATUS_RESULT_ERROR = 3
-        STATUS_SUBMIT_FAILED = 4
-
-    def __init__(self, verdict_code=VerdictCode.STATUS_RUNNING):
+    def __init__(self, verdict_code=VerdictCode.VERDICT_RUNNING):
         self.origin_run_id = None
         self.verdict = None
         self.verdict_code = verdict_code

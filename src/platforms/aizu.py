@@ -5,9 +5,9 @@ import time
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from VirtualJudgeSpider.OJs.base import Base, BaseParser
-from VirtualJudgeSpider.config import Problem, Result
-from VirtualJudgeSpider.utils import HtmlTag, HttpUtil
+from src.platforms.base import Base, BaseParser
+from src.config import Problem, Result
+from src.utils import HtmlTag, HttpUtil
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -102,7 +102,7 @@ class Aizu(Base):
     def __init__(self, *args, **kwargs):
         self._headers = {'Content-Type': 'application/json'}
 
-        self._req = HttpUtil(custom_headers=self._headers, *args, **kwargs)
+        self._req = HttpUtil(headers=self._headers, *args, **kwargs)
 
     # 主页链接
     @staticmethod
@@ -111,7 +111,7 @@ class Aizu(Base):
         return url
 
     def set_cookies(self, cookies):
-        if type(cookies) == dict:
+        if isinstance(cookies, dict):
             self._req.cookies.update(cookies)
 
     def get_cookies(self):

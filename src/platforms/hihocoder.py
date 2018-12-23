@@ -1,7 +1,7 @@
 import re
 
-from VirtualJudgeSpider.OJs.base import Base
-from VirtualJudgeSpider.config import Problem
+from src.platforms.base import Base
+from src.config import Problem
 
 
 class HihoCoder(Base):
