@@ -1,6 +1,6 @@
 import unittest
 
-from spider.platforms import HDU
+from spider.platforms.hdu import HDU
 from spider.core import Core
 from spider.config import Account
 

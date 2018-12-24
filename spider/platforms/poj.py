@@ -6,7 +6,7 @@ from bs4.element import Tag
 
 from spider import config
 from spider.platforms.base import Base, BaseParser
-from spider import Problem, Result
+from spider.config import Problem, Result
 from spider.utils import HttpUtil, HtmlTag
 
 

@@ -1,7 +1,7 @@
 import unittest
 
 from spider.core import OJBuilder
-from spider.platforms import HDU
+from spider.platforms.hdu import HDU
 
 
 class TestOJBuilder(unittest.TestCase):

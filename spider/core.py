@@ -18,7 +18,7 @@ class OJBuilder(object):
     def build_oj(name, *args, **kwargs):
         if name:
             try:
-                module_meta = __import__(f'src.platforms.{str(name).lower()}', globals(), locals(), [name])
+                module_meta = __import__(f'spider.platforms.{str(name).lower()}', globals(), locals(), [name])
                 class_meta = getattr(module_meta, name)
                 oj = class_meta(*args, **kwargs)
                 return oj
