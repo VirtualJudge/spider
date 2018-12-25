@@ -39,14 +39,14 @@ class Problem(object):
     """
 
     class Status(Enum):
-        STATUS_PENDING = 0
-        STATUS_RUNNING = 1
-        STATUS_CRAWLING_SUCCESS = 2
-        STATUS_PROBLEM_NOT_EXIST = 3
-        STATUS_NO_ACCOUNT = 4
-        STATUS_OJ_NOT_EXIST = 5
-        STATUS_PARSE_ERROR = 6
-        STATUS_SUBMIT_FAILED = 7
+        STATUS_PENDING = 'Pending'
+        STATUS_RUNNING = 'Running'
+        STATUS_CRAWLING_SUCCESS = 'Success'
+        STATUS_PROBLEM_NOT_EXIST = 'Problem Not Exist'
+        STATUS_NO_ACCOUNT = 'No Account'
+        STATUS_OJ_NOT_EXIST = 'Platform Not Exist'
+        STATUS_PARSE_ERROR = 'Parse Error'
+        STATUS_SUBMIT_FAILED = 'Submit Failed'
 
     def __init__(self):
         self.remote_id = None
@@ -68,22 +68,22 @@ class Result(object):
     """
 
     class Status(Enum):
-        STATUS_PENDING = 0
-        STATUS_RUNNING = 1
-        STATUS_RESULT = 2
-        STATUS_SUBMIT_FAILED = 3
-        STATUS_RESULT_NOT_EXIST = 4
-        STATUS_NO_ACCOUNT = 5
-        STATUS_OJ_NOT_EXIST = 6
-        STATUS_PARSE_ERROR = 7
-        STATUS_IN_QUEUE = 8
+        STATUS_PENDING = 'Pending'
+        STATUS_RUNNING = 'Running'
+        STATUS_RESULT = 'Success'
+        STATUS_SUBMIT_FAILED = 'Submit Failed'
+        STATUS_RESULT_NOT_EXIST = 'Not Exist'
+        STATUS_NO_ACCOUNT = 'No Account'
+        STATUS_OJ_NOT_EXIST = 'Platform Not Exist'
+        STATUS_PARSE_ERROR = 'Parse Error'
+        STATUS_IN_QUEUE = 'In Queue'
 
     class VerdictCode(Enum):
-        VERDICT_RUNNING = 0
-        VERDICT_ACCEPTED = 1
-        VERDICT_COMPILE_ERROR = 2
-        VERDICT_RESULT_ERROR = 3
-        VERDICT_SUBMIT_FAILED = 4
+        VERDICT_RUNNING = 'Running'
+        VERDICT_ACCEPTED = 'Accepted'
+        VERDICT_COMPILE_ERROR = 'Compile Error'
+        VERDICT_RESULT_ERROR = 'Result Error'
+        VERDICT_SUBMIT_FAILED = 'Submit Failed'
 
     def __init__(self, verdict_code=VerdictCode.VERDICT_RUNNING):
         self.origin_run_id = None

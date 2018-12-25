@@ -23,7 +23,7 @@ class OJBuilder(object):
                 oj = class_meta(*args, **kwargs)
                 return oj
             except ModuleNotFoundError:
-                print(name, 'NOT SUPPORT')
+                print('\"', name, '\" is not support')
         return None
 
 
