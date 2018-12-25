@@ -76,6 +76,7 @@ class Result(object):
         STATUS_NO_ACCOUNT = 5
         STATUS_OJ_NOT_EXIST = 6
         STATUS_PARSE_ERROR = 7
+        STATUS_IN_QUEUE = 8
 
     class VerdictCode(Enum):
         VERDICT_RUNNING = 0
