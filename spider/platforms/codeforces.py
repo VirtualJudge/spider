@@ -247,7 +247,7 @@ class Codeforces(Base):
 
     # 检查源OJ是否运行正常
     def check_status(self):
-        pass
+        return self._req.get('http://codeforces.com').status_code == 200
 
     #  判断结果是否正确
     @staticmethod
