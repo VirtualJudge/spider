@@ -10,7 +10,7 @@ class HttpUtil(object):
         self._headers = headers
         self._request = requests.session()
         self._code_type = code_type
-        self._timeout = (3.03, 12)
+        self._timeout = (7, 12)
         self._response = None
         self._advanced = False
         self._proxies = None

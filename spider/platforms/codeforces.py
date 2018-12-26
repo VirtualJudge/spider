@@ -124,7 +124,7 @@ class Codeforces(Base):
         return 'http://codeforces.com/'
 
     def get_cookies(self):
-        return self._req.cookies
+        return self._req.cookies.get_dict()
 
     def set_cookies(self, cookies):
         if isinstance(cookies, dict):
@@ -134,29 +134,30 @@ class Codeforces(Base):
     def login_website(self, account, *args, **kwargs):
         if self.check_login_status():
             return True
-        res = self._req.get('http://codeforces.com/enter?back=%2F')
-        soup = BeautifulSoup(res.text, 'lxml')
-        csrf_token = soup.find(attrs={'name': 'X-Csrf-Token'}).get('content')
-        print(csrf_token)
-        post_data = {
-            'csrf_token': csrf_token,
-            'action': 'enter',
-            'ftaa': '',
-            'bfaa': '',
-            'handleOrEmail': account.username,
-            'password': account.password,
-            'remember': []
-        }
-        self._req.post(url='http://codeforces.com/enter', data=post_data)
+        try:
+            res = self._req.get('http://codeforces.com/enter?back=%2F')
+
+            soup = BeautifulSoup(res.text, 'lxml')
+            csrf_token = soup.find(attrs={'name': 'X-Csrf-Token'}).get('content')
+            post_data = {
+                'csrf_token': csrf_token,
+                'action': 'enter',
+                'ftaa': '',
+                'bfaa': '',
+                'handleOrEmail': account.username,
+                'password': account.password,
+                'remember': []
+            }
+            self._req.post(url='http://codeforces.com/enter', data=post_data)
+        except:
+            pass
         return self.check_login_status()
 
     # 检查登录状态
     def check_login_status(self):
         res = self._req.get('http://codeforces.com')
         if res and re.search(r'logout">Logout</a>', res.text):
-            print('已登录')
             return True
-        print('未登录')
         return False
 
     # 获取题目
@@ -176,15 +177,12 @@ class Codeforces(Base):
     def submit_code(self, *args, **kwargs):
         if not self.login_website(*args, **kwargs):
             return False
-
         res = self._req.get('http://codeforces.com/problemset/submit')
-
         code = kwargs.get('code')
         language = kwargs.get('language')
         pid = kwargs.get('pid')
         soup = BeautifulSoup(res.text, 'lxml')
         csrf_token = soup.find(attrs={'name': 'X-Csrf-Token'}).get('content')
-        print(csrf_token)
         post_data = {
             'csrf_token': csrf_token,
             'ftaa': '',

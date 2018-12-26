@@ -21,19 +21,17 @@ def submit():
 
         ans = False
         tries = 3
-        print('start')
         account = Account('robot4test', 'robot4test')
         while ans is False and tries > 0:
             tries -= 1
-            controller = Core(str(remote_oj))
-            ans = controller.submit_code(pid=remote_id, account=account, code=source_code.read(), language=language)
-            account.set_cookies(controller.get_cookies())
+            core = Core(str(remote_oj))
+            ans = core.submit_code(pid=remote_id, account=account, code=source_code.read(), language=language)
+            account.set_cookies(core.get_cookies())
         if ans is False:
             return "SUBMIT FAILED"
-        controller = Core(remote_oj)
-        result = controller.get_result(account=account, pid=remote_id)
-        account.set_cookies(controller.get_cookies())
-        print('end')
+        core = Core(remote_oj)
+        result = core.get_result(account=account, pid=remote_id)
+        account.set_cookies(core.get_cookies())
         tries = 5
         while result.status == Result.Status.STATUS_RESULT and tries > 0:
             time.sleep(2)
