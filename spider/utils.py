@@ -30,7 +30,8 @@ class HttpUtil(object):
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
-        except RequestException:
+        except RequestException as e:
+            print(e)
             return None
 
     def post(self, url, data=None, json=None, **kwargs):
@@ -89,7 +90,6 @@ class HtmlTag(object):
 
     @staticmethod
     def update_tag(tag, oj_prefix, update_style=None):
-        print('update tag')
         """
 
         :param tag: 一个顶级tag，从这个tag递归遍历所有子tag，寻找需要修改url的节点

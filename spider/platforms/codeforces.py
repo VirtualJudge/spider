@@ -170,7 +170,7 @@ class Codeforces(Base):
             return problem
         p_url = 'http://codeforces.com/problemset/problem/' + str(pid)[:-1] + '/' + str(pid)[-1]
         res = self._req.get(url=p_url)
-        return CodeforcesParser().problem_parse(res.text, pid, p_url)
+        return CodeforcesParser().problem_parse(res, pid, p_url)
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
