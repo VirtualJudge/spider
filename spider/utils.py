@@ -1,8 +1,27 @@
+import logging
+import os
 from enum import Enum
 
 import requests
 from bs4 import element
 from requests import RequestException
+import traceback
+
+LOG_BASE = '/log' if os.getenv('VJ_ENV') == 'production' else 'log'
+LOG_LEVEL = logging.WARNING if os.getenv('VJ_ENV') == 'production' else logging.INFO
+SPIDER_LOG_PATH = os.path.join(LOG_BASE, 'spider.log')
+try:
+    os.makedirs(LOG_BASE)
+except FileExistsError:
+    pass
+except:
+    traceback.print_exc()
+logger = logging.getLogger(__name__)
+handler = logging.FileHandler(SPIDER_LOG_PATH)
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 
 class HttpUtil(object):
@@ -31,7 +50,7 @@ class HttpUtil(object):
                 self._response.encoding = self._code_type
             return self._response
         except RequestException as e:
-            print(e)
+            logger.exception(e)
             return None
 
     def post(self, url, data=None, json=None, **kwargs):
@@ -40,7 +59,8 @@ class HttpUtil(object):
             if self._code_type and self._response:
                 self._response.encoding = self._code_type
             return self._response
-        except RequestException:
+        except RequestException as e:
+            logger.exception(e)
             return None
 
     @property

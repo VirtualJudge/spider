@@ -5,7 +5,7 @@ from bs4 import element
 
 from spider.config import Problem, Result
 from spider.platforms.base import Base, BaseParser
-from spider.utils import HtmlTag, HttpUtil
+from spider.utils import HtmlTag, HttpUtil,logger
 
 
 class CodeforcesParser(BaseParser):
@@ -149,8 +149,8 @@ class Codeforces(Base):
                 'remember': []
             }
             self._req.post(url='http://codeforces.com/enter', data=post_data)
-        except:
-            pass
+        except Exception as e:
+            logger.exception(e)
         return self.check_login_status()
 
     # 检查登录状态

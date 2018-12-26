@@ -6,7 +6,7 @@ from bs4 import element
 from spider import config
 from spider.config import Problem, Result
 from spider.platforms.base import Base, BaseParser
-from ..utils import HttpUtil, HtmlTag
+from spider.utils import HttpUtil, HtmlTag
 
 
 class HDUParser(BaseParser):

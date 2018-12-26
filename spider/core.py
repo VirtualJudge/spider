@@ -1,6 +1,7 @@
 import time
 
 from spider.config import Problem, Result
+from spider.utils import logger
 
 supports = [
     'Aizu',
@@ -22,8 +23,8 @@ class OJBuilder(object):
                 class_meta = getattr(module_meta, name)
                 oj = class_meta(*args, **kwargs)
                 return oj
-            except ModuleNotFoundError:
-                print('\"', name, '\" is not support')
+            except ModuleNotFoundError as e:
+                logger.exception(e)
         return None
 
 
