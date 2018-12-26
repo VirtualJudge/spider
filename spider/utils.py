@@ -89,6 +89,7 @@ class HtmlTag(object):
 
     @staticmethod
     def update_tag(tag, oj_prefix, update_style=None):
+        print('update tag')
         """
 
         :param tag: 一个顶级tag，从这个tag递归遍历所有子tag，寻找需要修改url的节点
@@ -106,9 +107,9 @@ class HtmlTag(object):
                     child['class'] += (HtmlTag.TagDesc.ANCHOR.value,)
                     child['target'] = ('_blank', '_parent')
                     child['href'] = HttpUtil.abs_url(child.get('href'), oj_prefix=oj_prefix)[-1]
-                if child.name == 'img' and child.get('spider'):
+                if child.name == 'img' and child.get('src'):
                     if not child.get('class'):
                         child['class'] = ()
                     child['class'] += (HtmlTag.TagDesc.IMAGE.value,)
-                    child['spider'] = HttpUtil.abs_url(child.get('spider'), oj_prefix=oj_prefix)[-1]
+                    child['src'] = HttpUtil.abs_url(child.get('src'), oj_prefix=oj_prefix)[-1]
         return tag
