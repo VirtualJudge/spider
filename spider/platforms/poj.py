@@ -67,7 +67,7 @@ class POJParser(BaseParser):
         line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
         if line is not None:
             result.origin_run_id = line[0].string
-            result.verdict = line[3].string
+            result.verdict_info = line[3].string
             result.execute_time = line[5].string
             result.execute_memory = line[4].string
             result.status = Result.Status.STATUS_RESULT_SUCCESS

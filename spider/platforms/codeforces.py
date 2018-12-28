@@ -99,10 +99,10 @@ MathJax.Hub.Config({
             if len(children_tag) > 9:
                 result = Result()
                 result.origin_run_id = children_tag[0].string
-                result.verdict = ''
+                result.verdict_info = ''
                 for item in children_tag[4].stripped_strings:
-                    result.verdict += str(item) + ' '
-                result.verdict = result.verdict.strip(' ')
+                    result.verdict_info += str(item) + ' '
+                result.verdict_info = result.verdict_info.strip(' ')
                 result.execute_time = children_tag[5].string
                 result.execute_memory = children_tag[6].string
                 result.status = Result.Status.STATUS_RESULT_SUCCESS

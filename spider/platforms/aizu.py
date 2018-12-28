@@ -90,7 +90,7 @@ class AizuParser(BaseParser):
         site_data = json.loads(website_data)
         submission_record = site_data['submissionRecord']
         result.origin_run_id = str(submission_record['judgeId'])
-        result.verdict = self._judge_static_string[int(submission_record['status'])]
+        result.verdict_info = self._judge_static_string[int(submission_record['status'])]
         result.execute_time = str(format(float(submission_record['cpuTime']) / float(100), '.2f')) + ' s'
         result.execute_memory = str(submission_record['memory']) + ' KB'
         result.status = Result.Status.STATUS_RESULT_SUCCESS

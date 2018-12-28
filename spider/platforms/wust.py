@@ -82,7 +82,7 @@ class WUSTParser(BaseParser):
         line = soup.find('table', attrs={'id': 'result-tab'}).find('tr', attrs={'class': 'evenrow'}).find_all('td')
         if line:
             result.origin_run_id = line[0].string
-            result.verdict = line[4].string
+            result.verdict_info = line[4].string
             result.execute_time = line[6].string
             result.execute_memory = line[5].string
             result.status = Result.Status.STATUS_RESULT_SUCCESS

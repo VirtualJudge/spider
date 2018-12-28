@@ -92,14 +92,14 @@ class Core(object):
         self._oj.set_cookies(account.cookies)
         result = self._oj.get_result(account=account, pid=pid, **kwargs)
         if result is not None:
-            if self._oj.is_accepted(result.verdict):
-                result.verdict_code = Result.Verdict.VERDICT_AC
-            elif self._oj.is_running(result.verdict):
-                result.verdict_code = Result.Verdict.VERDICT_RUNNING
-            elif self._oj.is_compile_error(result.verdict):
-                result.verdict_code = Result.Verdict.VERDICT_CE
+            if self._oj.is_accepted(result.verdict_info):
+                result.verdict = Result.Verdict.VERDICT_AC
+            elif self._oj.is_running(result.verdict_info):
+                result.verdict = Result.Verdict.VERDICT_RUNNING
+            elif self._oj.is_compile_error(result.verdict_info):
+                result.verdict = Result.Verdict.VERDICT_CE
             else:
-                result.verdict_code = Result.Verdict.VERDICT_WA
+                result.verdict = Result.Verdict.VERDICT_WA
             result.execute_time = Core.strip_blank(result.execute_time)
             result.execute_memory = Core.strip_blank(result.execute_memory)
 
@@ -112,14 +112,14 @@ class Core(object):
             return Result(Result.Status.STATUS_SYSTEM_ERROR)
         result = self._oj.get_result_by_rid_and_pid(rid, pid)
         if result is not None:
-            if self._oj.is_accepted(result.verdict):
-                result.verdict_code = Result.Verdict.VERDICT_AC
-            elif self._oj.is_running(result.verdict):
-                result.verdict_code = Result.Verdict.VERDICT_RUNNING
-            elif self._oj.is_compile_error(result.verdict):
-                result.verdict_code = Result.Verdict.VERDICT_CE
+            if self._oj.is_accepted(result.verdict_info):
+                result.verdict = Result.Verdict.VERDICT_AC
+            elif self._oj.is_running(result.verdict_info):
+                result.verdict = Result.Verdict.VERDICT_RUNNING
+            elif self._oj.is_compile_error(result.verdict_info):
+                result.verdict = Result.Verdict.VERDICT_CE
             else:
-                result.verdict_code = Result.Verdict.VERDICT_WA
+                result.verdict = Result.Verdict.VERDICT_WA
             result.execute_time = Core.strip_blank(result.execute_time)
             result.execute_memory = Core.strip_blank(result.execute_memory)
             return result
