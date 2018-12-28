@@ -6,7 +6,6 @@ from bs4 import element
 from spider.config import Problem, Result
 from spider.platforms.base import Base, BaseParser
 from spider.utils import HtmlTag, HttpUtil, logger
-from deprecated import deprecated
 
 
 class CodeforcesParser(BaseParser):

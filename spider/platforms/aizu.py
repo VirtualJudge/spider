@@ -8,7 +8,6 @@ from bs4 import element
 from spider.platforms.base import Base, BaseParser
 from spider.config import Problem, Result
 from spider.utils import HtmlTag, HttpUtil
-from deprecated import deprecated
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
