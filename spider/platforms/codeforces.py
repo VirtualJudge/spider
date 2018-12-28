@@ -98,7 +98,7 @@ MathJax.Hub.Config({
             children_tag = tag[-1].find_all('td')
             if len(children_tag) > 9:
                 result = Result()
-                result.origin_run_id = children_tag[0].string
+                result.unique_key = children_tag[0].string
                 result.verdict_info = ''
                 for item in children_tag[4].stripped_strings:
                     result.verdict_info += str(item) + ' '

@@ -59,6 +59,9 @@ class Core(object):
             return None
         return self._oj.get_cookies()
 
+    def account_required(self):
+        return self._oj.account_required()
+
     # 获取题面
     def get_problem(self, pid, account, **kwargs):
         if not self._oj:

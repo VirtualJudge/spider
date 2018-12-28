@@ -92,7 +92,7 @@ class ZOJParser(BaseParser):
         line = soup.find('table', attrs={'class': 'list'}).find('tr', attrs={'class': 'rowOdd'}).find_all(
             'td')
         if line:
-            result.origin_run_id = line[0].string
+            result.unique_key = line[0].string
             result.verdict_info = line[2].get_text().strip()
             result.execute_time = line[5].string + "ms"
             result.execute_memory = line[6].string + "KB"

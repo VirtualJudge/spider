@@ -90,7 +90,7 @@ class HDUParser(BaseParser):
         line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
             'td')
         if line:
-            result.origin_run_id = line[0].string
+            result.unique_key = line[0].string
             result.verdict_info = line[2].get_text()
             result.execute_time = line[4].string
             result.execute_memory = line[5].string
