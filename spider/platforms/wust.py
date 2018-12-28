@@ -179,8 +179,8 @@ class WUST(Base):
     def get_result(self, *args, **kwargs):
         account = kwargs.get('account')
         pid = kwargs.get('pid')
-        url = 'http://acm.wust.edu.cn/status.php?soj=-1&problem_id=' + \
-              pid + '&user_id=' + account.username + '&language=-1&jresult=-1'
+        url = f'http://acm.wust.edu.cn/status.php?soj=-1&' \
+            f'problem_id={pid}&user_id={account.username}&language=-1&jresult=-1'
 
         return self.get_result_by_url(url=url)
 

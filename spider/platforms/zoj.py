@@ -183,6 +183,7 @@ class ZOJ(Base):
         url = 'http://acm.zju.edu.cn/onlinejudge/showRuns.do' \
               '?contestId=1&search=true&firstId=-1&lastId=-1&problemCode=' + \
               str(pid) + '&handle=' + account.username + '&idStart=&idEnd='
+
         return self.get_result_by_url(url=url)
 
     def get_result_by_rid_and_pid(self, rid, pid):

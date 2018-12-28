@@ -62,7 +62,6 @@ class POJParser(BaseParser):
         if response is None or response.status_code != 200:
             result.status = Result.Status.STATUS_RESULT_ERROR
             return result
-        print(response.text)
         soup = BeautifulSoup(response.text, 'lxml')
         line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
         if line is not None:

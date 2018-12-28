@@ -11,7 +11,6 @@ class TestResult(unittest.TestCase):
         result.unique_key = '1'
         result.verdict = Result.Verdict.VERDICT_RUNNING
         result.verdict_info = 'Accepted'
-        print(result.__dict__)
         self.assertDictEqual(result.__dict__, {'execute_memory': '128 MB',
                                                'execute_time': '1000 MS',
                                                'unique_key': '1',

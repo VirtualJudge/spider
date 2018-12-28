@@ -93,7 +93,11 @@ class Core(object):
         if not self._oj:
             return Result(Result.Status.STATUS_SYSTEM_ERROR)
         self._oj.set_cookies(account.cookies)
-        result = self._oj.get_result(account=account, pid=pid, **kwargs)
+        result = None
+        try:
+            result = self._oj.get_result(account=account, pid=pid, **kwargs)
+        except:
+            pass
         if result is not None:
             if self._oj.is_accepted(result.verdict_info):
                 result.verdict = Result.Verdict.VERDICT_AC
@@ -105,15 +109,18 @@ class Core(object):
                 result.verdict = Result.Verdict.VERDICT_WA
             result.execute_time = Core.strip_blank(result.execute_time)
             result.execute_memory = Core.strip_blank(result.execute_memory)
-
             return result
-        return None
+        return Result(Result.Status.STATUS_RESULT_ERROR)
 
     # 通过运行id获取结果
     def get_result_by_rid_and_pid(self, rid, pid):
         if not self._oj:
             return Result(Result.Status.STATUS_SYSTEM_ERROR)
-        result = self._oj.get_result_by_rid_and_pid(rid, pid)
+        result = None
+        try:
+            result = self._oj.get_result_by_rid_and_pid(rid, pid)
+        except:
+            pass
         if result is not None:
             if self._oj.is_accepted(result.verdict_info):
                 result.verdict = Result.Verdict.VERDICT_AC

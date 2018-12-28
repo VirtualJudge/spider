@@ -87,8 +87,7 @@ class HDUParser(BaseParser):
             return result
         website_data = response.text
         soup = BeautifulSoup(website_data, 'lxml')
-        line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all(
-            'td')
+        line = soup.find('table', attrs={'class': 'table_text'}).find('tr', attrs={'align': 'center'}).find_all('td')
         if line:
             result.unique_key = line[0].string
             result.verdict_info = line[2].get_text()
