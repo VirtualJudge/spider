@@ -12,6 +12,6 @@ class TestOJBuilder(unittest.TestCase):
     def test_all_support(self):
         for item in Core.get_supports():
             try:
-                self.assertTrue(Core(item).check_status(), msg=f'{item} error')
+                self.assertTrue(Core(item).is_working(), msg=f'{item} error')
             except Exception as e:
                 print(e)

@@ -6,6 +6,7 @@ from bs4 import element
 from spider.config import Problem, Result
 from spider.platforms.base import Base, BaseParser
 from spider.utils import HtmlTag, HttpUtil, logger
+from deprecated import deprecated
 
 
 class CodeforcesParser(BaseParser):
@@ -38,16 +39,16 @@ MathJax.Hub.Config({
         problem.remote_id = pid
         problem.remote_url = url
         if response is None:
-            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         elif response.status_code == 302:
-            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         elif response.status_code != 200:
-            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         elif response.text is None:
-            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         website = response.text
         soup = BeautifulSoup(website, 'lxml')
@@ -83,14 +84,12 @@ MathJax.Hub.Config({
                 else:
                     problem.html += str(HtmlTag.update_tag(child, self._static_prefix))
         problem.html = '<html>' + problem.html + self._script + '</html>'
-        problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        problem.status = Problem.Status.STATUS_SUCCESS
         return problem
 
     def result_parse(self, response):
         if response is None or response.status_code != 200 or response.text is None:
-            result = Result()
-            result.status = Result.Status.STATUS_SUBMIT_FAILED
-            return result
+            return Result(Result.Status.STATUS_RESULT_ERROR)
         soup = BeautifulSoup(response.text, 'lxml')
         table = soup.find('table')
         tag = None
@@ -107,11 +106,9 @@ MathJax.Hub.Config({
                 result.verdict = result.verdict.strip(' ')
                 result.execute_time = children_tag[5].string
                 result.execute_memory = children_tag[6].string
-                result.status = Result.Status.STATUS_RESULT
+                result.status = Result.Status.STATUS_RESULT_SUCCESS
                 return result
-        result = Result()
-        result.status = Result.Status.STATUS_SUBMIT_FAILED
-        return result
+        return Result(Result.Status.STATUS_RESULT_ERROR)
 
 
 class Codeforces(Base):
@@ -132,7 +129,7 @@ class Codeforces(Base):
 
     # 登录页面
     def login_website(self, account, *args, **kwargs):
-        if self.check_login_status():
+        if self.is_login():
             return True
         try:
             res = self._req.get('http://codeforces.com/enter?back=%2F')
@@ -151,13 +148,16 @@ class Codeforces(Base):
             self._req.post(url='http://codeforces.com/enter', data=post_data)
         except Exception as e:
             logger.exception(e)
-        return self.check_login_status()
+        return self.is_login()
 
     # 检查登录状态
-    def check_login_status(self):
+    def is_login(self):
         res = self._req.get('http://codeforces.com')
         if res and re.search(r'logout">Logout</a>', res.text):
             return True
+        return False
+
+    def account_required(self):
         return False
 
     # 获取题目
@@ -167,7 +167,7 @@ class Codeforces(Base):
             problem = Problem()
             problem.remote_oj = Codeforces.__name__
             problem.remote_id = pid
-            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            problem.status = Problem.Status.STATUS_ERROR
             return problem
         p_url = 'http://codeforces.com/problemset/problem/' + str(pid)[:-1] + '/' + str(pid)[-1]
         res = self._req.get(url=p_url)
@@ -176,7 +176,7 @@ class Codeforces(Base):
     # 提交代码
     def submit_code(self, *args, **kwargs):
         if not self.login_website(*args, **kwargs):
-            return False
+            return Result(Result.Status.STATUS_SPIDER_ERROR)
         res = self._req.get('http://codeforces.com/problemset/submit')
         code = kwargs.get('code')
         language = kwargs.get('language')
@@ -193,17 +193,16 @@ class Codeforces(Base):
             'source': code,
             'tabSize': 0,
             'sourceFile': '',
-
         }
-        self._req.post('http://codeforces.com/problemset/submit?csrf_token=' + csrf_token, data=post_data)
-        return True
+        res = self._req.post('http://codeforces.com/problemset/submit?csrf_token=' + csrf_token, data=post_data)
+        if res and res.status_code == 200:
+            return Result(Result.Status.STATUS_SUBMIT_SUCCESS)
+        return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
     # 获取当然运行结果
     def get_result(self, account, pid, *args, **kwargs):
         if self.login_website(account, *args, **kwargs) is False:
-            result = Result()
-            result.status = Result.Status.STATUS_SUBMIT_FAILED
-            return result
+            return Result(Result.Status.STATUS_RESULT_ERROR)
 
         request_url = 'http://codeforces.com/problemset/status?friends=on'
         res = self._req.get(request_url)
@@ -217,7 +216,7 @@ class Codeforces(Base):
                     if isinstance(tr, element.Tag) and tr.get('data-submission-id'):
                         return self.get_result_by_url(
                             'http://codeforces.com/contest/' + pid[:-1] + '/submission/' + tr.get('data-submission-id'))
-        return Result(Result.Status.STATUS_SUBMIT_FAILED)
+        return Result(Result.Status.STATUS_RESULT_ERROR)
 
     # 根据源OJ的运行id获取结构
     def get_result_by_rid_and_pid(self, rid, pid):
@@ -244,7 +243,7 @@ class Codeforces(Base):
         return languages
 
     # 检查源OJ是否运行正常
-    def check_status(self):
+    def is_working(self):
         return self._req.get('http://codeforces.com').status_code == 200
 
     #  判断结果是否正确

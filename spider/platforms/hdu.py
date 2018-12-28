@@ -39,16 +39,16 @@ class HDUParser(BaseParser):
         problem.remote_oj = 'HDU'
 
         if response is None:
-            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         website_data = response.text
         status_code = response.status_code
 
         if status_code != 200:
-            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         if re.search('No such problem', website_data):
-            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         soup = BeautifulSoup(website_data, 'lxml')
 
@@ -76,14 +76,14 @@ class HDUParser(BaseParser):
                     tag['style'] = HtmlTag.TagStyle.CONTENT.value
                 problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
         problem.html += self._script
-        problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        problem.status = Problem.Status.STATUS_SUCCESS
         return problem
 
     def result_parse(self, response):
         result = Result()
 
         if response is None or response.status_code != 200:
-            result.status = Result.Status.STATUS_SUBMIT_FAILED
+            result.status = Result.Status.STATUS_RESULT_ERROR
             return result
         website_data = response.text
         soup = BeautifulSoup(website_data, 'lxml')
@@ -94,9 +94,9 @@ class HDUParser(BaseParser):
             result.verdict = line[2].get_text()
             result.execute_time = line[4].string
             result.execute_memory = line[5].string
-            result.status = Result.Status.STATUS_RESULT
+            result.status = Result.Status.STATUS_RESULT_SUCCESS
         else:
-            result.status = Result.Status.STATUS_SUBMIT_FAILED
+            result.status = Result.Status.STATUS_RESULT_ERROR
         return result
 
 
@@ -118,7 +118,7 @@ class HDU(Base):
         if isinstance(cookies, dict):
             self._req.cookies.update(cookies)
 
-    def check_login_status(self):
+    def is_login(self):
         url = 'http://acm.hdu.edu.cn/'
         res = self._req.get(url)
         if res and re.search(r'userloginex\.php\?action=logout', res.text) is not None:
@@ -128,7 +128,7 @@ class HDU(Base):
     def login_website(self, account, *args, **kwargs):
         if account and account.cookies:
             self._req.cookies.update(account.cookies)
-        if self.check_login_status():
+        if self.is_login():
             return True
         login_link_url = 'http://acm.hdu.edu.cn/userloginex.php'
         post_data = {'username': account.username,
@@ -137,16 +137,20 @@ class HDU(Base):
                      }
         self._req.post(url=login_link_url, data=post_data,
                        params={'action': 'login'})
-        return self.check_login_status()
+        return self.is_login()
+
+    def account_required(self):
+        return False
 
     def get_problem(self, pid, *args, **kwargs):
+
         url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + pid
         res = self._req.get(url)
         return HDUParser().problem_parse(res, pid, url)
 
     def submit_code(self, *args, **kwargs):
         if not self.login_website(*args, **kwargs):
-            return False
+            return Result(Result.Status.STATUS_SUBMIT_ERROR)
         code = kwargs.get('code')
         language = kwargs.get('language')
         pid = kwargs.get('pid')
@@ -154,8 +158,8 @@ class HDU(Base):
         post_data = {'check': '0', 'language': language, 'problemid': pid, 'usercode': code}
         res = self._req.post(url=url, data=post_data, params={'action': 'submit'})
         if res and res.status_code == 200:
-            return True
-        return False
+            return Result(Result.Status.STATUS_SUBMIT_SUCCESS)
+        return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
     def find_language(self, *args, **kwargs):
         if self.login_website(*args, **kwargs) is False:
@@ -174,18 +178,18 @@ class HDU(Base):
     def get_result(self, *args, **kwargs):
         account = kwargs.get('account')
         pid = kwargs.get('pid')
-        url = 'http://acm.hdu.edu.cn/status.php?first=&pid=' + pid + '&user=' + account.username + '&lang=0&status=0'
+        url = f'http://acm.hdu.edu.cn/status.php?first=&pid=${pid}&user=f{account.username}&lang=0&status=0'
         return self.get_result_by_url(url=url)
 
     def get_result_by_rid_and_pid(self, rid, pid):
-        url = 'http://acm.hdu.edu.cn/status.php?first=' + rid + '&pid=&user=&lang=0&status=0'
+        url = f'http://acm.hdu.edu.cn/status.php?first=${rid}&pid=&user=&lang=0&status=0'
         return self.get_result_by_url(url=url)
 
     def get_result_by_url(self, url):
         res = self._req.get(url)
         return HDUParser().result_parse(res)
 
-    def check_status(self):
+    def is_working(self):
         url = 'http://acm.hdu.edu.cn/'
         res = self._req.get(url)
         if res and re.search(r'<H1>Welcome to HDU Online Judge System</H1>', res.text):

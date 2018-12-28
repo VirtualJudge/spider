@@ -8,12 +8,14 @@ class TestResult(unittest.TestCase):
         result = Result()
         result.execute_memory = '128 MB'
         result.execute_time = '1000 MS'
-        result.origin_run_id = '1'
-        result.verdict = 'Accepted'
+        result.unique_key = '1'
+        result.verdict = Result.Verdict.VERDICT_RUNNING
+        result.verdict_info = 'Accepted'
+        print(result.__dict__)
         self.assertDictEqual(result.__dict__, {'execute_memory': '128 MB',
                                                'execute_time': '1000 MS',
-                                               'origin_run_id': '1',
+                                               'unique_key': '1',
                                                'status': None,
-                                               'info': None,
-                                               'verdict': 'Accepted',
-                                               'verdict_code': Result.VerdictCode.VERDICT_RUNNING})
+                                               'compile_info': None,
+                                               'verdict_info': 'Accepted',
+                                               'verdict': Result.Verdict.VERDICT_RUNNING})

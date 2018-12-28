@@ -19,15 +19,15 @@ class WUSTParser(BaseParser):
         problem.remote_url = url
         problem.remote_oj = 'WUST'
         if response is None:
-            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         website_data = response.text
         status_code = response.status_code
         if status_code != 200:
-            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         if re.search('Problem is not Available', website_data):
-            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         match_groups = re.search(r'[\d]{4,}: ([\s\S]*?)</h2>', website_data)
         if match_groups:
@@ -65,13 +65,13 @@ class WUSTParser(BaseParser):
                             HtmlTag.update_tag(tag, self._static_prefix,
                                                update_style=HtmlTag.TagStyle.CONTENT.value))
         problem.html = '<body>' + problem.html + '</body>'
-        problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        problem.status = Problem.Status.STATUS_SUCCESS
         return problem
 
     def result_parse(self, response):
         result = Result()
         if response is None or response.status_code != 200:
-            result.status = Result.Status.STATUS_SUBMIT_FAILED
+            result.status = Result.Status.STATUS_RESULT_ERROR
             return result
 
         website_data = response.text
@@ -85,9 +85,9 @@ class WUSTParser(BaseParser):
             result.verdict = line[4].string
             result.execute_time = line[6].string
             result.execute_memory = line[5].string
-            result.status = Result.Status.STATUS_RESULT
+            result.status = Result.Status.STATUS_RESULT_SUCCESS
         else:
-            result.status = Result.Status.STATUS_SUBMIT_FAILED
+            result.status = Result.Status.STATUS_RESULT_ERROR
         return result
 
 
@@ -108,7 +108,7 @@ class WUST(Base):
         if isinstance(cookies, dict):
             self._req.cookies.update(cookies)
 
-    def check_login_status(self):
+    def is_login(self):
         url = 'http://acm.wust.edu.cn/'
         res = self._req.get(url)
         if res is None:
@@ -119,7 +119,7 @@ class WUST(Base):
     def login_website(self, account, *args, **kwargs):
         if account and account.cookies:
             self._req.cookies.update(account.cookies)
-        if self.check_login_status():
+        if self.is_login():
             return True
         login_page_url = 'http://acm.wust.edu.cn/loginpage.php'
         login_link_url = 'http://acm.wust.edu.cn/login.php'
@@ -129,8 +129,11 @@ class WUST(Base):
                      'submit': 'Submit'}
         self._req.get(login_page_url)
         self._req.post(login_link_url, post_data)
-        if self.check_login_status():
+        if self.is_login():
             return True
+        return False
+
+    def account_required(self):
         return False
 
     def get_problem(self, *args, **kwargs):
@@ -141,7 +144,7 @@ class WUST(Base):
 
     def submit_code(self, *args, **kwargs):
         if not self.login_website(*args, **kwargs):
-            return False
+            return Result(Result.Status.STATUS_SPIDER_ERROR)
         code = kwargs['code']
         language = kwargs['language']
         pid = kwargs['pid']
@@ -149,15 +152,15 @@ class WUST(Base):
         link_post_url = 'http://acm.wust.edu.cn/submit.php'
         res = self._req.get(link_page_url)
         if res is None or res.status_code != 200:
-            return False
+            return Result(Result.Status.STATUS_SUBMIT_ERROR)
         soup = BeautifulSoup(res.text, 'lxml')
         submitkey = soup.find('input', attrs={'name': 'submitkey'})['value']
         post_data = {'id': str(pid), 'soj': '0', 'language': language, 'source': code, 'submitkey': str(submitkey)}
         self._headers['Referer'] = link_page_url
         res = self._req.post(url=link_post_url, data=post_data, headers=self._headers)
         if res is None or res.status_code != 200:
-            return False
-        return True
+            return Result(Result.Status.STATUS_SUBMIT_ERROR)
+        return Result(Result.Status.STATUS_SUBMIT_SUCCESS)
 
     def find_language(self, *args, **kwargs):
         if self.login_website(*args, **kwargs) is False:
@@ -190,7 +193,7 @@ class WUST(Base):
 
         return WUSTParser().result_parse(res)
 
-    def check_status(self):
+    def is_working(self):
         url = 'http://acm.wust.edu.cn/'
         res = self._req.get(url)
         if res and re.search(r'<a href="index.php">WUST Online Judge</a>', res.text):

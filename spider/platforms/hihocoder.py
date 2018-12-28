@@ -16,7 +16,7 @@ class HihoCoder(Base):
 
     # 登录页面
     def login_website(self, account, *args, **kwargs):
-        if self.check_login_status():
+        if self.is_login():
             return True
         # login_page_url = 'https://hihocoder.com/login'
         # login_link_url = 'https://hihocoder.com/api/User/login.json'
@@ -30,7 +30,7 @@ class HihoCoder(Base):
         # return False
 
     # 检查登录状态
-    def check_login_status(self):
+    def is_login(self):
         url = 'https://hihocoder.com'
         res = self.req.get(url=url)
         if res is None:
@@ -71,7 +71,7 @@ class HihoCoder(Base):
         pass
 
     # 检查源OJ是否运行正常
-    def check_status(self):
+    def is_working(self):
         pass
 
     def is_compile_error(verdict):

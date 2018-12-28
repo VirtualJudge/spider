@@ -23,7 +23,7 @@ class Base(object):
         pass
 
     # 检查登录状态
-    def check_login_status(self, *args, **kwargs):
+    def is_login(self, *args, **kwargs):
         pass
 
     # 获取题目
@@ -32,6 +32,10 @@ class Base(object):
 
     # 提交代码
     def submit_code(self, *args, **kwargs):
+        pass
+
+    # 抓取题目是否需要登录账号
+    def account_required(self):
         pass
 
     # 获取当然运行结果
@@ -51,7 +55,8 @@ class Base(object):
         pass
 
     # 检查源OJ是否运行正常
-    def check_status(self):
+
+    def is_working(self):
         pass
 
     #  判断结果是否正确

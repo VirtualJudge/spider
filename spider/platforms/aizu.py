@@ -8,6 +8,7 @@ from bs4 import element
 from spider.platforms.base import Base, BaseParser
 from spider.config import Problem, Result
 from spider.utils import HtmlTag, HttpUtil
+from deprecated import deprecated
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -45,15 +46,15 @@ class AizuParser(BaseParser):
         problem.remote_oj = 'Aizu'
         problem.remote_url = url
         if response is None:
-            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         website_data = response.text
         status_code = response.status_code
         if status_code in [401, 404]:
-            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         elif status_code != 200:
-            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         site_data = json.loads(website_data)
         soup = BeautifulSoup(site_data.get('html'), 'lxml')
@@ -76,14 +77,14 @@ class AizuParser(BaseParser):
                     tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
                 problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
         problem.html += self._script
-        problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        problem.status = Problem.Status.STATUS_SUCCESS
         return problem
 
     def result_parse(self, response):
         result = Result()
 
         if response is None or response.status_code != 200:
-            result.status = Result.Status.STATUS_SUBMIT_FAILED
+            result.status = Result.Status.STATUS_RESULT_ERROR
             return result
 
         website_data = response.text
@@ -93,7 +94,7 @@ class AizuParser(BaseParser):
         result.verdict = self._judge_static_string[int(submission_record['status'])]
         result.execute_time = str(format(float(submission_record['cpuTime']) / float(100), '.2f')) + ' s'
         result.execute_memory = str(submission_record['memory']) + ' KB'
-        result.status = Result.Status.STATUS_RESULT
+        result.status = Result.Status.STATUS_RESULT_SUCCESS
         return result
 
 
@@ -121,7 +122,7 @@ class Aizu(Base):
     def login_website(self, account, *args, **kwargs):
         if account and account.cookies:
             self._req.cookies.update(account.cookies)
-        if self.check_login_status():
+        if self.is_login():
             return True
         login_link_url = 'https://judgeapi.u-aizu.ac.jp/session'
         post_data = {
@@ -129,14 +130,17 @@ class Aizu(Base):
             'password': account.password
         }
         self._req.post(url=login_link_url, json=post_data)
-        return self.check_login_status()
+        return self.is_login()
 
     # 检查登录状态
-    def check_login_status(self):
+    def is_login(self):
         url = 'https://judgeapi.u-aizu.ac.jp/self'
         res = self._req.get(url)
         if res and res.status_code == 200:
             return True
+        return False
+
+    def account_required(self):
         return False
 
     # 获取题目
@@ -149,7 +153,7 @@ class Aizu(Base):
     # 提交代码
     def submit_code(self, *args, **kwargs):
         if not self.login_website(*args, **kwargs):
-            return False
+            return Result(Result.Status.STATUS_SPIDER_ERROR)
         url = 'https://judgeapi.u-aizu.ac.jp/submissions'
 
         pid = kwargs['pid']
@@ -158,8 +162,8 @@ class Aizu(Base):
         res = self._req.post(url, json={'problemId': str(pid), 'language': str(language),
                                         'sourceCode': str(source_code)})
         if res and res.status_code == 200:
-            return True
-        return False
+            return Result(Result.Status.STATUS_SUBMIT_SUCCESS)
+        return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
     # 获取当然运行结果
     def get_result(self, *args, **kwargs):
@@ -170,7 +174,7 @@ class Aizu(Base):
         time.sleep(3)
         res = self._req.get(url)
         if res is None or res.status_code != 200:
-            return None
+            return Result(Result.Status.STATUS_RESULT_ERROR)
 
         recent_list = json.loads(res.text)
         url = 'https://judgeapi.u-aizu.ac.jp/verdicts/' + str(recent_list[0].get('judgeId'))
@@ -188,13 +192,13 @@ class Aizu(Base):
 
     # 获取源OJ支持的语言类型
     def find_language(self, *args, **kwargs):
-        return {'C': 'C', 'C++': 'C++', 'JAVA': 'JAVA', 'C++11': 'C++11', 'C++14': 'C++14', 'C#': 'C#', 'D': 'D',
-                'Go': 'Go', 'Ruby': 'Ruby', 'Rust': 'Rust', 'Python': 'Python', 'Python3': 'Python3',
-                'JavaScript': 'JavaScript', 'Scala': 'Scala', 'Haskell': 'Haskell', 'OCaml': 'OCaml', 'PHP': 'PHP',
-                'Kotlin': 'Kotlin'}
+        vec = ['C', 'C++', 'JAVA', 'C++11', 'C++14', 'C#', 'D', 'Go', 'Ruby', 'Rust', 'Python', 'Python3', 'JavaScript',
+               'Scala', 'Haskell', 'OCaml', 'PHP', 'Kotlin']
+        return {item: item for item in vec}
 
     # 检查源OJ是否运行正常
-    def check_status(self):
+
+    def is_working(self):
         url = 'https://judgeapi.u-aizu.ac.jp/categories'
         res = self._req.get(url)
         if res and res.status_code == 200:

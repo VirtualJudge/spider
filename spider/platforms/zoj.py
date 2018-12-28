@@ -26,16 +26,16 @@ class ZOJParser(BaseParser):
         problem.remote_url = url
         problem.remote_oj = 'ZOJ'
         if not response:
-            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         website_data = response.text
         status_code = response.status_code
 
         if status_code != 200:
-            problem.status = Problem.Status.STATUS_SUBMIT_FAILED
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         if re.search('No such problem', website_data):
-            problem.status = Problem.Status.STATUS_PROBLEM_NOT_EXIST
+            problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
 
         soup = BeautifulSoup(website_data, 'lxml')
@@ -78,14 +78,14 @@ class ZOJParser(BaseParser):
                         tag['class'] = (HtmlTag.TagDesc.CONTENT.value,)
                     HtmlTag.update_tag(tag, self._static_prefix)
                 problem.html += str(tag)
-        problem.status = Problem.Status.STATUS_CRAWLING_SUCCESS
+        problem.status = Problem.Status.STATUS_SUCCESS
         return problem
 
     def result_parse(self, response):
         result = Result()
 
         if response is None or response.status_code != 200:
-            result.status = Result.Status.STATUS_SUBMIT_FAILED
+            result.status = Result.Status.STATUS_RESULT_ERROR
             return result
         website_data = response.text
         soup = BeautifulSoup(website_data, 'lxml')
@@ -96,9 +96,9 @@ class ZOJParser(BaseParser):
             result.verdict = line[2].get_text().strip()
             result.execute_time = line[5].string + "ms"
             result.execute_memory = line[6].string + "KB"
-            result.status = Result.Status.STATUS_RESULT
+            result.status = Result.Status.STATUS_RESULT_SUCCESS
         else:
-            result.status = Result.Status.STATUS_SUBMIT_FAILED
+            result.status = Result.Status.STATUS_RESULT_ERROR
         return result
 
 
@@ -111,7 +111,7 @@ class ZOJ(Base):
         url = 'http://acm.zju.edu.cn/onlinejudge/'
         return url
 
-    def check_login_status(self):
+    def is_login(self):
         url = 'http://acm.zju.edu.cn/onlinejudge/'
         res = self._req.get(url)
         if res and re.search(r'/onlinejudge/logout.do">Logout', res.text) is not None:
@@ -128,12 +128,15 @@ class ZOJ(Base):
     def login_website(self, account, *args, **kwargs):
         if account and account.cookies:
             self._req.cookies.update(account.cookies)
-        if self.check_login_status():
+        if self.is_login():
             return True
         login_link_url = 'http://acm.zju.edu.cn/onlinejudge/login.do'
         post_data = {'handle': account.username, 'password': account.password}
         self._req.post(url=login_link_url, data=post_data)
-        return self.check_login_status()
+        return self.is_login()
+
+    def account_required(self):
+        return False
 
     def get_problem(self, *args, **kwargs):
         pid = str(kwargs['pid'])
@@ -143,22 +146,22 @@ class ZOJ(Base):
 
     def submit_code(self, *args, **kwargs):
         if not self.login_website(*args, **kwargs):
-            return False
+            return Result(Result.Status.STATUS_SPIDER_ERROR)
         code = kwargs['code']
         language = kwargs['language']
         pid = kwargs['pid']
         problem_url = 'http://acm.zju.edu.cn/onlinejudge/showProblem.do?problemCode=' + str(pid)
         res = self._req.get(problem_url)
         if res is None:
-            return False
+            return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
         problem_id = re.search(r'problemId=(\d*)"><font color="blue">Submit</font>', res.text).group(1)
         url = 'http://acm.zju.edu.cn/onlinejudge/submit.do?problemId=' + str(problem_id)
         post_data = {'languageId': str(language), 'problemId': str(pid), 'source': code}
         res = self._req.post(url=url, data=post_data)
         if res and res.status_code == 200:
-            return True
-        return False
+            return Result(Result.Status.STATUS_SUBMIT_SUCCESS)
+        return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
     def find_language(self, *args, **kwargs):
         if self.login_website(*args, **kwargs) is False:
@@ -191,7 +194,7 @@ class ZOJ(Base):
         res = self._req.get(url)
         return ZOJParser().result_parse(res)
 
-    def check_status(self):
+    def is_working(self):
         url = 'http://acm.zju.edu.cn/onlinejudge/'
         res = self._req.get(url)
         if res and re.search(r'<div class="welcome_msg">Welcome to ZOJ</div>', res.text):
