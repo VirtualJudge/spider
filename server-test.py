@@ -35,14 +35,14 @@ def submit():
         tries = 5
         while result.status == Result.Status.STATUS_RESULT and tries > 0:
             time.sleep(2)
-            if Core(remote_oj).is_waiting_for_judge(result.verdict):
+            if Core(remote_oj).is_running(result.verdict_info):
                 result = Core(remote_oj).get_result_by_rid_and_pid(rid=result.origin_run_id,
                                                                    pid=remote_id)
             else:
                 break
             tries -= 1
 
-        if result.status == Result.Status.STATUS_RESULT:
+        if result.status == Result.Status.STATUS_RESULT_SUCCESS:
             return str(result.__dict__)
         return result.status.name
     return "Error"
@@ -68,7 +68,7 @@ def language(remote_oj):
 @app.route("/<string:remote_oj>/<string:remote_id>")
 def problem(remote_oj, remote_id):
     problem = Core(remote_oj).get_problem(remote_id, account=Account('robot4test', 'robot4test'))
-    if problem.status == Problem.Status.STATUS_CRAWLING_SUCCESS:
+    if problem.status == Problem.Status.STATUS_SUCCESS:
         return problem.html
     return problem.status.name
 
