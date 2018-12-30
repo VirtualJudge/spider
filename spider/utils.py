@@ -17,7 +17,7 @@ except FileExistsError:
 except:
     traceback.print_exc()
 logger = logging.getLogger(__name__)
-handler = logging.FileHandler(SPIDER_LOG_PATH)
+handler = logging.FileHandler(SPIDER_LOG_PATH) if os.getenv('VJ_ENV') == 'production' else logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)

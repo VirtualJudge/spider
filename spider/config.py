@@ -65,6 +65,9 @@ class Problem(object):
         # 这个属性是html代码，直接在网页中用iframe展示
         self.html = None
 
+        # 这个属性代表使用的开源OJ类型，比如hustoj,qduoj等。
+        self.template = None
+
 
 class Result(object):
     """

@@ -3,7 +3,7 @@
 VirtualJudge - Spider
   
 [![Build Status](https://travis-ci.org/VirtualJudge/spider.svg?branch=master)](https://travis-ci.org/VirtualJudge/spider)
-[![Coverage Status](https://coveralls.io/repos/github/VirtualJudge/Spider/badge.svg?branch=master)](https://coveralls.io/github/VirtualJudge/Spider?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/VirtualJudge/spider/badge.svg?branch=master)](https://coveralls.io/github/VirtualJudge/spider?branch=master)
 ***
 
 ### Build script  
