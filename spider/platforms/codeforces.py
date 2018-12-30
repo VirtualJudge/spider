@@ -248,7 +248,7 @@ class Codeforces(Base):
     #  判断结果是否正确
     @staticmethod
     def is_accepted(verdict):
-        return verdict == 'Accepted'
+        return verdict in ['Accepted', 'Happy New Year!']
 
     # 判断是否编译错误
     @staticmethod
