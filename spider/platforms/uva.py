@@ -15,24 +15,24 @@ class UVA(Base):
     def set_cookies(self, cookies):
         super().set_cookies(cookies)
 
-    def login_website(self, *args, **kwargs):
-        super().login_website(*args, **kwargs)
+    def login_website(self, account):
+        pass
 
-    def is_login(self, *args, **kwargs):
-        super().is_login(*args, **kwargs)
+    def is_login(self):
+        pass
 
-    def get_problem(self, *args, **kwargs):
-        pid = kwargs.get('pid')
+    def get_problem(self, pid, account=None):
         url = f'https://uva.onlinejudge.org/external/{pid[0:len(pid - 2)]}/{pid}.pdf'
+        pass
 
-    def submit_code(self, *args, **kwargs):
-        super().submit_code(*args, **kwargs)
+    def submit_code(self, account, pid, language, code):
+        pass
 
     def account_required(self):
         return False
 
-    def get_result(self, *args, **kwargs):
-        super().get_result(*args, **kwargs)
+    def get_result(self, account, pid):
+        pass
 
     def get_result_by_rid_and_pid(self, rid, pid):
         super().get_result_by_rid_and_pid(rid, pid)
@@ -40,8 +40,8 @@ class UVA(Base):
     def get_result_by_url(self, url):
         super().get_result_by_url(url)
 
-    def find_language(self, *args, **kwargs):
-        super().find_language(*args, **kwargs)
+    def find_language(self, account):
+        pass
 
     def is_working(self):
         super().is_working()

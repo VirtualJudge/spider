@@ -97,7 +97,7 @@ class POJ(Base):
             self._req.cookies.update(cookies)
 
     # 登录页面
-    def login_website(self, account, *args, **kwargs):
+    def login_website(self, account):
         if account and account.cookies:
             self._req.cookies.update(account.cookies)
         if self.is_login():
@@ -124,19 +124,15 @@ class POJ(Base):
         return False
 
     # 获取题目
-    def get_problem(self, *args, **kwargs):
-        pid = str(kwargs['pid'])
-        url = 'http://poj.org/problem?id=' + pid
+    def get_problem(self, pid, account=None):
+        url = f'http://poj.org/problem?id={pid}'
         res = self._req.get(url=url)
         return POJParser().problem_parse(res, pid, url)
 
     # 提交代码
-    def submit_code(self, *args, **kwargs):
-        if not self.login_website(*args, **kwargs):
+    def submit_code(self, account, pid, language, code):
+        if not self.login_website(account):
             return Result(Result.Status.STATUS_SPIDER_ERROR)
-        code = kwargs['code']
-        language = kwargs['language']
-        pid = kwargs['pid']
         url = 'http://poj.org/submit'
         if type(code) is str:
             code = bytes(code, encoding='utf-8')
@@ -151,9 +147,7 @@ class POJ(Base):
         return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
     # 获取当前运行结果
-    def get_result(self, *args, **kwargs):
-        account = kwargs.get('account')
-        pid = kwargs.get('pid')
+    def get_result(self, account, pid):
         url = f'http://poj.org/status?problem_id=f{pid}&result=&language=&top=&user_id={account.username}'
         return self.get_result_by_url(url=url)
 
@@ -168,8 +162,8 @@ class POJ(Base):
         return POJParser().result_parse(res)
 
     # 获取源OJ支持的语言类型
-    def find_language(self, *args, **kwargs):
-        if self.login_website(*args, **kwargs) is False:
+    def find_language(self, account):
+        if self.login_website(account) is False:
             return None
         url = 'http://poj.org/submit'
         language = {}

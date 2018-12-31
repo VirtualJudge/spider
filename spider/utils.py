@@ -64,6 +64,10 @@ class HttpUtil(object):
             return None
 
     @property
+    def headers(self):
+        return self._request.headers
+
+    @property
     def cookies(self):
         return self._request.cookies
 

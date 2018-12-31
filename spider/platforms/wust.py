@@ -116,7 +116,7 @@ class WUST(Base):
         if re.search(r'<a href="logout.php">Logout</a>', res.text) is not None:
             return True
 
-    def login_website(self, account, *args, **kwargs):
+    def login_website(self, account):
         if account and account.cookies:
             self._req.cookies.update(account.cookies)
         if self.is_login():
@@ -136,18 +136,14 @@ class WUST(Base):
     def account_required(self):
         return False
 
-    def get_problem(self, *args, **kwargs):
-        pid = str(kwargs['pid'])
-        url = 'http://acm.wust.edu.cn/problem.php?id=' + pid + '&soj=0'
+    def get_problem(self, pid, account=None):
+        url = f'http://acm.wust.edu.cn/problem.php?id={pid}&soj=0'
         res = self._req.get(url)
         return WUSTParser().problem_parse(res, pid, url)
 
-    def submit_code(self, *args, **kwargs):
-        if not self.login_website(*args, **kwargs):
+    def submit_code(self, account, pid, language, code):
+        if not self.login_website(account):
             return Result(Result.Status.STATUS_SPIDER_ERROR)
-        code = kwargs['code']
-        language = kwargs['language']
-        pid = kwargs['pid']
         link_page_url = 'http://acm.wust.edu.cn/submitpage.php?id=' + str(pid) + '&soj=0'
         link_post_url = 'http://acm.wust.edu.cn/submit.php'
         res = self._req.get(link_page_url)
@@ -162,8 +158,8 @@ class WUST(Base):
             return Result(Result.Status.STATUS_SUBMIT_ERROR)
         return Result(Result.Status.STATUS_SUBMIT_SUCCESS)
 
-    def find_language(self, *args, **kwargs):
-        if self.login_website(*args, **kwargs) is False:
+    def find_language(self, account):
+        if self.login_website(account) is False:
             return None
         url = 'http://acm.wust.edu.cn/submitpage.php?id=1000&soj=0'
         languages = {}
@@ -176,9 +172,7 @@ class WUST(Base):
             languages[option.get('value')] = option.string
         return languages
 
-    def get_result(self, *args, **kwargs):
-        account = kwargs.get('account')
-        pid = kwargs.get('pid')
+    def get_result(self, account, pid):
         url = f'http://acm.wust.edu.cn/status.php?soj=-1&' \
             f'problem_id={pid}&user_id={account.username}&language=-1&jresult=-1'
 

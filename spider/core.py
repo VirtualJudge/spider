@@ -59,43 +59,44 @@ class Core(object):
             return None
         return self._oj.get_cookies()
 
+    # 获取题面的时候是否需要登录状态
     def account_required(self):
         return self._oj.account_required()
 
     # 获取题面
-    def get_problem(self, pid, account, **kwargs):
+    def get_problem(self, pid, account):
         if not self._oj:
             problem = Problem(Problem.Status.STATUS_ERROR)
             problem.remote_oj = self._remote_oj
             problem.remote_id = pid
             return problem
         self._oj.set_cookies(account.cookies)
-        problem = self._oj.get_problem(pid=pid, account=account, **kwargs)
+        problem = self._oj.get_problem(pid=pid, account=account)
         problem.title = Core.strip_blank(problem.title)
         problem.time_limit = Core.strip_blank(problem.time_limit)
         problem.memory_limit = Core.strip_blank(problem.memory_limit)
         return problem
 
     # 提交代码
-    def submit_code(self, pid, account, code, language, **kwargs):
+    def submit_code(self, account, pid, language, code):
         if not self._oj:
             return Result(Result.Status.STATUS_SYSTEM_ERROR)
         self._oj.set_cookies(account.cookies)
-        if self._oj.submit_code(account=account, code=code, language=language, pid=pid, **kwargs):
+        if self._oj.submit_code(account, pid, language, code):
             time.sleep(2)
-            return self.get_result(account=account, pid=pid, **kwargs)
+            return self.get_result(account=account, pid=pid)
         else:
             return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
     # 获取结果
-    def get_result(self, account, pid, **kwargs):
+    def get_result(self, account, pid):
 
         if not self._oj:
             return Result(Result.Status.STATUS_SYSTEM_ERROR)
         self._oj.set_cookies(account.cookies)
         result = None
         try:
-            result = self._oj.get_result(account=account, pid=pid, **kwargs)
+            result = self._oj.get_result(account=account, pid=pid)
         except:
             pass
         if result is not None:
@@ -136,11 +137,11 @@ class Core(object):
         return Result(Result.Status.STATUS_RESULT_ERROR)
 
     # 获取源OJ语言
-    def find_language(self, account, **kwargs):
+    def find_language(self, account):
         if not self._oj:
             return None
         self._oj.set_cookies(account.cookies)
-        return self._oj.find_language(account=account, **kwargs)
+        return self._oj.find_language(account=account)
 
     # 判断源OJ的网络连接是否良好
     def is_working(self):

@@ -29,7 +29,7 @@ class HDUParser(BaseParser):
       }
      });
     </script>
-    <script spider="https://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
+    <script src="https://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
 
     def problem_parse(self, response, pid, url):
         problem = Problem()
@@ -124,7 +124,7 @@ class HDU(Base):
             return True
         return False
 
-    def login_website(self, account, *args, **kwargs):
+    def login_website(self, account):
         if account and account.cookies:
             self._req.cookies.update(account.cookies)
         if self.is_login():
@@ -141,18 +141,15 @@ class HDU(Base):
     def account_required(self):
         return False
 
-    def get_problem(self, pid, *args, **kwargs):
+    def get_problem(self, pid, account=None):
 
         url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + pid
         res = self._req.get(url)
         return HDUParser().problem_parse(res, pid, url)
 
-    def submit_code(self, *args, **kwargs):
-        if not self.login_website(*args, **kwargs):
+    def submit_code(self, account, pid, language, code):
+        if not self.login_website(account):
             return Result(Result.Status.STATUS_SUBMIT_ERROR)
-        code = kwargs.get('code')
-        language = kwargs.get('language')
-        pid = kwargs.get('pid')
         url = 'http://acm.hdu.edu.cn/submit.php'
         post_data = {'check': '0', 'language': language, 'problemid': pid, 'usercode': code}
         res = self._req.post(url=url, data=post_data, params={'action': 'submit'})
@@ -160,8 +157,8 @@ class HDU(Base):
             return Result(Result.Status.STATUS_SUBMIT_SUCCESS)
         return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
-    def find_language(self, *args, **kwargs):
-        if self.login_website(*args, **kwargs) is False:
+    def find_language(self, account):
+        if self.login_website(account) is False:
             return None
         url = 'http://acm.hdu.edu.cn/submit.php'
         languages = {}
@@ -174,9 +171,7 @@ class HDU(Base):
             languages[option.get('value')] = option.string
         return languages
 
-    def get_result(self, *args, **kwargs):
-        account = kwargs.get('account')
-        pid = kwargs.get('pid')
+    def get_result(self, account, pid):
         url = f'http://acm.hdu.edu.cn/status.php?first=&pid=${pid}&user=f{account.username}&lang=0&status=0'
         return self.get_result_by_url(url=url)
 

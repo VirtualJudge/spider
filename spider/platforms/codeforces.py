@@ -14,7 +14,7 @@ class CodeforcesParser(BaseParser):
         self._script = """
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({
- showProcessingMessages: false,
+ showProcessingMessages: true,
  messageStyle: "none",
  extensions: ["tex2jax.js"],
  jax: ["input/TeX", "output/HTML-CSS"],
@@ -29,7 +29,7 @@ MathJax.Hub.Config({
  }
 });
 </script>
-<script spider="https://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS_HTML-full" async></script>
 """
 
     def problem_parse(self, response, pid, url):
@@ -127,7 +127,7 @@ class Codeforces(Base):
             self._req.cookies.update(cookies)
 
     # 登录页面
-    def login_website(self, account, *args, **kwargs):
+    def login_website(self, account):
         if self.is_login():
             return True
         try:
@@ -160,7 +160,7 @@ class Codeforces(Base):
         return False
 
     # 获取题目
-    def get_problem(self, pid, *args, **kwargs):
+    def get_problem(self, pid, account=None):
 
         if len(str(pid)) < 2 or str(pid)[-1].isalpha() is False or str(pid)[:-1].isnumeric() is False:
             problem = Problem()
@@ -173,13 +173,10 @@ class Codeforces(Base):
         return CodeforcesParser().problem_parse(res, pid, p_url)
 
     # 提交代码
-    def submit_code(self, *args, **kwargs):
-        if not self.login_website(*args, **kwargs):
+    def submit_code(self, account, pid, language, code):
+        if not self.login_website(account):
             return Result(Result.Status.STATUS_SPIDER_ERROR)
         res = self._req.get('http://codeforces.com/problemset/submit')
-        code = kwargs.get('code')
-        language = kwargs.get('language')
-        pid = kwargs.get('pid')
         soup = BeautifulSoup(res.text, 'lxml')
         csrf_token = soup.find(attrs={'name': 'X-Csrf-Token'}).get('content')
         post_data = {
@@ -199,8 +196,8 @@ class Codeforces(Base):
         return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
     # 获取当然运行结果
-    def get_result(self, account, pid, *args, **kwargs):
-        if self.login_website(account, *args, **kwargs) is False:
+    def get_result(self, account, pid):
+        if self.login_website(account) is False:
             return Result(Result.Status.STATUS_RESULT_ERROR)
 
         request_url = 'http://codeforces.com/problemset/status?friends=on'
@@ -227,8 +224,8 @@ class Codeforces(Base):
         return CodeforcesParser().result_parse(response=res)
 
     # 获取源OJ支持的语言类型
-    def find_language(self, account, *args, **kwargs):
-        if self.login_website(account, *args, **kwargs) is False:
+    def find_language(self, account):
+        if self.login_website(account) is False:
             return {}
         res = self._req.get('http://codeforces.com/problemset/submit')
         website_data = res.text

@@ -19,19 +19,19 @@ class Base(object):
         pass
 
     # 登录页面
-    def login_website(self, *args, **kwargs):
+    def login_website(self, account):
         pass
 
     # 检查登录状态
-    def is_login(self, *args, **kwargs):
+    def is_login(self):
         pass
 
     # 获取题目
-    def get_problem(self, *args, **kwargs):
+    def get_problem(self, pid, account):
         pass
 
     # 提交代码
-    def submit_code(self, *args, **kwargs):
+    def submit_code(self, account, pid, language, code):
         pass
 
     # 抓取题目是否需要登录账号
@@ -39,7 +39,7 @@ class Base(object):
         pass
 
     # 获取当然运行结果
-    def get_result(self, *args, **kwargs):
+    def get_result(self, account, pid):
         pass
 
     # 根据源OJ的运行id获取结构
@@ -51,7 +51,7 @@ class Base(object):
         pass
 
     # 获取源OJ支持的语言类型
-    def find_language(self, *args, **kwargs):
+    def find_language(self, account):
         pass
 
     # 检查源OJ是否运行正常

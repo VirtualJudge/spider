@@ -125,7 +125,7 @@ class ZOJ(Base):
         if isinstance(cookies, dict):
             self._req.cookies.update(cookies)
 
-    def login_website(self, account, *args, **kwargs):
+    def login_website(self, account):
         if account and account.cookies:
             self._req.cookies.update(account.cookies)
         if self.is_login():
@@ -138,18 +138,14 @@ class ZOJ(Base):
     def account_required(self):
         return False
 
-    def get_problem(self, *args, **kwargs):
-        pid = str(kwargs['pid'])
+    def get_problem(self, pid, account=None):
         url = 'http://acm.zju.edu.cn/onlinejudge/showProblem.do?problemCode=' + pid
         res = self._req.get(url)
         return ZOJParser().problem_parse(res, pid, url)
 
-    def submit_code(self, *args, **kwargs):
-        if not self.login_website(*args, **kwargs):
+    def submit_code(self, account, pid, language, code):
+        if not self.login_website(account):
             return Result(Result.Status.STATUS_SPIDER_ERROR)
-        code = kwargs['code']
-        language = kwargs['language']
-        pid = kwargs['pid']
         problem_url = 'http://acm.zju.edu.cn/onlinejudge/showProblem.do?problemCode=' + str(pid)
         res = self._req.get(problem_url)
         if res is None:
@@ -163,8 +159,8 @@ class ZOJ(Base):
             return Result(Result.Status.STATUS_SUBMIT_SUCCESS)
         return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
-    def find_language(self, *args, **kwargs):
-        if self.login_website(*args, **kwargs) is False:
+    def find_language(self, account):
+        if self.login_website(account) is False:
             return None
         url = 'http://acm.zju.edu.cn/onlinejudge/submit.do?problemId=1'
         languages = {}
@@ -177,9 +173,7 @@ class ZOJ(Base):
         finally:
             return languages
 
-    def get_result(self, *args, **kwargs):
-        account = kwargs.get('account')
-        pid = kwargs.get('pid')
+    def get_result(self, account, pid):
         url = 'http://acm.zju.edu.cn/onlinejudge/showRuns.do' \
               '?contestId=1&search=true&firstId=-1&lastId=-1&problemCode=' + \
               str(pid) + '&handle=' + account.username + '&idStart=&idEnd='

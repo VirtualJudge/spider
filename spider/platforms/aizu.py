@@ -36,7 +36,7 @@ class AizuParser(BaseParser):
     }
    });
   </script>
-  <script spider="https://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
+  <script src="https://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>"""
 
     def problem_parse(self, response, pid, url):
         problem = Problem()
@@ -118,7 +118,7 @@ class Aizu(Base):
         return self._req.cookies.get_dict()
 
     # 登录页面
-    def login_website(self, account, *args, **kwargs):
+    def login_website(self, account):
         if account and account.cookies:
             self._req.cookies.update(account.cookies)
         if self.is_login():
@@ -143,31 +143,25 @@ class Aizu(Base):
         return False
 
     # 获取题目
-    def get_problem(self, *args, **kwargs):
-        pid = kwargs['pid']
-        url = 'https://judgeapi.u-aizu.ac.jp/resources/descriptions/en/' + str(pid)
+    def get_problem(self, pid, account=None):
+        url = f'https://judgeapi.u-aizu.ac.jp/resources/descriptions/en/{pid}'
         res = self._req.get(url)
         return AizuParser().problem_parse(res, pid, url)
 
     # 提交代码
-    def submit_code(self, *args, **kwargs):
-        if not self.login_website(*args, **kwargs):
+    def submit_code(self, account, pid, language, code):
+        if not self.login_website(account):
             return Result(Result.Status.STATUS_SPIDER_ERROR)
         url = 'https://judgeapi.u-aizu.ac.jp/submissions'
 
-        pid = kwargs['pid']
-        language = kwargs['language']
-        source_code = kwargs['code']
         res = self._req.post(url, json={'problemId': str(pid), 'language': str(language),
-                                        'sourceCode': str(source_code)})
+                                        'sourceCode': str(code)})
         if res and res.status_code == 200:
             return Result(Result.Status.STATUS_SUBMIT_SUCCESS)
         return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
     # 获取当然运行结果
-    def get_result(self, *args, **kwargs):
-        account = kwargs.get('account')
-        pid = str(kwargs.get('pid'))
+    def get_result(self, account, pid):
         url = 'https://judgeapi.u-aizu.ac.jp/submission_records/users/' + str(account.username) + '/problems/' + pid
 
         time.sleep(3)
@@ -190,7 +184,7 @@ class Aizu(Base):
         return AizuParser().result_parse(res)
 
     # 获取源OJ支持的语言类型
-    def find_language(self, *args, **kwargs):
+    def find_language(self, account):
         vec = ['C', 'C++', 'JAVA', 'C++11', 'C++14', 'C#', 'D', 'Go', 'Ruby', 'Rust', 'Python', 'Python3', 'JavaScript',
                'Scala', 'Haskell', 'OCaml', 'PHP', 'Kotlin']
         return {item: item for item in vec}
