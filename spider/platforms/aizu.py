@@ -145,8 +145,9 @@ class Aizu(Base):
     # 获取题目
     def get_problem(self, pid, account=None):
         url = f'https://judgeapi.u-aizu.ac.jp/resources/descriptions/en/{pid}'
+        show_url = f'http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id={pid}'
         res = self._req.get(url)
-        return AizuParser().problem_parse(res, pid, url)
+        return AizuParser().problem_parse(res, pid, show_url)
 
     # 提交代码
     def submit_code(self, account, pid, language, code):
