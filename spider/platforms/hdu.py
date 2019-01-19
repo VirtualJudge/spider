@@ -172,7 +172,7 @@ class HDU(Base):
         return languages
 
     def get_result(self, account, pid):
-        url = f'http://acm.hdu.edu.cn/status.php?first=&pid=${pid}&user=f{account.username}&lang=0&status=0'
+        url = f'http://acm.hdu.edu.cn/status.php?first=&pid=${pid}&user={account.username}&lang=0&status=0'
         return self.get_result_by_url(url=url)
 
     def get_result_by_rid_and_pid(self, rid, pid):
