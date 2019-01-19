@@ -49,10 +49,7 @@ class AizuParser(BaseParser):
             return problem
         website_data = response.text
         status_code = response.status_code
-        if status_code in [401, 404]:
-            problem.status = Problem.Status.STATUS_RETRYABLE
-            return problem
-        elif status_code != 200:
+        if status_code != 200:
             problem.status = Problem.Status.STATUS_RETRYABLE
             return problem
         site_data = json.loads(website_data)

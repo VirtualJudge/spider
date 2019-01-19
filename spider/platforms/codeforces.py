@@ -112,7 +112,7 @@ MathJax.Hub.Config({
 
 class Codeforces(Base):
     def __init__(self, *args, **kwargs):
-        self._req = HttpUtil()
+        self._req = HttpUtil(*args, **kwargs)
 
     # 主页链接
     @staticmethod
@@ -177,6 +177,8 @@ class Codeforces(Base):
         if not self.login_website(account):
             return Result(Result.Status.STATUS_SPIDER_ERROR)
         res = self._req.get('http://codeforces.com/problemset/submit')
+        if res is None:
+            return Result(Result.Status.STATUS_SPIDER_ERROR)
         soup = BeautifulSoup(res.text, 'lxml')
         csrf_token = soup.find(attrs={'name': 'X-Csrf-Token'}).get('content')
         post_data = {
@@ -199,7 +201,6 @@ class Codeforces(Base):
     def get_result(self, account, pid):
         if self.login_website(account) is False:
             return Result(Result.Status.STATUS_RESULT_ERROR)
-
         request_url = 'http://codeforces.com/problemset/status?friends=on'
         res = self._req.get(request_url)
         website_data = res.text
