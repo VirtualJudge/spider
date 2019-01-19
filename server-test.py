@@ -25,14 +25,12 @@ def submit():
             tries -= 1
             core = Core(str(remote_oj))
             ans = core.submit_code(pid=remote_id, account=account, code=source_code.read(), language=language)
-            print(ans.__dict__)
             account.set_cookies(core.get_cookies())
         if ans.status in [Result.Status.STATUS_SUBMIT_ERROR, Result.Status.STATUS_SPIDER_ERROR,
                           Result.Status.STATUS_SYSTEM_ERROR]:
             return "SUBMIT FAILED"
         core = Core(remote_oj)
         result = core.get_result(account=account, pid=remote_id)
-        print(result.__dict__)
         account.set_cookies(core.get_cookies())
         tries = 5
         while result.verdict == Result.Verdict.VERDICT_RUNNING and tries > 0:

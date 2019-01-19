@@ -154,9 +154,7 @@ class HDU(Base):
         post_data = {'check': '0', 'language': language, 'problemid': pid, 'usercode': code}
         res = self._req.post(url=url, data=post_data, params={'action': 'submit'})
         if res and res.status_code == 200:
-            print('submit success')
             return Result(Result.Status.STATUS_SUBMIT_SUCCESS)
-        print('submit failed')
         return Result(Result.Status.STATUS_SUBMIT_ERROR)
 
     def find_language(self, account):
@@ -175,7 +173,6 @@ class HDU(Base):
 
     def get_result(self, account, pid):
         url = f'http://acm.hdu.edu.cn/status.php?first=&pid=${pid}&user={account.username}&lang=0&status=0'
-        print('url',url)
         return self.get_result_by_url(url=url)
 
     def get_result_by_rid_and_pid(self, rid, pid):
