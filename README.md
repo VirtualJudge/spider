@@ -26,4 +26,6 @@ VirtualJudge - Spider
  - FZU
  - Aizu
  - ZOJ
- - Codeforces(working...)
+ - Codeforces
+ - BZOJ(working...)
+ - SGU(working...)
