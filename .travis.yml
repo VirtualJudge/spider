@@ -8,7 +8,3 @@ install:
 script:
   - python3 setup.py install
   - flake8 --ignore=E722 --max-line-length=120 --exclude=venv,__pycache__ .
-  - coverage run --source=spider setup.py test
-  - coverage report
-after_success:
-  coveralls
