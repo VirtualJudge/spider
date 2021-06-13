@@ -12,15 +12,9 @@ dist/
 *.egg-info/
 
 build/
-dist/
 
 !.gitignore
 
-__pycache__/
-VirtualJudgeSpider/__pycache__/
-VirtualJudgeSpider/OJs/__pycache__/
+**/__pycache__/
 
-.DS_Store
-test.py
-html/
-log/
+accounts.yaml

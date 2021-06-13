@@ -3,7 +3,8 @@ lxml
 wheel
 requests
 coverage
-Flask
 requests[socks]
 flake8
-deprecated
+celery
+redis
+pyyaml
