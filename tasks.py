@@ -67,7 +67,8 @@ def request_problem(self, remote_oj: str, remote_id: str):
     Returns: None
     Raises: None
     """
-
+    if accounts_conn.get('PROBLEM_PAUSE') and int(accounts_conn.get('PROBLEM_PAUSE')) > 0:
+        raise self.retry(exc=Exception('Pause'), countdown=int(math.fabs(random.gauss(0, 20))))
     idx = lock_account(remote_oj)
     if idx is None:
         raise self.retry(exc=Exception('Bind Account Error'), countdown=int(math.fabs(random.gauss(0, 5))))
@@ -91,6 +92,8 @@ def request_problem(self, remote_oj: str, remote_id: str):
 
 @app.task(bind=True, name="request_submission")
 def request_submission(self, local_id: int, remote_oj: str, remote_id: str, language: str, user_code: str):
+    if accounts_conn.get('SUBMISSION_PAUSE'):
+        raise self.retry(exc=Exception('Pause'), countdown=int(math.fabs(random.gauss(0, 20))))
     idx = lock_account(remote_oj)
     if idx is None:
         raise self.retry(exc=Exception('Bind Account Error'), countdown=int(math.fabs(random.gauss(0, 5))))
@@ -122,5 +125,6 @@ int main(){
     return 0;
 }
 """
+    # accounts_conn.set('PROBLEM_PAUSE', 0)
     request_problem('POJ', '1000')
     request_submission(1, 'POJ', '1000', '0', code)
