@@ -1,0 +1,36 @@
+# 开发用的相关数据库文件
+version: "3"
+services:
+  vj-postgres-dev:
+    image: postgres:alpine
+    container_name: vj-postgres-dev
+    restart: always
+    volumes:
+      - ~/data/vj-postgres-dev:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=vj
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    ports:
+      - '0.0.0.0:5432:5432'
+  vj-redis-dev:
+    image: redis:alpine
+    container_name: vj-redis-dev
+    restart: always
+    volumes:
+      - ~/data/vj-redis-dev:/data
+    ports:
+      - '0.0.0.0:6379:6379'
+  vj-rabbitmq-dev:
+    image: rabbitmq:management
+    container_name: vj-rabbitmq-dev
+    restart: always
+    hostname: my-rabbit
+    ports:
+      - '0.0.0.0:5672:5672'
+      - '0.0.0.0:15672:15672'
+    environment:
+      - RABBITMQ_DEFAULT_USER=vj_user
+      - RABBITMQ_DEFAULT_PASS=vj_pass
+    volumes:
+      - ~/data/vj-rabbitmq-dev:/var/lib/rabbitmq
