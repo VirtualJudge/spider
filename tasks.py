@@ -1,12 +1,13 @@
+import json
 import math
 import random
-import json
-import time
+
 from celery import Celery
 from redis import Redis
+
 from server_config import BROKER_URL, REDIS_USER, REDIS_PASS, REDIS_PORT, REDIS_HOST
-from spider.platforms import HDU, POJ
 from spider.config import Account
+from spider.platforms import HDU, POJ
 
 app = Celery('spider')
 app.conf.update(
