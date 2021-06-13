@@ -79,6 +79,16 @@ class Result(object):
         self.execute_memory = None
         self.compile_info = None  # 编译信息，CE时可用
 
+    def to_dict(self):
+        return {
+            'run_id': self.run_id,
+            'verdict': self.verdict.name,
+            'verdict_info': self.verdict_info,
+            'execute_time': self.execute_time,
+            'execute_memory': self.execute_memory,
+            'compile_info': self.compile_info
+        }
+
     class Verdict(Enum):
         VERDICT_AC = 'AC'  # Accepted
         VERDICT_CE = 'CE'  # Compilation Error

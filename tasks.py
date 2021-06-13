@@ -102,9 +102,12 @@ def request_submission(self, local_id: int, remote_oj: str, remote_id: str, lang
         print("Not support")
         return
 
-    result = oj.submit_code(remote_id, language, user_code).__dict__
+    result = oj.submit_code(remote_id, language, user_code).to_dict()
     oj.account.update_previous()
     result_submission(local_id, result)
+    result_submission.apply_async(
+        args=[local_id, result],
+        queue='results')
     release_account(idx, remote_oj)
 
 
