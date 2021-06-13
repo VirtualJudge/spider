@@ -5,7 +5,7 @@ import time
 from celery import Celery
 from redis import Redis
 from server_config import BROKER_URL, REDIS_USER, REDIS_PASS, REDIS_PORT, REDIS_HOST
-from spider.platforms import HDU
+from spider.platforms import HDU, POJ
 from spider.config import Account
 
 app = Celery('spider')
@@ -50,6 +50,15 @@ def result_submission(local_id: int, data: dict):
     print(local_id, data)
 
 
+def get_oj(account: Account, remote_oj=None):
+    oj = None
+    if remote_oj == 'HDU':
+        oj = HDU(account=account)
+    elif remote_oj == 'POJ':
+        oj = POJ(account=account)
+    return oj
+
+
 @app.task(bind=True, name="request_problem")
 def request_problem(self, remote_oj: str, remote_id: str):
     """ 从请求任务队列中获取到题目请求任务，进行题目的抓取
@@ -61,15 +70,14 @@ def request_problem(self, remote_oj: str, remote_id: str):
     idx = lock_account(remote_oj)
     if idx is None:
         raise self.retry(exc=Exception('Bind Account Error'), countdown=int(math.fabs(random.gauss(0, 5))))
-    oj = None
+
     accounts_js = json.loads(accounts_conn.lindex(remote_oj, idx))
     account = Account(username=accounts_js.get('username', ''), password=accounts_js.get('password', ''),
                       cookies=accounts_js.get('cookies', ''), previous=accounts_js.get('previous', 0))
-    if remote_oj == 'HDU':
-        oj = HDU(account=account)
+    oj = get_oj(account, remote_oj)
     if oj is None:
-        pass
-
+        print("Not support")
+        return
     problem = oj.get_problem(remote_id).__dict__
     oj.account.update_previous()
 
@@ -85,14 +93,14 @@ def request_submission(self, local_id: int, remote_oj: str, remote_id: str, lang
     idx = lock_account(remote_oj)
     if idx is None:
         raise self.retry(exc=Exception('Bind Account Error'), countdown=int(math.fabs(random.gauss(0, 5))))
-    oj = None
     accounts_js = json.loads(accounts_conn.lindex(remote_oj, idx))
     account = Account(username=accounts_js.get('username', ''), password=accounts_js.get('password', ''),
                       cookies=accounts_js.get('cookies', ''), previous=accounts_js.get('previous', 0))
-    if remote_oj == 'HDU':
-        oj = HDU(account=account)
+    oj = get_oj(account, remote_oj)
     if oj is None:
-        pass
+        print("Not support")
+        return
+
     result = oj.submit_code(remote_id, language, user_code).__dict__
     oj.account.update_previous()
     result_submission(local_id, result)
@@ -101,7 +109,7 @@ def request_submission(self, local_id: int, remote_oj: str, remote_id: str, lang
 
 if __name__ == '__main__':
     code = """
-#include <bits/stdc++.h>
+#include <iostream>
 using namespace std;
 
 int main(){
@@ -110,5 +118,5 @@ int main(){
     return 0;
 }
 """
-    request_problem('HDU', '1000')
-    request_submission(1, 'HDU', '1000', "0", code)
+    request_problem('POJ', '1000')
+    request_submission(1, 'POJ', '1000', '0', code)

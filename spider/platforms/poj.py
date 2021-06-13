@@ -8,6 +8,9 @@ from spider import config
 from spider.platforms.base import Base, BaseParser
 from spider.config import Problem, Result
 from spider.utils import HttpUtil, HtmlTag
+from spider.exceptions import *
+from spider.config import Account
+import time
 
 
 class POJParser(BaseParser):
@@ -21,16 +24,13 @@ class POJParser(BaseParser):
         problem.remote_url = url
         problem.remote_oj = 'POJ'
         if response is None:
-            problem.status = Problem.Status.STATUS_RETRYABLE
-            return problem
+            raise SpiderNetworkError("")
         website_data = response.text
         status_code = response.status_code
         if status_code != 200:
-            problem.status = Problem.Status.STATUS_RETRYABLE
-            return problem
+            raise SpiderNetworkError("")
         if re.search('Can not find problem', website_data):
-            problem.status = Problem.Status.STATUS_RETRYABLE
-            return problem
+            raise SpiderNetworkError("")
         soup = BeautifulSoup(website_data, 'lxml')
 
         match_groups = re.search(r'ptt" lang="en-US">([\s\S]*?)</div>', website_data)
@@ -54,58 +54,43 @@ class POJParser(BaseParser):
                     tag['style'] = HtmlTag.TagStyle.CONTENT.value
                     tag['class'] += (HtmlTag.TagDesc.CONTENT.value,)
                 problem.html += str(HtmlTag.update_tag(tag, self._static_prefix))
-        problem.status = Problem.Status.STATUS_SUCCESS
         return problem
 
     def result_parse(self, response):
         result = Result()
         if response is None or response.status_code != 200:
-            result.status = Result.Status.STATUS_RESULT_ERROR
-            return result
+            raise SpiderNetworkError("")
         soup = BeautifulSoup(response.text, 'lxml')
         line = soup.find('table', attrs={'class': 'a'}).find('tr', attrs={'align': 'center'}).find_all('td')
-        if line is not None:
-            result.unique_key = line[0].string
-            result.verdict_info = line[3].string
-            result.execute_time = line[5].string
-            result.execute_memory = line[4].string
-            result.status = Result.Status.STATUS_RESULT_SUCCESS
-        else:
-            result.status = Result.Status.STATUS_RESULT_ERROR
+        if line is None:
+            raise SpiderProblemParseError("Parse Error")
+        result.unique_key = line[0].string
+        result.verdict_info = line[3].string
+        result.execute_time = line[5].string
+        result.execute_memory = line[4].string
         return result
 
 
 class POJ(Base):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, account: Account, *args, **kwargs):
+        super().__init__(account, *args, **kwargs)
         self.code_type = 'utf-8'
         self._headers = config.default_headers
         self._headers['Referer'] = 'http://poj.org/'
         self._headers['Content-Type'] = 'application/x-www-form-urlencoded'
 
         self._req = HttpUtil(headers=self._headers, code_type=self.code_type, *args, **kwargs)
-
-    @staticmethod
-    def home_page_url():
-        url = 'http://poj.org/'
-        return url
-
-    def get_cookies(self):
-        return self._req.cookies.get_dict()
-
-    def set_cookies(self, cookies):
-        if isinstance(cookies, dict):
-            self._req.cookies.update(cookies)
+        if self.account.cookies:
+            self._req.cookies.update(self.account.cookies)
 
     # 登录页面
-    def login_website(self, account):
-        if account and account.cookies:
-            self._req.cookies.update(account.cookies)
+    def login_website(self):
         if self.is_login():
             return True
         login_page_url = 'http://poj.org/'
         login_link_url = 'http://poj.org/login'
-        post_data = {'user_id1': account.username,
-                     'password1': account.password,
+        post_data = {'user_id1': self.account.username,
+                     'password1': self.account.password,
                      'B1': 'login',
                      'url': '/'}
         self._req.get(url=login_page_url)
@@ -117,22 +102,20 @@ class POJ(Base):
         url = 'http://poj.org/'
         res = self._req.get(url=url)
         if res and re.search(r'action=logout&', res.text):
+            self.account.set_cookies(self._req.cookies.get_dict())
             return True
         return False
 
-    def account_required(self):
-        return False
-
     # 获取题目
-    def get_problem(self, pid, account=None):
+    def get_problem(self, pid):
         url = f'http://poj.org/problem?id={pid}'
         res = self._req.get(url=url)
         return POJParser().problem_parse(res, pid, url)
 
     # 提交代码
-    def submit_code(self, account, pid, language, code):
-        if not self.login_website(account):
-            return Result(Result.Status.STATUS_SPIDER_ERROR)
+    def submit_code(self, pid, language, code):
+        if not self.login_website():
+            raise SpiderAccountLoginError()
         url = 'http://poj.org/submit'
         if type(code) is str:
             code = bytes(code, encoding='utf-8')
@@ -141,39 +124,22 @@ class POJ(Base):
                      'source': base64.b64encode(code),
                      'submit': 'Submit',
                      'encoded': '1'}
-        res = self._req.post(url=url, data=post_data)
-        if res and res.status_code == 200:
-            return Result(Result.Status.STATUS_SUBMIT_SUCCESS)
-        return Result(Result.Status.STATUS_SUBMIT_ERROR)
-
-    # 获取当前运行结果
-    def get_result(self, account, pid):
-        url = f'http://poj.org/status?problem_id=f{pid}&result=&language=&top=&user_id={account.username}'
-        return self.get_result_by_url(url=url)
-
-    # 根据源OJ的运行id获取结果
-    def get_result_by_rid_and_pid(self, rid, pid):
-        url = 'http://poj.org/status?problem_id=&result=&language=&top=' + str(int(rid) + 1)
-        return self.get_result_by_url(url=url)
-
-    # 根据源OJ的url获取结果
-    def get_result_by_url(self, url):
-        res = self._req.get(url=url)
-        return POJParser().result_parse(res)
-
-    # 获取源OJ支持的语言类型
-    def find_language(self, account):
-        if self.login_website(account) is False:
-            return None
-        url = 'http://poj.org/submit'
-        language = {}
-        res = self._req.get(url=url)
-        if res:
-            soup = BeautifulSoup(res.text, 'lxml')
-            options = soup.find('select', attrs={'name': 'language'}).find_all('option')
-            for option in options:
-                language[option.get('value')] = option.string
-        return language
+        self._req.post(url=url, data=post_data)
+        while True:
+            time.sleep(1)
+            status_url = f'http://poj.org/status?problem_id={pid}&result=&language=&top=&user_id={self.account.username}'
+            result = POJParser().result_parse(self._req.get(status_url))
+            if str(result.verdict_info) not in ['Queuing', 'Compiling', 'Waiting', 'Running & Judging']:
+                break
+        if str(result.verdict_info) == 'Accepted':
+            result.verdict = Result.Verdict.VERDICT_AC
+        elif str(result.verdict_info) == 'Compile Error':
+            result.verdict = Result.Verdict.VERDICT_CE
+        else:
+            result.verdict = Result.Verdict.VERDICT_WA
+        result.execute_time = str(result.execute_time).strip()
+        result.execute_memory = str(result.execute_memory).strip()
+        return result
 
     # 检查源OJ是否运行正常
     def is_working(self):
@@ -182,15 +148,3 @@ class POJ(Base):
         if res and re.search(r'color=blue>Welcome To PKU JudgeOnline</font>', res.text):
             return True
         return False
-
-    @staticmethod
-    def is_accepted(verdict):
-        return verdict == 'Accepted'
-
-    @staticmethod
-    def is_running(verdict):
-        return verdict in ['Queuing', 'Compiling', 'Waiting', 'Running & Judging']
-
-    @staticmethod
-    def is_compile_error(verdict):
-        return verdict == 'Compile Error'
