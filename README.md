@@ -15,12 +15,12 @@ VirtualJudge - Spider
 
 ### Now supports
 
-- HDU(tested)
-- WUST(unknown)
-- POJ(unknown)
-- FZU(unknown)
-- Aizu(unknown)
-- ZOJ(unknown)
-- Codeforces(unknown)
-- BZOJ(working...)
-- SGU(working...)
+- HDU(Supported)
+- WUST(Repairing...)
+- POJ(Supported)
+- FZU(Repairing...)
+- Aizu(Repairing...)
+- ZOJ(Repairing...)
+- Codeforces(Repairing...)
+- BZOJ(To Do...)
+- SGU(To Do...)
