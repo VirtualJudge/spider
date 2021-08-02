@@ -9,7 +9,7 @@ from server_config import BROKER_URL, REDIS_USER, REDIS_PASS, REDIS_PORT, REDIS_
 from spider.config import Account
 from spider.platforms import HDU, POJ
 
-app = Celery('spider')
+app = Celery('platforms')
 app.conf.update(
     broker_url=BROKER_URL,
     enable_utc=True,

@@ -2,7 +2,7 @@ from celery import Celery
 
 from server_config import BROKER_URL
 
-app = Celery('spider')
+app = Celery('platforms')
 app.conf.update(
     broker_url=BROKER_URL,
     enable_utc=True,
