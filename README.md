@@ -15,12 +15,6 @@ VirtualJudge - Spider
 
 ### Now supports
 
-- HDU(Supported)
-- WUST(Repairing...)
-- POJ(Supported)
-- FZU(Repairing...)
-- Aizu(Repairing...)
-- ZOJ(Repairing...)
-- Codeforces(Repairing...)
-- BZOJ(To Do...)
-- SGU(To Do...)
+- HDU(To do...)
+- Codeforces(To do...)
+
