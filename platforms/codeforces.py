@@ -83,7 +83,8 @@ MathJax.Hub.Config({
         problem.html = '<html>' + problem.html + self._script + '</html>'
         return problem
 
-    def result_parse(self, response):
+    @staticmethod
+    def result_parse(response):
         if response is None or response.status_code != 200 or response.text is None:
             raise SpiderNetworkError("Network error")
         soup = BeautifulSoup(response.text, 'lxml')
@@ -106,9 +107,21 @@ MathJax.Hub.Config({
         else:
             raise SpiderException('Parse Result Error')
 
+    @staticmethod
+    def problem_list_parse(response):
+        ret = []
+        if response.status_code != 200 or response.text == None:
+            return ret
+        soup = BeautifulSoup(response.text, 'lxml')
+        raw_problems = soup.find('table', 'problems').find_all('tr')
+        for item in raw_problems:
+            if item.td:
+                ret.append(item.td.a.string.strip())
+        return ret
+
 
 class Codeforces(Base):
-    def __init__(self, account: Account, *args, **kwargs):
+    def __init__(self, account, *args, **kwargs):
         super().__init__(account, *args, **kwargs)
         self._req = HttpUtil(*args, **kwargs)
 
@@ -159,10 +172,12 @@ class Codeforces(Base):
 
     # 获取题目
     def get_problem(self, pid):
-        if len(str(pid)) < 2 or str(pid)[-1].isalpha() is False or str(pid)[:-1].isnumeric() is False:
+        m = re.match(r'^(\d+)([A-Z]\d?)$', str(pid))
+        if not m:
             raise SpiderException('Problem not exist')
-        contest_id = str(pid)[:-1]
-        problem_id = str(pid)[-1]
+
+        contest_id = m.group(1)
+        problem_id = m.group(2)
         p_url = f'https://codeforces.com/contest/{contest_id}/problem/{problem_id}'
         res = self._req.get(p_url)
         return CodeforcesParser().problem_parse(res, pid, p_url)
@@ -199,7 +214,7 @@ class Codeforces(Base):
                 status_url = f'https://codeforces.com{tag.get("href")}'
                 while True:
                     time.sleep(1)
-                    result = CodeforcesParser().result_parse(response=self._req.get(status_url))
+                    result = CodeforcesParser.result_parse(response=self._req.get(status_url))
                     if str(result.verdict_info) != 'In queue' and not str(result.verdict_info).startswith(
                             'Running on test'):
                         if str(result.verdict_info).startswith('Accepted') or str(result.verdict_info).startswith(
@@ -207,6 +222,14 @@ class Codeforces(Base):
                             result.verdict = Result.Verdict.ACCEPTED
                         elif str(result.verdict_info).startswith('Compilation error'):
                             result.verdict = Result.Verdict.COMPILE_ERROR
+                        elif str(result.verdict_info).startswith('Runtime error'):
+                            result.verdict = Result.Verdict.RUNTIME_ERROR
+                        elif str(result.verdict_info).startswith('Idleness limit'):
+                            result.verdict = Result.Verdict.WRONG_ANSWER
+                        elif str(result.verdict_info).startswith('Memory limit exceeded'):
+                            result.verdict = Result.Verdict.MEMORY_LIMIT_EXCEEDED
+                        elif str(result.verdict_info).startswith('Time limit exceeded'):
+                            result.verdict = Result.Verdict.TIME_LIMIT_EXCEEDED
                         else:
                             result.verdict = Result.Verdict.WRONG_ANSWER
                         return result
@@ -218,7 +241,7 @@ class Codeforces(Base):
     def find_language(self):
         if self.login_website() is False:
             return {}
-        res = self._req.get('http://codeforces.com/problemset/submit')
+        res = self._req.get('https://codeforces.com/problemset/submit')
         website_data = res.text
         languages = {}
         if website_data:
@@ -231,4 +254,24 @@ class Codeforces(Base):
 
     # 检查源OJ是否运行正常
     def is_working(self):
-        return self._req.get('http://codeforces.com').status_code == 200
+        return self._req.get('https://codeforces.com').status_code == 200
+
+    def get_problem_list(self):
+        page_idx = 1
+        all_problem_ids = []
+        while True:
+            page_url = f'https://codeforces.com/problemset/page/{page_idx}'
+            cur_page = CodeforcesParser.problem_list_parse(self._req.get(page_url))
+            if len(cur_page) > 0 and cur_page[0] not in all_problem_ids:
+                all_problem_ids += cur_page
+            else:
+                break
+            page_idx += 1
+
+        return all_problem_ids[::-1]
+
+
+if __name__ == '__main__':
+    oj = Codeforces(None)
+    # oj.get_problem_list()
+    print(oj.get_problem('1188A1').__dict__)

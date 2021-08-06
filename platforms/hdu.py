@@ -77,7 +77,8 @@ class HDUParser(BaseParser):
         problem.html += self._script
         return problem
 
-    def result_parse(self, response):
+    @staticmethod
+    def result_parse(response):
         result = Result()
         if response is None or response.status_code != 200:
             raise SpiderNetworkError("Network error")
@@ -92,6 +93,18 @@ class HDUParser(BaseParser):
         result.execute_memory = line[5].string
         return result
 
+    @staticmethod
+    def problem_list_parse(response):
+        ret = []
+        if response.status_code != 200 or response.text == None:
+            return ret
+        soup = BeautifulSoup(response.text, 'lxml')
+        raw_problems = str(soup.find('table', 'table_text').find('script').string).split(';')
+        for item in raw_problems:
+            if item.startswith('p('):
+                ret.append(item.split(',')[1])
+        return ret
+
 
 class HDU(Base):
     def __init__(self, account, *args, **kwargs):
@@ -99,7 +112,7 @@ class HDU(Base):
         self._code_type = 'gb18030'
         self._req = HttpUtil(headers=config.default_headers, code_type=self._code_type,
                              *args, **kwargs)
-        if self.account.cookies:
+        if self._account and self.account.cookies:
             self._req.cookies.update(self.account.cookies)
 
     def is_login(self):
@@ -144,6 +157,16 @@ class HDU(Base):
             result.verdict = Result.Verdict.ACCEPTED
         elif str(result.verdict_info) == 'Compilation Error':
             result.verdict = Result.Verdict.COMPILE_ERROR
+        elif str(result.verdict_info) == 'Time Limit Exceeded':
+            result.verdict = Result.Verdict.TIME_LIMIT_EXCEEDED
+        elif str(result.verdict_info).startswith('Runtime Error'):
+            result.verdict = Result.Verdict.RUNTIME_ERROR
+        elif str(result.verdict_info).startswith('Presentation Error'):
+            result.verdict = Result.Verdict.PRESENTATION_ERROR
+        elif str(result.verdict_info).startswith('Output Limit Exceeded'):
+            result.verdict = Result.Verdict.OUTPUT_LIMIT_EXCEEDED
+        elif str(result.verdict_info).startswith('Memory Limit Exceeded'):
+            result.verdict = Result.Verdict.MEMORY_LIMIT_EXCEEDED
         else:
             result.verdict = Result.Verdict.WRONG_ANSWER
         result.execute_time = str(result.execute_time).strip()
@@ -157,3 +180,23 @@ class HDU(Base):
             return True
         return False
 
+    def get_problem_list(self):
+        """
+        获得当前平台所有题目的编号
+        """
+        page_idx = 1
+        all_problem_ids = []
+        while True:
+            page_url = f'https://acm.hdu.edu.cn/listproblem.php?vol={page_idx}'
+            cur_page = HDUParser.problem_list_parse(self._req.get(page_url))
+            if len(cur_page) > 0:
+                all_problem_ids += cur_page
+            else:
+                break
+            page_idx += 1
+        return all_problem_ids
+
+
+if __name__ == '__main__':
+    oj = HDU(None)
+    oj.get_problem_list()

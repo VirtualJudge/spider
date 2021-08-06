@@ -31,6 +31,7 @@ def init():
         accounts_conn.flushdb()
         for key in res.keys():
             for idx in range(len(res[key])):
+                print(key, res[key][idx])
                 accounts_conn.rpush(key, json.dumps(res[key][idx]))
                 accounts_conn.rpush(f'{key}_IDLE', idx)
 

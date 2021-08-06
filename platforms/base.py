@@ -11,7 +11,7 @@ class BaseParser(object):
 
 
 class Base(object):
-    def __init__(self, account: Account, *args, **kwargs):
+    def __init__(self, account, *args, **kwargs):
         self._account = account
 
     @property
@@ -52,4 +52,7 @@ class Base(object):
         pass
 
     def retrieve_problem(self, *args, **kwargs):
+        pass
+
+    def get_problem_list(self):
         pass

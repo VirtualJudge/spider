@@ -1,11 +1,13 @@
+import json
 import logging
 import os
+import traceback
+from datetime import datetime
 from enum import Enum
 
 import requests
 from bs4 import element
 from requests import RequestException
-import traceback
 
 LOG_BASE = '/log' if os.getenv('VJ_ENV') == 'production' else 'log'
 LOG_LEVEL = logging.WARNING if os.getenv('VJ_ENV') == 'production' else logging.INFO
@@ -33,13 +35,12 @@ default_headers = {
 
 
 class Account:
-    def __init__(self):
-        self._username = None
-        self._password = None
-
-        self._key = None
-
-        self._cookies = None
+    def __init__(self, username=None, password=None, key=None, cookies=None, previous=None):
+        self._username = username
+        self._password = password
+        self._key = key
+        self._cookies = cookies
+        self._previous = previous
 
     @property
     def username(self):
@@ -57,19 +58,35 @@ class Account:
     def key(self):
         return self._key
 
+    @property
+    def previous(self):
+        return self._previous
+
+    def to_str(self):
+        return json.dumps(self.to_json())
+
     def to_json(self):
         return {
             'username': str(self._username),
             'password': str(self._password),
-            'key': str(self._key),
-            'cookies': str(self._cookies),
+            'previous': self._previous,
+            'key': self._key,
+            'cookies': self._cookies
+
         }
 
-    def from_json(self, data: dict):
-        self._username = data['username']
-        self._password = data['password']
-        self._key = data['key']
-        self._cookies = data['cookies']
+    @staticmethod
+    def from_json(data: dict):
+        return Account(
+            username=data.get('username', None),
+            password=data.get('password', None),
+            key=data.get('key', None),
+            cookies=data.get('cookies', None),
+            previous=data.get('previous', None)
+        )
+
+    def update_previous(self):
+        self._previous = int(datetime.utcnow().timestamp())
 
 
 class HttpUtil(object):
@@ -195,7 +212,7 @@ class Problem(object):
         self.title = None
         self.time_limit = None
         self.memory_limit = None
-        self.special_judge = None
+        self.special_judge = False
         # 这个属性是html代码，直接在网页中用iframe展示
         self.html = None
         # 这个属性代表使用的开源OJ类型，比如hustoj,qduoj等。
