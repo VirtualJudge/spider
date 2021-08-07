@@ -67,54 +67,40 @@ def get_oj(account, remote_oj=None):
 
 
 @app.task(bind=True, name="retrieve_problem_task")
-def retrieve_problem_task(self, remote_oj: str, remote_id: str, problem_id: str):
-    """ 从请求任务队列中获取到题目请求任务，进行题目的抓取
-    Args: 待定
-    Returns: None
-    Raises: None
-    """
-    # print("remote_oj", remote_oj)
-    # idx = lock_account(remote_oj)
-    # if idx is None:
-    #     raise self.retry(exc=Exception('Bind crawl account error'), countdown=int(math.fabs(random.gauss(0, 5))))
-
-    # accounts_js = json.loads(accounts_conn.lindex(remote_oj, idx))
-    # print(accounts_js)
-    # account = Account.from_json(accounts_js)
+def retrieve_problem_task(self, remote_oj: str, remote_id: str, problem_id: int):
     oj = get_oj(None, remote_oj)
     if oj is None:
         print("Not support")
         return
     problem = oj.get_problem(remote_id)
-    # oj.account.update_previous()
 
-    result_problem_task(
-        problem_id,
-        remote_oj,
-        remote_id,
-        problem.time_limit,
-        problem.memory_limit,
-        {
-            'html': problem.html,
-            'template': problem.template,
-        },
-        problem.remote_url,
-        problem.title,
-        problem.special_judge)
-    # result_problem_task.apply_async(
-    #     args=[problem_id,
-    #           remote_oj,
-    #           remote_id,
-    #           problem.time_limit,
-    #           problem.memory_limit,
-    #           {
-    #               'html': problem.html,
-    #               'template': problem.template,
-    #           },
-    #           problem.remote_url,
-    #           problem.title],
-    #     queue='results')
-    # release_account(idx, remote_oj, oj.account.to_str())
+    # result_problem_task(
+    #     problem_id,
+    #     remote_oj,
+    #     remote_id,
+    #     problem.time_limit,
+    #     problem.memory_limit,
+    #     problem.remote_url,
+    #     problem.title,
+    #     problem.special_judge,
+    #     {
+    #         'html': problem.html,
+    #         'template': problem.template,
+    #     })
+    result_problem_task.apply_async(
+        args=[problem_id,
+              remote_oj,
+              remote_id,
+              problem.time_limit,
+              problem.memory_limit,
+              problem.remote_url,
+              problem.title,
+              problem.special_judge,
+              {
+                  'html': problem.html,
+                  'template': problem.template,
+              }],
+        queue='results')
 
 
 @app.task(bind=True, name="request_submission")
@@ -145,7 +131,11 @@ def sync_problem_list(self, remote_oj: str, local_id_list: list[str]):
     remote_id_list = oj.get_problem_list()
     id_set = set(local_id_list)
     candidate_update_id_list = [it for it in remote_id_list if it not in id_set]
-    return candidate_update_id_list
+    for item in candidate_update_id_list:
+        retrieve_problem_task.apply_async(
+            args=['HDU', item, None],
+            queue='requests'
+        )
 
 
 if __name__ == '__main__':

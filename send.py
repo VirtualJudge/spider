@@ -1,6 +1,7 @@
 from celery import Celery
 
 from server_config import BROKER_URL
+from tasks import retrieve_problem_task, result_problem_task, sync_problem_list
 
 app = Celery('platforms')
 app.conf.update(
@@ -9,19 +10,9 @@ app.conf.update(
     task_serializer='json',
 )
 
-
-@app.task(name="problem")
-def send_problem(local_pid: int, remote_oj: str, remote_id: str):
-    print(local_pid, remote_oj, remote_id)
-
-
-@app.task(name="submission")
-def send_submission(local_id: int, remote_oj: str, remote_id: str, language: str, code: str):
-    print(local_id, remote_oj, remote_id, language, code)
-
-
 if __name__ == '__main__':
-    send_submission.apply_async(
-        args=[1, 'HDU', '1000'],
+    sync_problem_list.apply_async(
+        args=['HDU', ['1000', ]],
         queue='requests'
     )
+

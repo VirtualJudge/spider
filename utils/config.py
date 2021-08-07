@@ -172,7 +172,7 @@ class HtmlTag(object):
         TITLE = 'font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB"' \
                 ',"Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 16px;font-weight: bold;color:#000000;'
         CONTENT = 'font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB",' \
-                  '"Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 16px;color:#495060;'
+                  '"Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 14px;color:#495060;'
 
     @staticmethod
     def update_tag(tag, oj_prefix, update_style=None):
