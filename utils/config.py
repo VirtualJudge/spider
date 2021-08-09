@@ -42,6 +42,9 @@ class Account:
         self._cookies = cookies
         self._previous = previous
 
+    def update_cookies(self, cookies: str):
+        self._cookies = cookies
+
     @property
     def username(self):
         return self._username
@@ -161,6 +164,7 @@ class HtmlTag(object):
         """
         TITLE = 'vj-title'
         CONTENT = 'vj-content'
+        MONO = "vj-mono"
         IMAGE = 'vj-image'
         FILE = 'vj-file'
         ANCHOR = 'vj-anchor'
@@ -173,6 +177,7 @@ class HtmlTag(object):
                 ',"Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 16px;font-weight: bold;color:#000000;'
         CONTENT = 'font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB",' \
                   '"Microsoft YaHei","微软雅黑",Arial,sans-serif; font-size: 14px;color:#495060;'
+        MONO = 'font-family: "Consolas", "Ubuntu Mono"; font-size: 14px;color:#495060;'
 
     @staticmethod
     def update_tag(tag, oj_prefix, update_style=None):

@@ -56,3 +56,6 @@ class Base(object):
 
     def get_problem_list(self):
         pass
+
+    def retrieve_language(self, *args, **kwargs):
+        pass

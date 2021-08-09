@@ -3,16 +3,16 @@ import time
 
 from bs4 import BeautifulSoup
 from bs4 import element
-
+import json
 from platforms.base import Base, BaseParser
 from utils import config
-from utils.config import Problem, Result, HttpUtil, HtmlTag
+from utils.config import Problem, Result, HttpUtil, HtmlTag, Account
 from utils.exceptions import *
 
 
 class HDUParser(BaseParser):
     def __init__(self, *args, **kwargs):
-        self._static_prefix = 'http://acm.hdu.edu.cn/'
+        self._static_prefix = 'https://acm.hdu.edu.cn/'
         self._script = """<script type="text/x-mathjax-config">
      MathJax.Hub.Config({
       showProcessingMessages: false,
@@ -112,44 +112,49 @@ class HDU(Base):
         self._code_type = 'gb18030'
         self._req = HttpUtil(headers=config.default_headers, code_type=self._code_type,
                              *args, **kwargs)
-        if self._account and self.account.cookies:
-            self._req.cookies.update(self.account.cookies)
+        if self._account and self._account.cookies:
+            self._req.cookies.update(json.loads(self._account.cookies))
 
     def is_login(self):
-        url = 'http://acm.hdu.edu.cn/'
+        url = 'https://acm.hdu.edu.cn/'
         res = self._req.get(url)
         if res and re.search(r'userloginex\.php\?action=logout', res.text) is not None:
-            self.account.set_cookies(self._req.cookies.get_dict())
+            if self._account and isinstance(self._account, Account):
+                self._account.update_cookies(json.dumps(self._req.cookies.get_dict()))
             return True
         return False
 
     def login_website(self):
         if self.is_login():
             return True
-        login_link_url = 'http://acm.hdu.edu.cn/userloginex.php'
+        login_link_url = 'https://acm.hdu.edu.cn/userloginex.php?action=login&cid=0&notice=0'
         post_data = {'username': self._account.username,
                      'userpass': self._account.password,
                      'login': 'Sign In'
                      }
-        self._req.post(url=login_link_url, data=post_data,
-                       params={'action': 'login'})
+        self._req.headers.update({
+            'Content-Type': 'application/x-www-form-urlencoded'
+        })
+        res = self._req.post(url=login_link_url, data=post_data,
+                             params={'action': 'login'})
+
         return self.is_login()
 
     def get_problem(self, pid):
-        url = 'http://acm.hdu.edu.cn/showproblem.php?pid=' + pid
+        url = 'https://acm.hdu.edu.cn/showproblem.php?pid=' + pid
         res = self._req.get(url)
         return HDUParser().problem_parse(res, pid, url)
 
     def submit_code(self, pid, language, code):
         if not self.login_website():
             raise SpiderAccountLoginError("Login error")
-        submit_url = 'http://acm.hdu.edu.cn/submit.php'
+        submit_url = 'https://acm.hdu.edu.cn/submit.php'
         post_data = {'check': '0', 'language': language, 'problemid': pid, 'usercode': code}
         self._req.post(url=submit_url, data=post_data, params={'action': 'submit'})
 
         while True:
             time.sleep(1)
-            status_url = f'http://acm.hdu.edu.cn/status.php?first=&pid=${pid}&user={self.account.username}&lang=0&status=0'
+            status_url = f'https://acm.hdu.edu.cn/status.php?first=&pid=${pid}&user={self.account.username}&lang=0&status=0'
             result = HDUParser().result_parse(self._req.get(status_url))
             if str(result.verdict_info) not in ['Queuing', 'Compiling', 'Running']:
                 break
@@ -174,7 +179,7 @@ class HDU(Base):
         return result
 
     def is_working(self):
-        url = 'http://acm.hdu.edu.cn/'
+        url = 'https://acm.hdu.edu.cn/'
         res = self._req.get(url)
         if res and re.search(r'<H1>Welcome to HDU Online Judge System</H1>', res.text):
             return True
@@ -195,6 +200,23 @@ class HDU(Base):
                 break
             page_idx += 1
         return all_problem_ids
+
+    def retrieve_language(self, *args, **kwargs):
+        if not self.login_website():
+            raise SpiderAccountLoginError("Login error")
+        res = self._req.get('https://acm.hdu.edu.cn/submit.php')
+        ret = []
+        try:
+            soup = BeautifulSoup(res.text, 'lxml')
+            languages = soup.find('select', attrs={'name': 'language'}).find_all('option')
+            for it in languages:
+                ret.append({
+                    'key': it['value'],
+                    'val': it.string
+                })
+        except:
+            pass
+        return ret
 
 
 if __name__ == '__main__':

@@ -18,3 +18,6 @@ VirtualJudge - Spider
 - HDU(To do...)
 - Codeforces(To do...)
 
+### 备注
+
+帐号信息保存在Redis的`4`数据库中。

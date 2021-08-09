@@ -9,7 +9,7 @@ accounts_conn = Redis(
     port=REDIS_PORT,
     username=REDIS_USER,
     password=REDIS_PASS,
-    db=1)
+    db=4)
 
 
 def check(accounts):
@@ -25,16 +25,19 @@ def check(accounts):
 
 
 def init():
-    accounts_conn.flushdb()
     res = yaml.safe_load(open(ACCOUNTS_CONFIG, 'r', encoding='utf-8'))
     if check(res):
         accounts_conn.flushdb()
         for key in res.keys():
-            for idx in range(len(res[key])):
-                print(key, res[key][idx])
-                accounts_conn.rpush(key, json.dumps(res[key][idx]))
+            for idx, auth in enumerate(res[key]):
+                print(idx, auth)
+                accounts_conn.rpush(key, json.dumps(auth))
                 accounts_conn.rpush(f'{key}_IDLE', idx)
 
 
 if __name__ == '__main__':
-    init()
+    # init()
+    remote_ojs = ['Codeforces', 'HDU']
+    for oj in remote_ojs:
+        res = accounts_conn.lrange(f'{oj}_LANGUAGES', 0, -1)
+        print(res)

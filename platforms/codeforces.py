@@ -1,12 +1,13 @@
+import json
 import re
 import time
 
 from bs4 import BeautifulSoup
 from bs4 import element
 
-from utils.config import Problem, Result, Account
 from platforms.base import Base, BaseParser
-from utils.config import HtmlTag, HttpUtil, logger
+from utils.config import HtmlTag, HttpUtil, logger, Account
+from utils.config import Problem, Result
 from utils.exceptions import *
 
 
@@ -50,15 +51,18 @@ MathJax.Hub.Config({
         website = response.text
         soup = BeautifulSoup(website, 'lxml')
         match_groups = soup.find('div', attrs={'class': 'title'})
+
         if match_groups:
             problem.title = match_groups.string
             problem.title = str(problem.title)[2:]
         match_groups = soup.find(name='div', attrs={'class': 'time-limit'})
         if match_groups:
-            problem.time_limit = match_groups.contents[-1]
+            for item in match_groups.stripped_strings:
+                problem.time_limit = item
         match_groups = soup.find(name='div', attrs={'class': 'memory-limit'})
         if match_groups:
-            problem.memory_limit = match_groups.contents[-1]
+            for item in match_groups.stripped_strings:
+                problem.memory_limit = item
         match_groups = soup.find(name='div', attrs={'class': 'problem-statement'})
         problem.html = ''
         if match_groups and isinstance(match_groups, element.Tag):
@@ -124,6 +128,8 @@ class Codeforces(Base):
     def __init__(self, account, *args, **kwargs):
         super().__init__(account, *args, **kwargs)
         self._req = HttpUtil(*args, **kwargs)
+        if self._account and self._account.cookies:
+            self._req.cookies.update(json.loads(self._account.cookies))
 
     # 主页链接
     @staticmethod
@@ -164,20 +170,22 @@ class Codeforces(Base):
     def is_login(self):
         res = self._req.get('https://codeforces.com')
         if res and re.search(r'logout">Logout</a>', res.text):
+            if self._account and isinstance(self._account, Account):
+                self._account.update_cookies(json.dumps(self._req.cookies.get_dict()))
             return True
-        return False
-
-    def account_required(self):
         return False
 
     # 获取题目
     def get_problem(self, pid):
-        m = re.match(r'^(\d+)([A-Z]\d?)$', str(pid))
-        if not m:
-            raise SpiderException('Problem not exist')
-
-        contest_id = m.group(1)
-        problem_id = m.group(2)
+        if pid.startswith('921'):
+            contest_id = '921'
+            problem_id = pid[-2:]
+        else:
+            m = re.match(r'^(\d+)([A-Z]\d*)$', str(pid))
+            if not m:
+                raise SpiderException('Problem not exist')
+            contest_id = m.group(1)
+            problem_id = m.group(2)
         p_url = f'https://codeforces.com/contest/{contest_id}/problem/{problem_id}'
         res = self._req.get(p_url)
         return CodeforcesParser().problem_parse(res, pid, p_url)
@@ -270,8 +278,25 @@ class Codeforces(Base):
 
         return all_problem_ids[::-1]
 
+    def retrieve_language(self, *args, **kwargs):
+        if not self.login_website():
+            raise SpiderAccountLoginError("Login error")
+        res = self._req.get('https://codeforces.com/problemset/submit')
+
+        ret = []
+        try:
+            soup = BeautifulSoup(res.text, 'lxml')
+            languages = soup.find('select', attrs={'name': 'programTypeId'}).find_all('option')
+            for it in languages:
+                ret.append({
+                    'key': it['value'],
+                    'val': it.string
+                })
+        except:
+            pass
+        return ret
+
 
 if __name__ == '__main__':
     oj = Codeforces(None)
-    # oj.get_problem_list()
     print(oj.get_problem('1188A1').__dict__)
