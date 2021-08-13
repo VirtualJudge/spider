@@ -2,14 +2,14 @@ import json
 
 from redis import Redis
 import yaml
-from server_config import REDIS_USER, REDIS_PASS, REDIS_PORT, REDIS_HOST, ACCOUNTS_CONFIG
+from server_config import REDIS_USER, REDIS_PASS, REDIS_PORT, REDIS_HOST, ACCOUNTS_CONFIG, REDIS_DB
 
 accounts_conn = Redis(
     host=REDIS_HOST,
     port=REDIS_PORT,
     username=REDIS_USER,
     password=REDIS_PASS,
-    db=4)
+    db=REDIS_DB)
 
 
 def check(accounts):

@@ -8,7 +8,7 @@ from redis import Redis
 
 from platforms.codeforces import Codeforces
 from platforms.hdu import HDU
-from server_config import BROKER_URL, REDIS_USER, REDIS_PASS, REDIS_PORT, REDIS_HOST
+from server_config import BROKER_URL, REDIS_USER, REDIS_PASS, REDIS_PORT, REDIS_HOST, REDIS_DB
 from utils.config import Account
 
 app = Celery('platforms')
@@ -19,7 +19,7 @@ app.conf.update(
     task_serializer='json',
 )
 
-accounts_conn = Redis(host=REDIS_HOST, port=REDIS_PORT, username=REDIS_USER, password=REDIS_PASS, db=4)
+accounts_conn = Redis(host=REDIS_HOST, port=REDIS_PORT, username=REDIS_USER, password=REDIS_PASS, db=REDIS_DB)
 
 
 def lock_account(platform):

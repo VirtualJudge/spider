@@ -11,7 +11,7 @@ REDIS_USER = os.getenv('REDIS_USER', None)
 REDIS_PASS = os.getenv('REDIS_PASS', None)
 REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = os.getenv('REDIS_PORT', 6379)
-
+REDIS_DB = 4
 # Celery 相关的配置
 BROKER_URL = f'amqp://{MQ_USER}:{MQ_PASS}@{MQ_HOST}:{MQ_PORT}/'
 
